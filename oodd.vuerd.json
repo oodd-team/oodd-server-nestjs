@@ -4,9 +4,9 @@
   "settings": {
     "width": 5000,
     "height": 5000,
-    "scrollTop": -496.1176,
-    "scrollLeft": -635,
-    "zoomLevel": 0.1,
+    "scrollTop": -996.4435,
+    "scrollLeft": -208.3989,
+    "zoomLevel": 1,
     "show": 511,
     "database": 4,
     "databaseName": "oodd_dev",
@@ -586,7 +586,7 @@
           "color": ""
         },
         "meta": {
-          "updateAt": 1725427042671,
+          "updateAt": 1725672796259,
           "createAt": 1725423390548
         }
       },
