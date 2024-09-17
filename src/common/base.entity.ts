@@ -5,8 +5,7 @@ import {
   Column,
 } from 'typeorm';
 
-export class BaseEntity {
-  //export abstract class BaseEnity - abstract 사용하면 인스턴스 생성X
+export abstract class BaseEntity {
   @PrimaryGeneratedColumn()
   id!: number;
 
@@ -17,8 +16,8 @@ export class BaseEntity {
   createdAt!: Date;
 
   @UpdateDateColumn({ type: 'datetime', nullable: true })
-  updatedAt?: Date;
+  updatedAt!: Date | null;
 
   @Column({ type: 'datetime', nullable: true })
-  deletedAt?: Date | null;
+  deletedAt!: Date | null;
 }

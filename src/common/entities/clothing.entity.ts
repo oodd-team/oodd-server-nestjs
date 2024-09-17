@@ -1,24 +1,24 @@
 import { Entity, Column, OneToMany } from 'typeorm';
 import { BaseEntity } from '../base.entity';
-import { PostClothing } from './postClothingEntity';
+import { PostClothing } from './post-clothing.entity';
 
 @Entity('Clothing')
 export class Clothing extends BaseEntity {
-  @OneToMany(() => PostClothing, (postClothing) => postClothing.clothing)
-  postClothings!: PostClothing[];
-
-  @Column()
+  @Column({ type: 'text', nullable: true })
   imageUrl!: string;
 
-  @Column()
+  @Column({ type: 'varchar', length: 100, nullable: true })
   brandName!: string;
 
-  @Column()
+  @Column({ type: 'varchar', length: 100, nullable: true })
   modelName!: string;
 
-  @Column()
+  @Column({ type: 'varchar', length: 100, nullable: true })
   modelNumber!: string;
 
-  @Column()
+  @Column({ type: 'text', nullable: true })
   url!: string;
+
+  @OneToMany(() => PostClothing, (postClothing) => postClothing.clothing)
+  postClothings!: PostClothing[];
 }

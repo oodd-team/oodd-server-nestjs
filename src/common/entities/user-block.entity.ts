@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { User } from './userEntity';
+import { User } from './user.entity';
 import { BaseEntity } from '../base.entity';
 
 @Entity('UserBlock')
