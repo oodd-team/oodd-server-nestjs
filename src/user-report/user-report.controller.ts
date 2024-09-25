@@ -1,8 +1,10 @@
 import { Controller, Post } from '@nestjs/common';
 import { UserReportService } from './user-report.service';
 import { PostUserReportSwagger } from './user-report.swagger';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('user-report')
+@ApiTags('[서비스] 유저 신고')
 export class UserReportController {
   constructor(private readonly userReportService: UserReportService) {}
 

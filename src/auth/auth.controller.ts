@@ -1,8 +1,10 @@
 import { Controller, Post } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { KakaoLoginSwagger, NaverLoginSwagger } from './auth.swagger';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('auth')
+@ApiTags('[서비스] Auth 관련')
 export class AuthController {
   constructor(private readonly userService: UserService) {}
 

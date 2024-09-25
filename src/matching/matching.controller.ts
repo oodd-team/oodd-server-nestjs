@@ -7,8 +7,10 @@ import {
   GetMatchingSwagger,
   PatchMatchingRequestStatusSwagger,
 } from './matching.swagger';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('matching')
+@ApiTags('[서비스] 매칭')
 export class MatchingController {
   constructor(private readonly matchingService: MatchingService) {}
 

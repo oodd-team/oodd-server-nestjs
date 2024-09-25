@@ -7,8 +7,10 @@ import {
   PatchIsRepresentativeSwagger,
   PatchPostSwagger,
 } from './post.swagger';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('post')
+@ApiTags('[서비스] 게시글')
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
