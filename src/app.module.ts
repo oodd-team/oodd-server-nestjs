@@ -18,6 +18,7 @@ import { PostModule } from './post/post.module';
 import { StyletagModule } from './styletag/styletag.module';
 import { UserBlockModule } from './user-block/user-block.module';
 import { UserReportModule } from './user-report/user-report.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { UserReportModule } from './user-report/user-report.module';
     StyletagModule,
     UserBlockModule,
     UserReportModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
