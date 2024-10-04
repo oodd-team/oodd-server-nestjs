@@ -1,5 +1,6 @@
-import { Controller, Get, Patch, Post } from '@nestjs/common';
+import { Controller, Get, Patch, Post, Query } from '@nestjs/common';
 import { PostService } from './post.service';
+import { PostDto } from './dtos/response/postResponse.dto';
 import {
   CreatePostsSwagger,
   GetPostsSwagger,
@@ -16,9 +17,29 @@ export class PostController {
 
   @Get()
   @GetPostsSwagger('게시글 리스트 조회 API')
-  getPosts() {
-    // return this.userService.getHello();
-  }
+  async getPosts(@Query('userId') userId?: number): Promise<PostDto[]> {
+    const posts = await this.postService.findAll(userId);
+    return posts.map(post => ({
+      id: post.id,
+      content: post.content,
+      isRepresentative: post.isRepresentative,
+      createdAt: post.createdAt,
+      updatedAt: post.updatedAt,
+      deletedAt: post.deletedAt,
+      images: post.postImages.map(image => ({
+        id: image.id,
+        url: image.url,
+        orderNum: image.orderNum,
+      })),
+      user: {
+        id: post.user.id,
+        nickname: post.user.nickname,
+        profilePictureUrl: post.user.profilePictureUrl,
+      },
+      likeCount: post.commentCount,
+      commentCount: post.likeCount,
+    }));
+    }
 
   @Get()
   @GetPostSwagger('게시글 상세 조회 API')
