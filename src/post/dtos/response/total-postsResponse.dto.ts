@@ -1,4 +1,4 @@
-export class AllPostsDto {
+export class TotalPostsDto {
     id: number;
     content: string;
     createdAt: Date;

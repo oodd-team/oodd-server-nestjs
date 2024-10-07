@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Post } from '../common/entities/post.entity';
-import { AllPostsDto } from './dtos/response/all-postsResponse.dto';
+import { TotalPostsDto } from './dtos/response/total-postsResponse.dto';
 import { UserPostsDto } from './dtos/response/user-postsResponse.dto';
 
 @Injectable()
@@ -12,7 +12,7 @@ export class PostService {
         private readonly postRepository: Repository<Post>,
       ) {}
     
-      async findAll(userId?: number): Promise<(AllPostsDto | UserPostsDto)[]> {
+      async findAll(userId?: number): Promise<(TotalPostsDto | UserPostsDto)[]> {
         if (userId){
             const posts = await this.postRepository
             .createQueryBuilder('post')

@@ -1,6 +1,6 @@
 import { Controller, Get, InternalServerErrorException, Patch, Post, Query } from '@nestjs/common';
 import { PostService } from './post.service';
-import { AllPostsDto } from './dtos/response/all-postsResponse.dto';
+import { TotalPostsDto } from './dtos/response/total-postsResponse.dto';
 import { UserPostsDto } from './dtos/response/user-postsResponse.dto';
 import {
   CreatePostsSwagger,
@@ -19,7 +19,7 @@ export class PostController {
   @Get()
   @GetPostsSwagger('게시글 리스트 조회 API')
   @ApiQuery({ name: 'userId', required: false, type: Number, description: '사용자 ID (선택적)' })
-  async getPosts(@Query('userId') userId?: number): Promise<{ posts: (AllPostsDto | UserPostsDto)[]; totalPostCount: number }> {
+  async getPosts(@Query('userId') userId?: number): Promise<{ posts: (TotalPostsDto | UserPostsDto)[]; totalPostCount: number }> {
     try {
       const posts = await this.postService.findAll(userId);
       const totalPostCount = posts.length;
