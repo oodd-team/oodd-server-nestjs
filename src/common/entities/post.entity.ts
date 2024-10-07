@@ -41,11 +41,11 @@ export class Post extends BaseEntity {
 
   // 댓글 수
   get commentCount(): number {
-    return this.postComments.length;
+    return this.postComments? this.postComments.length : 0;
   }
 
   // Like 수
   get likeCount(): number {
-    return this.postLikes.length;
+    return this.postLikes? this.postLikes.length : 0;
   }
 }
