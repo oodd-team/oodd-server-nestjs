@@ -1,8 +1,10 @@
-export interface KakaoUser {
-  kakaoId: string;
-  email: string;
-  nickname: string;
-  photo: string;
+export interface SocialUser {
+  kakaoId?: string;
+  naverId?: string;
+  email?: string;
+  name?: string;
+  nickname?: string;
+  profilePictureUrl?: string;
 }
 
 export interface JwtPayload {

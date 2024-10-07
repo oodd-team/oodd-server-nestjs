@@ -2,7 +2,7 @@ import { ExecutionContext, Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
 @Injectable()
-export class KakaoAuthGuard extends AuthGuard('kakao') {
+export class NaverAuthGuard extends AuthGuard('naver') {
   handleRequest(err, user, info, context: ExecutionContext) {
     const req = context.switchToHttp().getRequest();
 

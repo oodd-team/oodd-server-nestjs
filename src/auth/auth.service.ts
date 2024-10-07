@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
-import { JwtPayload, KakaoUser } from './dto/auth.dto';
+import { JwtPayload, SocialUser } from './dto/auth.dto';
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
@@ -11,12 +11,21 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async kakaoLogin(user: KakaoUser): Promise<string> {
-    const userByKakao = await this.userSerivce.getUserByKaKaoId(user.kakaoId);
+  async socialLogin(
+    user: SocialUser,
+    provider: 'kakao' | 'naver',
+  ): Promise<string> {
+    console.log(user);
+    let userBySocial;
+    if (provider === 'kakao')
+      userBySocial = await this.userSerivce.getUserByKaKaoId(user.kakaoId);
+    else if (provider === 'naver')
+      userBySocial = await this.userSerivce.getUserByNaverId(user.naverId);
 
-    if (!userByKakao) return await this.userSerivce.createUserByKakao(user);
+    if (!userBySocial)
+      return await this.userSerivce.createUserByKakaoOrNaver(user);
 
-    return await this.generateJwtToken(userByKakao);
+    return await this.generateJwtToken(userBySocial);
   }
 
   async generateJwtToken(user: JwtPayload): Promise<string> {

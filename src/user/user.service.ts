@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuthService } from 'src/auth/auth.service';
-import { KakaoUser } from 'src/auth/dto/auth.dto';
+import { SocialUser } from 'src/auth/dto/auth.dto';
 import { User } from 'src/common/entities/user.entity';
 import { InternalServerException } from 'src/common/exception/service.exception';
 import { DataSource, FindOneOptions, Repository } from 'typeorm';
@@ -25,7 +25,13 @@ export class UserService {
     });
   }
 
-  async createUserByKakao(user: KakaoUser): Promise<string> {
+  async getUserByNaverId(naverId: string): Promise<User | null> {
+    return await this.userRepository.findOne({
+      where: { naverId: naverId, status: 'activated' },
+    });
+  }
+
+  async createUserByKakaoOrNaver(user: SocialUser): Promise<string> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
