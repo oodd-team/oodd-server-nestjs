@@ -1,7 +1,7 @@
 import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './user.entity';
 import { Post } from './post.entity';
-import { BaseEntity } from '../base.entity';
+import { BaseEntity } from './base.entity';
 
 @Entity('PostComment')
 export class PostComment extends BaseEntity {

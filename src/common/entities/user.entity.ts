@@ -1,5 +1,5 @@
 import { Entity, OneToMany, Column } from 'typeorm';
-import { BaseEntity } from '../base.entity';
+import { BaseEntity } from './base.entity';
 import { Post } from './post.entity';
 import { PostComment } from './post-comment.entity';
 import { ChatRoom } from './chat-room.entity';
@@ -12,9 +12,6 @@ import { ChatMessage } from './chat-message.entity';
 export class User extends BaseEntity {
   @Column({ type: 'varchar', length: 100, nullable: true })
   kakaoId!: string | null; // 카카오 고유 ID를 저장하는 필드
-
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  googleId!: string | null; // 구글 고유 ID를 저장하는 필드
 
   @Column({ type: 'varchar', length: 100, nullable: true })
   naverId!: string | null; // 네이버 고유 ID를 저장하는 필드
