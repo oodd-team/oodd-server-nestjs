@@ -1,7 +1,7 @@
 import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './user.entity';
 import { ChatRoom } from './chat-room.entity';
-import { BaseEntity } from '../base.entity';
+import { BaseEntity } from './base.entity';
 
 @Entity('ChatMessage')
 export class ChatMessage extends BaseEntity {
