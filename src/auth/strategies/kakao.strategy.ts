@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Profile, Strategy } from 'passport-kakao';
-import { KakaoUser } from '../dto/auth.dto';
+import { SocialUser } from '../dto/auth.dto';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -19,15 +19,15 @@ export class JwtKakaoStrategy extends PassportStrategy(Strategy, 'kakao') {
     accessToken: string,
     refreshToken: string,
     profile: Profile,
-    done: (error: any, user?: KakaoUser, info?: any) => void,
+    done: (error: any, user?: SocialUser, info?: any) => void,
   ) {
     try {
       const { _json } = profile;
-      const kakaoUser = {
+      const kakaoUser: SocialUser = {
         kakaoId: _json.id,
         email: _json.kakao_account.email,
         nickname: _json.properties.nickname,
-        photo: _json.properties.profile_image,
+        profilePictureUrl: _json.properties.profile_image,
       };
       // done(null, user);
       return kakaoUser;
