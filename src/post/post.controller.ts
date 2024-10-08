@@ -49,11 +49,12 @@ export class PostController {
     // return this.userService.getHello();
   }*/
 
+  /*
   @Post()
   @CreatePostsSwagger('게시글 생성 API')
-  createPost() {
-    // return this.userService.getHello();
-  }
+  createPost(@Body() uploadPostDto: UploadPostDto): Promise<Post> {
+    return this.postService.uploadPost(uploadPostDto); 
+  } */
 
   @Patch()
   @PatchPostSwagger('게시글 수정 API')

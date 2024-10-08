@@ -1,0 +1,10 @@
+export class UploadPostDto {
+    postId: number;
+    userId: number;
+    content: string;
+    instagramFeed?: InstagramFeedDto;
+    localPhoto?: PhotoUploadDto;
+    //스타일 태그
+    //옷 정보 태그
+    isRepresentative: boolean;
+}
