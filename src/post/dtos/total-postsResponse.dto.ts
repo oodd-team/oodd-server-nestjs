@@ -1,18 +1,49 @@
-import { PostImageDto } from 'src/post-image/dtos/post-image.dto';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsArray, IsNumber, IsString, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+class PostImageDto {
+  @ApiProperty({ example: 'http://example.com/image.jpg' })
+  @IsString()
+  url: string;
 
-class postDto {
-  postId: number;
+  @ApiProperty({ example: 1 })
+  @IsNumber()
+  orderNum: number;
+}
+
+class PostDto {
+  @ApiProperty({ example: '게시물 내용' })
+  @IsString()
   content: string;
+
+  @ApiProperty({ example: '2024-10-11T09:00:00.000Z' })
   createdAt: Date;
+
+  @ApiProperty({ type: [PostImageDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => PostImageDto)
   postImages: PostImageDto[];
+
+  @ApiProperty({ example: false })
+  isPostLike: boolean;
 }
 
 export class GetPostsResponse {
-  post: postDto[];
+  @ApiProperty({ type: [PostDto] })
+  post: PostDto[];
+
+  @ApiProperty({
+    properties: {
+      nickname: { type: 'string' },
+      profilePictureUrl: { type: 'string' },
+    },
+  })
   user: {
-    userId: number;
     nickname: string;
     profilePictureUrl: string;
   };
-  isMatching: boolean; //매칭 신청 여부
+
+  @ApiProperty({ example: false })
+  isMatching: boolean;
 }
