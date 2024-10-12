@@ -5,9 +5,9 @@ import { SocialUser } from '../auth/dto/auth.dto';
 declare module 'express' {
   interface Request extends Req {
     user: {
-      kakaoId?: number;
-      naverId?: number;
-      userId?: number;
+      id?: number;
+      email?: string;
+      nickname?: string;
     };
     socialUser: SocialUser;
   }

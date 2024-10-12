@@ -12,7 +12,7 @@ export class UserService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly authService: AuthService,
-    private dataSource: DataSource,
+    private readonly dataSource: DataSource,
   ) {}
 
   async findByFields(fields: FindOneOptions<User>) {
@@ -28,6 +28,12 @@ export class UserService {
   async getUserByNaverId(naverId: string): Promise<User | null> {
     return await this.userRepository.findOne({
       where: { naverId: naverId, status: 'activated' },
+    });
+  }
+
+  async getUserById(id: number): Promise<User | null> {
+    return await this.userRepository.findOne({
+      where: { id: id, status: 'activated' },
     });
   }
 
