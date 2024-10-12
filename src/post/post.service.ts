@@ -7,6 +7,8 @@ import { GetMyPostsResponse } from './dtos/user-postsResponse.dto';
 import { UserService } from 'src/user/user.service';
 import { PostImageService } from 'src/post-image/post-image.service';
 import { CreatePostDto } from './dtos/create-post.dto';
+import { PostStyletagService } from '../post-styletag/post-styletag.service';
+
 import {
   DataNotFoundException,
   InternalServerException,
@@ -19,11 +21,13 @@ export class PostService {
     private readonly postRepository: Repository<Post>,
     private readonly userService: UserService,
     private readonly postImageService: PostImageService,
+    private readonly postStyletagService: PostStyletagService,
   ) {}
 
   //게시글 생성
   async createPost(uploadPostDto: CreatePostDto, userId: number) {
-    const { content, postImages, isRepresentative } = uploadPostDto;
+    const { content, postImages, isRepresentative, postStyletags } =
+      uploadPostDto;
 
     const user = await this.userService.findByFields({
       where: { id: userId },
@@ -46,7 +50,16 @@ export class PostService {
       throw InternalServerException('게시글 저장에 실패했습니다.');
     }
 
+    // postImage 저장
     await this.postImageService.savePostImages(postImages, savedPost);
+
+    // styletag 저장
+    if (postStyletags) {
+      await this.postStyletagService.savePostStyletags(
+        savedPost,
+        postStyletags,
+      );
+    }
 
     return savedPost;
   }
