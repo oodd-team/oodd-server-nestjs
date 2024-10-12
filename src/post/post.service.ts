@@ -41,7 +41,7 @@ export class PostService {
 
     let savedPost;
     try {
-      savedPost = this.postRepository.save(post);
+      savedPost = await this.postRepository.save(post);
     } catch (error) {
       throw InternalServerException('게시글 저장에 실패했습니다.');
     }
