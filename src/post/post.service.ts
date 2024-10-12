@@ -14,7 +14,6 @@ import {
   DataNotFoundException,
   InternalServerException,
 } from 'src/common/exception/service.exception';
-import { User } from 'src/common/entities/user.entity';
 
 @Injectable()
 export class PostService {
@@ -66,6 +65,10 @@ export class PostService {
         relations: ['postImages'],
       });
 
+      if (!posts || posts.length === 0) {
+        throw DataNotFoundException('게시글을 찾을 수 없습니다.');
+      }
+
       return {
         post: posts.map((post) => ({
           content: post.content,
@@ -89,6 +92,10 @@ export class PostService {
           where: { user: { id: userId } },
           relations: ['postImages', 'postComments', 'postLikes'],
         });
+
+        if (!userPosts || userPosts.length === 0) {
+          throw DataNotFoundException('게시글을 찾을 수 없습니다.');
+        }
 
         return {
           posts: userPosts.map((post) => ({
@@ -116,6 +123,12 @@ export class PostService {
           where: { user: { id: userId } },
           relations: ['postImages', 'postLikes'],
         });
+
+        if (!otherPosts || otherPosts.length === 0) {
+          throw DataNotFoundException(
+            '해당 사용자의 게시글을 찾을 수 없습니다.',
+          );
+        }
 
         return {
           posts: otherPosts.map((post) => ({
@@ -157,4 +170,4 @@ export class PostService {
   }
 }
 
-// 예외 처리, 페이징
+// 페이징
