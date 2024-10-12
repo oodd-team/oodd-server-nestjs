@@ -33,10 +33,6 @@ export class PostService {
       where: { id: userId },
     });
 
-    if (!user) {
-      throw DataNotFoundException('사용자 정보를 찾을 수 없습니다.');
-    }
-
     const post = this.postRepository.create({
       user,
       content,
@@ -60,7 +56,6 @@ export class PostService {
     userId?: number,
     currentUserId?: number,
   ): Promise<GetPostsResponse | GetMyPostsResponse | GetOtherPostsResponse> {
-
     const currentUser = await this.userService.findByFields({
       where: { id: currentUserId },
     });
@@ -130,11 +125,6 @@ export class PostService {
               ?.url,
             isRepresentative: post.isRepresentative,
             likeCount: post.postLikes.length,
-            comments: post.postComments.map((comment) => ({
-              content: comment.content,
-              createdAt: comment.createdAt,
-              user: comment.user,
-            })),
             isPostLike: this.checkIsPostLiked(post, currentUserId),
           })),
           totalPosts: otherPosts.length,
