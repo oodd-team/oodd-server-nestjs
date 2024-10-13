@@ -7,6 +7,7 @@ import {
   Param,
   Body,
   Req,
+  Delete,
 } from '@nestjs/common';
 import { PostCommentService } from './post-comment.service';
 import {
@@ -51,9 +52,15 @@ export class PostCommentController {
     // return this.userService.getHello();
   }
 
-  @Patch()
+  @Delete(':commentId')
+  @UseGuards(KakaoAuthGuard)
   @DeletePostCommentSwagger('게시글 댓글 삭제 API')
-  deletePostComment() {
-    // return this.userService.getHello();
+  async deletePostComment(
+    @Param('commentId') commentId: number,
+    @Req() req: Request,
+  ): Promise<void> {
+    const userId = req.user.userId;
+
+    await this.postCommentService.deletePostComment(commentId, userId);
   }
 }
