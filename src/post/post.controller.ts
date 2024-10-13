@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   InternalServerErrorException,
+  Param,
   Patch,
   Post,
   Query,
@@ -27,6 +28,7 @@ import { Request } from 'express';
 import { BaseResponse } from 'src/common/response/dto';
 import { AuthService } from 'src/auth/auth.service';
 import { KakaoAuthGuard } from 'src/auth/guards/kakao.auth.guard';
+import { PatchPostDto } from './dtos/patch-Post.dto';
 
 @Controller('post')
 @ApiTags('[서비스] 게시글')
@@ -91,10 +93,23 @@ export class PostController {
     return new BaseResponse(true, 'SUCCESS', post);
   }
 
-  @Patch()
+  @Patch(':postId')
+  @UseGuards(KakaoAuthGuard)
   @PatchPostSwagger('게시글 수정 API')
-  patchPost() {
-    // return this.userService.getHello();
+  async patchPost(
+    @Param('postId') postId: number,
+    @Body() patchPostDto: PatchPostDto,
+    @Req() req: Request,
+  ): Promise<BaseResponse<any>> {
+    const userId = req.user.userId;
+
+    const updatedPost = await this.postService.patchPost(
+      postId,
+      patchPostDto,
+      userId,
+    );
+
+    return new BaseResponse(true, 'SUCCESS', updatedPost);
   }
 
   @Patch()

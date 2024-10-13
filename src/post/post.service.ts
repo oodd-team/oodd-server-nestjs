@@ -13,6 +13,7 @@ import {
   DataNotFoundException,
   InternalServerException,
 } from 'src/common/exception/service.exception';
+import { PatchPostDto } from './dtos/patch-Post.dto';
 
 @Injectable()
 export class PostService {
@@ -160,4 +161,44 @@ export class PostService {
     return userLikeCount ? Number(userLikeCount) : 0;
   }
     */
+
+
+  // 게시글 수정
+  async patchPost(postId: number, patchPostDto: PatchPostDto, userId: number) {
+    const { content, postImages, isRepresentative, postStyletags } = patchPostDto;
+
+    const post = await this.postRepository.findOne({
+      where: { id: postId, user: { id: userId } },
+    });
+
+    if (!post) {
+      throw DataNotFoundException('게시글을 찾을 수 없습니다.');
+    }
+
+    if (content !== undefined) {
+      post.content = content;
+    }
+    if (isRepresentative !== undefined) {
+      post.isRepresentative = isRepresentative;
+    }
+
+    let updatedPost;
+    try {
+      updatedPost = await this.postRepository.save(post);
+    } catch (error) {
+      throw InternalServerException('게시글 수정에 실패했습니다.');
+    }
+
+    // postImage 업데이트
+    if (postImages) {
+      await this.postImageService.savePostImages(postImages, updatedPost);
+    }
+
+    // styletag 업데이트
+    if (postStyletags) {
+      await this.postStyletagService.savePostStyletags(updatedPost, postStyletags);
+    }
+
+    return updatedPost;
+  }
 }
