@@ -1,22 +1,28 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsNumber, IsString, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsNumber,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 class PostImageDto {
-  @ApiProperty({ example: 'http://example.com/image.jpg' })
+  @ApiProperty()
   @IsString()
   url: string;
 
-  @ApiProperty({ example: 1 })
+  @ApiProperty()
   @IsNumber()
   orderNum: number;
 }
 
 class PostDto {
-  @ApiProperty({ example: '게시물 내용' })
+  @ApiProperty()
   @IsString()
   content: string;
 
-  @ApiProperty({ example: '2024-10-11T09:00:00.000Z' })
+  @ApiProperty()
   createdAt: Date;
 
   @ApiProperty({ type: [PostImageDto] })
@@ -25,7 +31,7 @@ class PostDto {
   @Type(() => PostImageDto)
   postImages: PostImageDto[];
 
-  @ApiProperty({ example: false })
+  @ApiProperty()
   isPostLike: boolean;
 
   @ApiProperty({
@@ -38,12 +44,16 @@ class PostDto {
     nickname: string;
     profilePictureUrl: string;
   };
+
+  @ApiProperty()
+  @IsBoolean()
+  isPostWriter: boolean; // 현재 사용자가 게시글 작성자인지 여부
 }
 
 export class GetPostsResponse {
   @ApiProperty({ type: [PostDto] })
   post: PostDto[];
 
-  @ApiProperty({ example: false })
+  @ApiProperty()
   isMatching: boolean;
 }
