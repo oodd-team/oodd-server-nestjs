@@ -47,7 +47,7 @@ export class PostCommentController {
     return new BaseResponse(true, '댓글 작성 성공', postComment);
   }
 
-  @Get(':postId/comments')
+  @Get(':postId')
   @UseGuards(KakaoAuthGuard)
   @GetPostCommentsSwagger('게시글 댓글 리스트 조회 API')
   async getPostComments(
