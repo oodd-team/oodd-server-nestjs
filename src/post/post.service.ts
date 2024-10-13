@@ -14,6 +14,7 @@ import {
   InternalServerException,
 } from 'src/common/exception/service.exception';
 import { PatchPostDto } from './dtos/patch-Post.dto';
+import { GetPostResponse } from './dtos/get-post.dto';
 
 @Injectable()
 export class PostService {
@@ -162,10 +163,10 @@ export class PostService {
   }
     */
 
-
   // 게시글 수정
   async patchPost(postId: number, patchPostDto: PatchPostDto, userId: number) {
-    const { content, postImages, isRepresentative, postStyletags } = patchPostDto;
+    const { content, postImages, isRepresentative, postStyletags } =
+      patchPostDto;
 
     const post = await this.postRepository.findOne({
       where: { id: postId, user: { id: userId } },
@@ -196,9 +197,47 @@ export class PostService {
 
     // styletag 업데이트
     if (postStyletags) {
-      await this.postStyletagService.savePostStyletags(updatedPost, postStyletags);
+      await this.postStyletagService.savePostStyletags(
+        updatedPost,
+        postStyletags,
+      );
     }
 
     return updatedPost;
+  }
+
+  // 게시글 상세 조회
+  async getPost(
+    postId: number,
+    currentUserId?: number,
+  ): Promise<GetPostResponse> {
+    const post = await this.postRepository.findOne({
+      where: { id: postId },
+      relations: ['postImages'],
+    });
+
+    if (!post) {
+      throw DataNotFoundException('게시글을 찾을 수 없습니다.');
+    }
+
+    const currentUser = await this.userService.findByFields({
+      where: { id: currentUserId },
+    });
+
+    return {
+      post: {
+        content: post.content,
+        createdAt: post.createdAt,
+        postImages: post.postImages.map((image) => ({
+          url: image.url,
+          orderNum: image.orderNum,
+        })),
+        isPostLike: this.checkIsPostLiked(post, currentUserId),
+      },
+      user: {
+        nickname: post.user.nickname,
+        profilePictureUrl: post.user.profilePictureUrl,
+      },
+    };
   }
 }

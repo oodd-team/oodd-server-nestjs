@@ -29,6 +29,7 @@ import { BaseResponse } from 'src/common/response/dto';
 import { AuthService } from 'src/auth/auth.service';
 import { KakaoAuthGuard } from 'src/auth/guards/kakao.auth.guard';
 import { PatchPostDto } from './dtos/patch-Post.dto';
+import { GetPostResponse } from './dtos/get-post.dto';
 
 @Controller('post')
 @ApiTags('[서비스] 게시글')
@@ -73,10 +74,18 @@ export class PostController {
   }
 */
 
-  @Get()
+  @Get(':postId')
   @GetPostSwagger('게시글 상세 조회 API')
-  getPost() {
-    // return this.userService.getHello();
+  @UseGuards(KakaoAuthGuard)
+  async getPost(
+    @Param('postId') postId: number,
+    @Req() req: Request,
+  ): Promise<BaseResponse<GetPostResponse>> {
+    const currentUserId = req.user.userId;
+
+    const postResponse = await this.postService.getPost(postId, currentUserId);
+
+    return new BaseResponse(true, 'SUCCESS', postResponse);
   }
 
   @Post()
