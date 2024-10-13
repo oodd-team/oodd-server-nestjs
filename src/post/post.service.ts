@@ -27,42 +27,6 @@ export class PostService {
     private readonly postStyletagService: PostStyletagService,
   ) {}
 
-  //게시글 생성
-  async createPost(uploadPostDto: CreatePostDto, userId: number) {
-    const { content, postImages, isRepresentative, postStyletags } =
-      uploadPostDto;
-
-    const user = await this.userService.findByFields({
-      where: { id: userId },
-    });
-
-    const post = this.postRepository.create({
-      user,
-      content,
-      isRepresentative,
-    });
-
-    let savedPost;
-    try {
-      savedPost = await this.postRepository.save(post);
-    } catch (error) {
-      throw InternalServerException('게시글 저장에 실패했습니다.');
-    }
-
-    // postImage 저장
-    await this.postImageService.savePostImages(postImages, savedPost);
-
-    // styletag 저장
-    if (postStyletags) {
-      await this.postStyletagService.savePostStyletags(
-        savedPost,
-        postStyletags,
-      );
-    }
-
-    return savedPost;
-  }
-
   //게시글 리스트 조회
   async getPosts(
     userId?: number,
@@ -146,6 +110,42 @@ export class PostService {
       totalPosts: posts.length,
       totalLikes: this.calculateTotalLikes(posts),
     };
+  }
+
+  //게시글 생성
+  async createPost(uploadPostDto: CreatePostDto, userId: number) {
+    const { content, postImages, isRepresentative, postStyletags } =
+      uploadPostDto;
+
+    const user = await this.userService.findByFields({
+      where: { id: userId },
+    });
+
+    const post = this.postRepository.create({
+      user,
+      content,
+      isRepresentative,
+    });
+
+    let savedPost;
+    try {
+      savedPost = await this.postRepository.save(post);
+    } catch (error) {
+      throw InternalServerException('게시글 저장에 실패했습니다.');
+    }
+
+    // postImage 저장
+    await this.postImageService.savePostImages(postImages, savedPost);
+
+    // styletag 저장
+    if (postStyletags) {
+      await this.postStyletagService.savePostStyletags(
+        savedPost,
+        postStyletags,
+      );
+    }
+
+    return savedPost;
   }
 
   // 총 댓글 수
