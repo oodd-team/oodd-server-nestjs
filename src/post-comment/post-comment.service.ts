@@ -18,6 +18,7 @@ export class PostCommentService {
     private readonly userRepository: Repository<User>,
   ) {}
 
+  // 댓글 생성
   async createPostComment(
     postId: number,
     currentUserId: number,
@@ -28,7 +29,9 @@ export class PostCommentService {
       throw DataNotFoundException('게시글을 찾을 수 없습니다.');
     }
 
-    const user = await this.userRepository.findOne({ where: { id: currentUserId } });
+    const user = await this.userRepository.findOne({
+      where: { id: currentUserId },
+    });
 
     const postComment = this.postCommentRepository.create({
       content: createCommentDto.content,
