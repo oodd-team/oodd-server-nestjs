@@ -296,6 +296,10 @@ export function PatchIsRepresentativeSwagger(text: string) {
             model: BaseResponse,
             exampleTitle: '성공',
             exampleDescription: '게시글을 대표 OOTD로 설정했습니다.',
+            overwriteValue: {
+              isSuccess: true,
+              data: null,
+            },
           },
         ],
       },
