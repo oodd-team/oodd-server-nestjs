@@ -149,28 +149,6 @@ export class PostService {
     return savedPost;
   }
 
-  // 총 댓글 수
-  private calculateTotalComments(posts: Post[]): number {
-    return posts.reduce((acc, post) => acc + post.postComments.length, 0);
-  }
-
-  // 총 좋아요 수
-  private calculateTotalLikes(posts: Post[]): number {
-    return posts.reduce((acc, post) => acc + post.postLikes.length, 0);
-  }
-
-  // 유저가 게시물에 좋아요를 눌렀는지 확인
-  private checkIsPostLiked(post: Post, currentUserId: number): boolean {
-    return post.postLikes.some((like) => like.user.id === currentUserId);
-  }
-
-  // 유저가 게시물에 댓글을 달았는지 확인
-  private checkIsPostCommented(post: Post, currentUserId: number): boolean {
-    return post.postComments.some(
-      (comment) => comment.user.id === currentUserId,
-    );
-  }
-
   // 게시글 수정
   async patchPost(postId: number, patchPostDto: PatchPostDto, userId: number) {
     const { content, postImages, isRepresentative, postStyletags } =
@@ -213,6 +191,27 @@ export class PostService {
 
     return updatedPost;
   }
-}
 
+  // 총 댓글 수
+  private calculateTotalComments(posts: Post[]): number {
+    return posts.reduce((acc, post) => acc + post.postComments.length, 0);
+  }
+
+  // 총 좋아요 수
+  private calculateTotalLikes(posts: Post[]): number {
+    return posts.reduce((acc, post) => acc + post.postLikes.length, 0);
+  }
+
+  // 유저가 게시물에 좋아요를 눌렀는지 확인
+  private checkIsPostLiked(post: Post, currentUserId: number): boolean {
+    return post.postLikes.some((like) => like.user.id === currentUserId);
+  }
+
+  // 유저가 게시물에 댓글을 달았는지 확인
+  private checkIsPostCommented(post: Post, currentUserId: number): boolean {
+    return post.postComments.some(
+      (comment) => comment.user.id === currentUserId,
+    );
+  }
+}
 // 페이징
