@@ -9,6 +9,7 @@ import {
   DataNotFoundException,
   UnauthorizedException,
 } from 'src/common/exception/service.exception';
+import { GetCommentsDto } from './dtos/get-comment.dto';
 
 @Injectable()
 export class PostCommentService {
@@ -64,5 +65,33 @@ export class PostCommentService {
     }
 
     await this.postCommentRepository.remove(comment);
+  }
+
+  // 댓글 조회
+  async getPostComments(
+    postId: number,
+    currentUserId: number,
+  ): Promise<GetCommentsDto> {
+    const comments = await this.postCommentRepository.find({
+      where: { post: { id: postId } },
+      relations: ['user'],
+    });
+
+    if (!comments || comments.length === 0) {
+      throw DataNotFoundException('댓글이 없습니다.');
+    }
+
+    return {
+      post: comments.map((comment) => ({
+        content: comment.content,
+        createdAt: comment.createdAt,
+        user: {
+          nickname: comment.user.nickname,
+          profilePictureUrl: comment.user.profilePictureUrl,
+        },
+        isCommentWriter: comment.user.id === currentUserId, //사용자가 댓글 작성자인지 확인
+      })),
+      totalComments: comments.length,
+    };
   }
 }

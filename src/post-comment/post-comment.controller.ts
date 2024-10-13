@@ -21,6 +21,7 @@ import { CreateCommentDto } from './dtos/create-comment.dto';
 import { PostComment } from 'src/common/entities/post-comment.entity';
 import { Request } from 'express';
 import { BaseResponse } from 'src/common/response/dto';
+import { GetCommentsDto } from './dtos/get-comment.dto';
 
 @Controller('post-comment')
 @ApiTags('[서비스] 게시글 댓글')
@@ -46,10 +47,21 @@ export class PostCommentController {
     return new BaseResponse(true, '댓글 작성 성공', postComment);
   }
 
-  @Get()
+  @Get(':postId/comments')
+  @UseGuards(KakaoAuthGuard)
   @GetPostCommentsSwagger('게시글 댓글 리스트 조회 API')
-  getPostCommenst() {
-    // return this.userService.getHello();
+  async getPostComments(
+    @Param('postId') postId: number,
+    @Req() req: Request,
+  ): Promise<BaseResponse<GetCommentsDto>> {
+    const userId = req.user.userId;
+
+    const postComments = await this.postCommentService.getPostComments(
+      postId,
+      userId,
+    );
+
+    return new BaseResponse(true, '댓글 조회 성공', postComments);
   }
 
   @Delete(':commentId')
