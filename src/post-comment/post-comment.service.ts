@@ -7,7 +7,7 @@ import { Repository } from 'typeorm';
 import { CreateCommentDto } from './dtos/create-comment.dto';
 import {
   DataNotFoundException,
-  UnauthorizedException,
+  ForbiddenException,
 } from 'src/common/exception/service.exception';
 import { GetCommentsDto } from './dtos/get-comment.dto';
 
@@ -61,7 +61,7 @@ export class PostCommentService {
     }
 
     if (comment.user.id !== currentUserId) {
-      throw UnauthorizedException('댓글을 삭제할 권한이 없습니다.');
+      throw ForbiddenException('댓글을 삭제할 권한이 없습니다.');
     }
 
     await this.postCommentRepository.remove(comment);
