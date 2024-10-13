@@ -1,4 +1,13 @@
-import { Controller, Post, Get, Patch } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Patch,
+  UseGuards,
+  Param,
+  Body,
+  Req,
+} from '@nestjs/common';
 import { PostCommentService } from './post-comment.service';
 import {
   CreatePostCommentSwagger,
@@ -6,6 +15,11 @@ import {
   GetPostCommentsSwagger,
 } from './post-comment.swagger';
 import { ApiTags } from '@nestjs/swagger';
+import { KakaoAuthGuard } from 'src/auth/guards/kakao.auth.guard';
+import { CreateCommentDto } from './dtos/create-comment.dto';
+import { PostComment } from 'src/common/entities/post-comment.entity';
+import { Request } from 'express';
+import { BaseResponse } from 'src/common/response/dto';
 
 @Controller('post-comment')
 @ApiTags('[서비스] 게시글 댓글')
@@ -13,9 +27,22 @@ export class PostCommentController {
   constructor(private readonly postCommentService: PostCommentService) {}
 
   @Post()
+  @UseGuards(KakaoAuthGuard)
   @CreatePostCommentSwagger('게시글 댓글 생성 API')
-  createPostComment() {
-    // return this.userService.getHello();
+  async createPostComment(
+    @Param('postId') postId: number,
+    @Body() createCommentDto: CreateCommentDto,
+    @Req() req: Request,
+  ): Promise<BaseResponse<PostComment>> {
+    const userId = req.user.userId;
+
+    const postComment = await this.postCommentService.createPostComment(
+      postId,
+      userId,
+      createCommentDto,
+    );
+
+    return new BaseResponse(true, '댓글 작성 성공', postComment);
   }
 
   @Get()

@@ -4,9 +4,9 @@
   "settings": {
     "width": 5000,
     "height": 5000,
-    "scrollTop": -2148.1966,
-    "scrollLeft": -2009.8505,
-    "zoomLevel": 0.25,
+    "scrollTop": -549.9732,
+    "scrollLeft": -592.7664,
+    "zoomLevel": 1,
     "show": 511,
     "database": 4,
     "databaseName": "oodd_dev",
@@ -94,7 +94,7 @@
           "color": ""
         },
         "meta": {
-          "updateAt": 1728242804614,
+          "updateAt": 1728853886556,
           "createAt": 1725423390543
         }
       },
@@ -581,7 +581,7 @@
           "U9yVRGWRzzc4ylH32boYr"
         ],
         "ui": {
-          "x": 722.5556,
+          "x": 714.5556,
           "y": 1390.4444,
           "zIndex": 2,
           "widthName": 60,
@@ -589,7 +589,7 @@
           "color": ""
         },
         "meta": {
-          "updateAt": 1726549617679,
+          "updateAt": 1728853885578,
           "createAt": 1725423390548
         }
       },
