@@ -207,10 +207,6 @@ export class PostService {
       throw DataNotFoundException('게시글을 찾을 수 없습니다.');
     }
 
-    const currentUser = await this.userService.findByFields({
-      where: { id: currentUserId },
-    });
-
     return {
       post: {
         content: post.content,
