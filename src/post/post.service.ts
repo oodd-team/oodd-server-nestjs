@@ -254,10 +254,10 @@ export class PostService {
           orderNum: image.orderNum,
         })),
         isPostLike: this.checkIsPostLiked(post, currentUserId),
-      },
-      user: {
-        nickname: post.user.nickname,
-        profilePictureUrl: post.user.profilePictureUrl,
+        user: {
+          nickname: post.user.nickname,
+          profilePictureUrl: post.user.profilePictureUrl,
+        },
       },
     };
   }

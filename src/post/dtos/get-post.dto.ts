@@ -28,11 +28,6 @@ class PostDetailDto {
 
   @ApiProperty({ example: false })
   isPostLike: boolean;
-}
-
-export class GetPostResponse {
-  @ApiProperty({ type: PostDetailDto })
-  post: PostDetailDto;
 
   @ApiProperty({
     properties: {
@@ -44,4 +39,9 @@ export class GetPostResponse {
     nickname: string;
     profilePictureUrl: string;
   };
+}
+
+export class GetPostResponse {
+  @ApiProperty({ type: PostDetailDto })
+  post: PostDetailDto;
 }
