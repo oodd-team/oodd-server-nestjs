@@ -12,7 +12,10 @@ import {
 } from '@nestjs/common';
 import { PostService } from './post.service';
 import { GetPostsResponse } from './dtos/total-postsResponse.dto';
-import { GetMyPostsResponse } from './dtos/user-postsResponse.dto';
+import {
+  GetMyPostsResponse,
+  GetOtherPostsResponse,
+} from './dtos/user-postsResponse.dto';
 import {
   CreatePostsSwagger,
   GetPostsSwagger,
@@ -20,7 +23,7 @@ import {
   PatchIsRepresentativeSwagger,
   PatchPostSwagger,
 } from './post.swagger';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { CreatePostDto } from './dtos/create-post.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { JwtPayload, SocialUser } from 'src/auth/dto/auth.dto';
@@ -28,6 +31,7 @@ import { Request } from 'express';
 import { BaseResponse } from 'src/common/response/dto';
 import { AuthService } from 'src/auth/auth.service';
 import { KakaoAuthGuard } from 'src/auth/guards/kakao.auth.guard';
+import { User } from 'src/common/entities/user.entity';
 import { PatchPostDto } from './dtos/patch-Post.dto';
 
 @Controller('post')
@@ -35,43 +39,26 @@ import { PatchPostDto } from './dtos/patch-Post.dto';
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
-  /*
-  @Get()
+  @Get(':userId?')
   @GetPostsSwagger('게시글 리스트 조회 API')
-  @ApiQuery({
-    name: 'userId',
-    required: false,
-    type: Number,
-    description: '사용자 ID (선택적)',
-  })
+  @ApiParam({ name: 'userId', required: false, description: 'User ID' })
+  @UseGuards(KakaoAuthGuard)
   async getPosts(
-    @Query('userId') userId?: number,
-  ): Promise<{
-    posts: (GetPostsResponse | GetMyPostsResponse)[];
-    totalPostCount: number;
-  }> {
-    try {
-      const posts = await this.postService.findAll(userId);
-      const totalPostCount = posts.length;
+    @Req() req: Request,
+    @Param('userId') userId?: number,
+  ): Promise<
+    BaseResponse<GetPostsResponse | GetMyPostsResponse | GetOtherPostsResponse>
+  > {
+    const currentUserId = req.user.userId;
 
-      //user의 총 post 수, 총 like 수
-      let userLikeCount = 0;
-      let userPostCount = 0;
-      if (userId) {
-        userLikeCount = await this.postService.UserLikeCount(userId);
-        userPostCount = await this.postService.UserPostCount(userId);
-      }
+    const postsResponse = await this.postService.getPosts(
+      userId,
+      currentUserId,
+    );
 
-      return {
-        posts,
-        totalPostCount,
-        ...(userId && { userLikeCount, userPostCount }),
-      };
-    } catch (error) {
-      throw new InternalServerErrorException('서버에서 오류가 발생했습니다.');
-    }
+    return new BaseResponse(true, 'SUCCESS', postsResponse);
   }
-*/
+
   /*
   @Get()
   @GetPostSwagger('게시글 상세 조회 API')
