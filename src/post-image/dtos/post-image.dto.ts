@@ -1,4 +1,4 @@
 export class PostImageDto {
-  photoFiles: string[];
+  url: string[];
   orderNum: number;
 }
