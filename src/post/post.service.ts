@@ -62,7 +62,7 @@ export class PostService {
     //전체 게시글 조회
     if (!userId) {
       const posts = await this.postRepository.find({
-        relations: ['postImages'],
+        relations: ['postImages', 'user'],
       });
 
       if (!posts || posts.length === 0) {
@@ -78,11 +78,11 @@ export class PostService {
             orderNum: image.orderNum,
           })),
           isPostLike: this.checkIsPostLiked(post, currentUserId),
+          user: {
+            nickname: post.user.nickname,
+            profilePictureUrl: post.user.profilePictureUrl,
+          },
         })),
-        user: {
-          nickname: currentUser.nickname,
-          profilePictureUrl: currentUser.profilePictureUrl,
-        },
         isMatching: false,
       };
     } else {

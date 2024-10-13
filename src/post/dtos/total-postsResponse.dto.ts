@@ -27,11 +27,6 @@ class PostDto {
 
   @ApiProperty({ example: false })
   isPostLike: boolean;
-}
-
-export class GetPostsResponse {
-  @ApiProperty({ type: [PostDto] })
-  post: PostDto[];
 
   @ApiProperty({
     properties: {
@@ -43,6 +38,11 @@ export class GetPostsResponse {
     nickname: string;
     profilePictureUrl: string;
   };
+}
+
+export class GetPostsResponse {
+  @ApiProperty({ type: [PostDto] })
+  post: PostDto[];
 
   @ApiProperty({ example: false })
   isMatching: boolean;
