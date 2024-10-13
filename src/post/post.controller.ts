@@ -23,15 +23,12 @@ import {
   PatchIsRepresentativeSwagger,
   PatchPostSwagger,
 } from './post.swagger';
-import { ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiParam, ApiTags } from '@nestjs/swagger';
 import { CreatePostDto } from './dtos/create-post.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { JwtPayload, SocialUser } from 'src/auth/dto/auth.dto';
 import { Request } from 'express';
 import { BaseResponse } from 'src/common/response/dto';
-import { AuthService } from 'src/auth/auth.service';
 import { KakaoAuthGuard } from 'src/auth/guards/kakao.auth.guard';
-import { User } from 'src/common/entities/user.entity';
 import { PatchPostDto } from './dtos/patch-Post.dto';
 import { GetPostResponse } from './dtos/get-post.dto';
 
