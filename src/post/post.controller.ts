@@ -72,12 +72,12 @@ export class PostController {
     }
   }
 */
-  /*
+
   @Get()
   @GetPostSwagger('게시글 상세 조회 API')
   getPost() {
     // return this.userService.getHello();
-  }*/
+  }
 
   @Post()
   @UseGuards(KakaoAuthGuard)
