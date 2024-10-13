@@ -107,9 +107,20 @@ export class PostController {
     return new BaseResponse(true, 'SUCCESS', updatedPost);
   }
 
-  @Patch()
+  @Patch(':postId/is-representative')
+  @UseGuards(KakaoAuthGuard)
   @PatchIsRepresentativeSwagger('대표 게시글 지정 API')
-  patchIsRepresentative() {
-    // return this.userService.getHello();
+  async patchIsRepresentative(
+    @Param('postId') postId: number,
+    @Req() req: Request,
+  ): Promise<BaseResponse<any>> {
+    const userId = req.user.userId;
+
+    const updatedPost = await this.postService.patchIsRepresentative(
+      postId,
+      userId,
+    );
+
+    return new BaseResponse(true, 'SUCCESS', updatedPost);
   }
 }

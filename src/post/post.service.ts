@@ -261,6 +261,28 @@ export class PostService {
       },
     };
   }
+
+  //대표 게시글 지정
+  async patchIsRepresentative(postId: number, currentUserId: number) {
+    const post = await this.postRepository.findOne({
+      where: { id: postId, user: { id: currentUserId } },
+    });
+
+    if (!post) {
+      throw DataNotFoundException('게시글을 찾을 수 없습니다.');
+    }
+
+    post.isRepresentative = true;
+
+    let updatedPost;
+    try {
+      updatedPost = await this.postRepository.save(post);
+    } catch (error) {
+      throw InternalServerException('게시글 수정에 실패했습니다.');
+    }
+
+    return updatedPost;
+  }
 }
 
 // 페이징
