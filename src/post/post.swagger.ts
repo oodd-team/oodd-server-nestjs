@@ -97,7 +97,7 @@ export function GetPostSwagger(text: string) {
           {
             model: GetPostResponse,
             exampleTitle: '성공',
-            exampleDescription: '성공했을 때 값',
+            exampleDescription: '게시글 조회 성공',
           },
         ],
         baseResponseDto: BaseResponse,
