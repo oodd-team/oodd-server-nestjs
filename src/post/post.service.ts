@@ -220,6 +220,7 @@ export class PostService {
           nickname: post.user.nickname,
           profilePictureUrl: post.user.profilePictureUrl,
         },
+        isPostWriter: post.user.id === currentUserId,
       },
     };
   }

@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsNumber, IsString, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsNumber,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 class PostImageDto {
@@ -39,6 +45,10 @@ class PostDetailDto {
     nickname: string;
     profilePictureUrl: string;
   };
+
+  @ApiProperty()
+  @IsBoolean()
+  isPostWriter: boolean;
 }
 
 export class GetPostResponse {
