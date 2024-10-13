@@ -24,7 +24,6 @@ import {
   PatchPostSwagger,
 } from './post.swagger';
 import { ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { CreatePostDto } from './dtos/create-post.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { JwtPayload, SocialUser } from 'src/auth/dto/auth.dto';
 import { Request } from 'express';
@@ -58,25 +57,16 @@ export class PostController {
     return new BaseResponse(true, 'SUCCESS', postsResponse);
   }
 
-  /*
   @Get()
   @GetPostSwagger('게시글 상세 조회 API')
   getPost() {
     // return this.userService.getHello();
-  }*/
+  }
 
   @Post()
-  @UseGuards(KakaoAuthGuard)
   @CreatePostsSwagger('게시글 생성 API')
-  async createPost(
-    @Body() createPostDto: CreatePostDto,
-    @Req() req: Request,
-  ): Promise<BaseResponse<any>> {
-    const userId = req.user.userId;
-
-    const post = await this.postService.createPost(createPostDto, userId);
-
-    return new BaseResponse(true, 'SUCCESS', post);
+  createPost() {
+    // return this.userService.getHello();
   }
 
   @Patch()

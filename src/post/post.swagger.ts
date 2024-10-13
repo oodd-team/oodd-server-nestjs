@@ -1,7 +1,6 @@
 import { ApiOperation } from '@nestjs/swagger';
 import { BaseSwaggerDecorator } from 'nestjs-swagger-decorator';
 import { BaseResponse } from 'src/common/response/dto';
-import { CreatePostDto } from './dtos/create-post.dto';
 import { GetPostsResponse } from './dtos/total-postsResponse.dto';
 import {
   GetMyPostsResponse,
@@ -90,69 +89,8 @@ export function GetPostSwagger(apiSummary: string) {
 }
 
 // 게시글 생성하기 API Swagger
-export function CreatePostsSwagger(text: string) {
-  return BaseSwaggerDecorator(
-    { summary: text },
-    [
-      {
-        statusCode: 200,
-        responseOptions: [
-          {
-            model: CreatePostDto,
-            exampleTitle: '성공',
-            exampleDescription: '성공했을 때 값',
-          },
-        ],
-        baseResponseDto: BaseResponse,
-      },
-      {
-        statusCode: 400,
-        responseOptions: [
-          {
-            model: BaseResponse,
-            exampleTitle: '실패',
-            exampleDescription: '잘못된 요청입니다.',
-            overwriteValue: {
-              isSuccess: false,
-              code: 'BAD_REQUEST',
-              data: null,
-            },
-          },
-        ],
-      },
-      {
-        statusCode: 401,
-        responseOptions: [
-          {
-            model: BaseResponse,
-            exampleTitle: '실패',
-            exampleDescription: '사용자 인증 실패',
-            overwriteValue: {
-              isSuccess: false,
-              code: 'UNAUTHORIZED',
-              data: null,
-            },
-          },
-        ],
-      },
-      {
-        statusCode: 500,
-        responseOptions: [
-          {
-            model: BaseResponse,
-            exampleTitle: '실패',
-            exampleDescription: '서버에서 오류 발생',
-            overwriteValue: {
-              isSuccess: false,
-              code: 'INTERNAL_SERVER_ERROR',
-              data: null,
-            },
-          },
-        ],
-      },
-    ],
-    [],
-  );
+export function CreatePostsSwagger(apiSummary: string) {
+  return ApiOperation({ summary: apiSummary });
 }
 
 // 게시글 수정 API Swagger
