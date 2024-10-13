@@ -3,7 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Post } from '../common/entities/post.entity';
 import { GetPostsResponse } from './dtos/total-postsResponse.dto';
-import { GetMyPostsResponse } from './dtos/user-postsResponse.dto';
+import {
+  GetMyPostsResponse,
+  GetOtherPostsResponse,
+} from './dtos/user-postsResponse.dto';
 import { UserService } from 'src/user/user.service';
 import { PostImageService } from 'src/post-image/post-image.service';
 import { CreatePostDto } from './dtos/create-post.dto';
@@ -33,10 +36,6 @@ export class PostService {
       where: { id: userId },
     });
 
-    if (!user) {
-      throw DataNotFoundException('사용자 정보를 찾을 수 없습니다.');
-    }
-
     const post = this.postRepository.create({
       user,
       content,
@@ -64,100 +63,124 @@ export class PostService {
     return savedPost;
   }
 
-  /*
-  async findAll(userId?: number): Promise<(GetPostsResponse | GetMyPostsResponse)[]> {
-    if (userId) {
-      const posts = await this.postRepository
-        .createQueryBuilder('post')
-        .leftJoin('post.user', 'user')
-        .leftJoinAndSelect('post.postImages', 'postImages')
-        .where('user.id = :userId', { userId })
-        .orderBy('post.createdAt', 'DESC')
-        .select([
-          'post.id',
-          'post.isRepresentative',
-          'post.createdAt',
-          'post.updatedAt',
-          'post.deletedAt',
-          'postImages.id',
-          'postImages.url',
-          'postImages.orderNum',
-        ])
-        .getMany();
+  //게시글 리스트 조회
+  async getPosts(
+    userId?: number,
+    currentUserId?: number,
+  ): Promise<GetPostsResponse | GetMyPostsResponse | GetOtherPostsResponse> {
+    const currentUser = await this.userService.findByFields({
+      where: { id: currentUserId },
+    });
 
-      return posts.map((post) => ({
-        id: post.id,
-        isRepresentative: post.isRepresentative,
-        createdAt: post.createdAt,
-        updatedAt: post.updatedAt,
-        deletedAt: post.deletedAt,
-        images: post.postImages.map((image) => ({
-          id: image.id,
-          url: image.url,
-          orderNum: image.orderNum,
+    //전체 게시글 조회
+    if (!userId) {
+      const posts = await this.postRepository.find({
+        relations: ['postImages', 'user'],
+      });
+
+      if (!posts || posts.length === 0) {
+        throw DataNotFoundException('게시글을 찾을 수 없습니다.');
+      }
+
+      return {
+        post: posts.map((post) => ({
+          content: post.content,
+          createdAt: post.createdAt,
+          postImages: post.postImages.map((image) => ({
+            url: image.url,
+            orderNum: image.orderNum,
+          })),
+          isPostLike: this.checkIsPostLiked(post, currentUserId),
+          user: {
+            nickname: post.user.nickname,
+            profilePictureUrl: post.user.profilePictureUrl,
+          },
         })),
-        likeCount: post.likeCount,
-        commentCount: post.commentCount,
-      }));
+        isMatching: false,
+      };
+    } else {
+      //내 게시글 조회
+      if (userId === currentUserId) {
+        const userPosts = await this.postRepository.find({
+          where: { user: { id: userId } },
+          relations: ['postImages', 'postComments', 'postLikes'],
+        });
+
+        if (!userPosts || userPosts.length === 0) {
+          throw DataNotFoundException('게시글을 찾을 수 없습니다.');
+        }
+
+        return {
+          posts: userPosts.map((post) => ({
+            content: post.content,
+            createdAt: post.createdAt,
+            imageUrl: post.postImages.find((image) => image.orderNum === 1)
+              ?.url,
+            isRepresentative: post.isRepresentative,
+            likeCount: post.postLikes.length,
+            comments: post.postComments.map((comment) => ({
+              content: comment.content,
+              createdAt: comment.createdAt,
+              user: comment.user,
+            })),
+            isPostLike: this.checkIsPostLiked(post, currentUserId),
+            isPostComment: this.checkIsPostCommented(post, currentUserId),
+          })),
+          totalComments: this.calculateTotalComments(userPosts),
+          totalPosts: userPosts.length,
+          totalLikes: this.calculateTotalLikes(userPosts),
+        };
+      } else {
+        // 다른 user 게시글 조회
+        const otherPosts = await this.postRepository.find({
+          where: { user: { id: userId } },
+          relations: ['postImages', 'postLikes'],
+        });
+
+        if (!otherPosts || otherPosts.length === 0) {
+          throw DataNotFoundException(
+            '해당 사용자의 게시글을 찾을 수 없습니다.',
+          );
+        }
+
+        return {
+          posts: otherPosts.map((post) => ({
+            content: post.content,
+            createdAt: post.createdAt,
+            imageUrl: post.postImages.find((image) => image.orderNum === 1)
+              ?.url,
+            isRepresentative: post.isRepresentative,
+            likeCount: post.postLikes.length,
+            isPostLike: this.checkIsPostLiked(post, currentUserId),
+          })),
+          totalPosts: otherPosts.length,
+          totalLikes: this.calculateTotalLikes(otherPosts),
+        };
+      }
     }
-
-    const posts = await this.postRepository
-      .createQueryBuilder('post')
-      .leftJoin('post.user', 'user')
-      .leftJoinAndSelect('post.postImages', 'postImages')
-      .orderBy('post.createdAt', 'DESC')
-      .select([
-        'post.id',
-        'post.content',
-        'post.createdAt',
-        'post.updatedAt',
-        'post.deletedAt',
-        'postImages.id',
-        'postImages.url',
-        'postImages.orderNum',
-        'user.id',
-        'user.nickname',
-        'user.profilePictureUrl',
-      ])
-      .getMany();
-
-    return posts.map((post) => ({
-      id: post.id,
-      content: post.content,
-      createdAt: post.createdAt,
-      updatedAt: post.updatedAt,
-      deletedAt: post.deletedAt,
-      images: post.postImages.map((image) => ({
-        id: image.id,
-        url: image.url,
-        orderNum: image.orderNum,
-      })),
-      user: {
-        id: post.user.id,
-        nickname: post.user.nickname,
-        profilePictureUrl: post.user.profilePictureUrl,
-      },
-    }));
   }
 
-  async UserPostCount(userId: number): Promise<number> {
-    const userPostCount = await this.postRepository
-      .createQueryBuilder('post')
-      .where('post.userId = :userId', { userId })
-      .getCount();
-
-    return userPostCount;
+  // 총 댓글 수
+  private calculateTotalComments(posts: Post[]): number {
+    return posts.reduce((acc, post) => acc + post.postComments.length, 0);
   }
 
-  async UserLikeCount(userId: number): Promise<number> {
-    const { userLikeCount } = await this.postRepository
-      .createQueryBuilder('post')
-      .leftJoin('post.postLikes', 'postLikes')
-      .where('post.userId = :userId', { userId })
-      .select('COUNT(postLikes.id)', 'likeCount')
-      .getRawOne();
-
-    return userLikeCount ? Number(userLikeCount) : 0;
+  // 총 좋아요 수
+  private calculateTotalLikes(posts: Post[]): number {
+    return posts.reduce((acc, post) => acc + post.postLikes.length, 0);
   }
-    */
+
+  // 유저가 게시물에 좋아요를 눌렀는지 확인
+  private checkIsPostLiked(post: Post, currentUserId: number): boolean {
+    return post.postLikes.some((like) => like.user.id === currentUserId);
+  }
+
+  // 유저가 게시물에 댓글을 달았는지 확인
+  private checkIsPostCommented(post: Post, currentUserId: number): boolean {
+    return post.postComments.some(
+      (comment) => comment.user.id === currentUserId,
+    );
+  }
 }
+
+// 페이징
