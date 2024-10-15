@@ -82,7 +82,7 @@ export class PostCommentService {
     }
 
     return {
-      post: comments.map((comment) => ({
+      comments: comments.map((comment) => ({
         content: comment.content,
         createdAt: comment.createdAt,
         user: {
