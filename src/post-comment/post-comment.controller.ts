@@ -58,9 +58,12 @@ export class PostCommentController {
   async deletePostComment(
     @Param('commentId') commentId: number,
     @Req() req: Request,
-  ): Promise<void> {
+  ): Promise<BaseResponse<PostComment>> {
     const userId = req.user.userId;
 
     await this.postCommentService.deletePostComment(commentId, userId);
+
+    return new BaseResponse(true, '댓글 삭제 성공');
+
   }
 }
