@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PostImage } from 'src/common/entities/post-image.entity';
-import { Repository } from 'typeorm';
+import { Repository, QueryRunner } from 'typeorm';
 import { Post } from 'src/common/entities/post.entity';
 import { UploadImageDto } from 'src/post/dtos/create-post.dto';
 import {
@@ -16,7 +16,11 @@ export class PostImageService {
     private readonly postImageRepository: Repository<PostImage>,
   ) {}
 
-  async savePostImages(postImages: UploadImageDto[], post: Post) {
+  async savePostImages(
+    postImages: UploadImageDto[],
+    post: Post,
+    queryRunner?: QueryRunner,
+  ) {
     if (postImages.length === 0) {
       throw InvalidInputValueException('하나 이상의 이미지를 업로드하세요.');
     }
@@ -30,9 +34,13 @@ export class PostImageService {
     });
 
     try {
-      await this.postImageRepository.save(postImageEntities);
+      if (queryRunner) {
+        await queryRunner.manager.save(postImageEntities);
+      } else {
+        await this.postImageRepository.save(postImageEntities);
+      }
     } catch (error) {
-      throw InternalServerException('image 저장에 실패했습니다.');
+      throw InternalServerException('이미지 저장에 실패했습니다.');
     }
   }
 }

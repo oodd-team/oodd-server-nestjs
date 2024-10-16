@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, QueryRunner, Repository } from 'typeorm';
 import { Post } from '../common/entities/post.entity';
 import { GetPostsResponse } from './dtos/total-postsResponse.dto';
 import {
@@ -11,20 +11,24 @@ import { UserService } from 'src/user/user.service';
 import { PostImageService } from 'src/post-image/post-image.service';
 import { CreatePostDto } from './dtos/create-post.dto';
 import { PostStyletagService } from '../post-styletag/post-styletag.service';
-
 import {
   DataNotFoundException,
   InternalServerException,
 } from 'src/common/exception/service.exception';
+import { UserBlockService } from 'src/user-block/user-block.service';
+import { PostClothingService } from 'src/post-clothing/post-clothing.service';
 
 @Injectable()
 export class PostService {
   constructor(
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
+    private readonly userBlockService: UserBlockService,
     private readonly userService: UserService,
     private readonly postImageService: PostImageService,
     private readonly postStyletagService: PostStyletagService,
+    private readonly postClothingService: PostClothingService,
+    private readonly dataSource: DataSource,
   ) {}
 
   //게시글 리스트 조회
@@ -35,24 +39,33 @@ export class PostService {
     const where = userId ? { user: { id: userId } } : {};
     const relations = ['postImages', 'postComments', 'postLikes', 'user'];
 
+    // 차단된 사용자 ID 목록 가져오기
+    const blockedUserIds = currentUserId
+      ? await this.userBlockService.getBlockedUserIds(currentUserId)
+      : [];
+
     const posts = await this.postRepository.find({
       where: where,
       relations: relations,
     });
 
-    if (!posts || posts.length === 0) {
+    const filteredPosts = posts.filter(
+      (post) => !blockedUserIds.includes(post.user.id),
+    );
+
+    if (!filteredPosts || filteredPosts.length === 0) {
       throw DataNotFoundException('게시글을 찾을 수 없습니다.');
     }
 
     if (!userId) {
       // 전체 게시글 조회
-      return this.PostsResponse(posts, currentUserId);
+      return this.PostsResponse(filteredPosts, currentUserId);
     } else if (userId === currentUserId) {
       // 내 게시글 조회
-      return this.MyPostsResponse(posts, currentUserId);
+      return this.userPostsResponse(posts, currentUserId, true);
     } else {
       // 다른 user 게시글 조회
-      return this.OtherPostsResponse(posts, currentUserId);
+      return this.userPostsResponse(posts, currentUserId, false);
     }
   }
 
@@ -70,82 +83,110 @@ export class PostService {
           nickname: post.user.nickname,
           profilePictureUrl: post.user.profilePictureUrl,
         },
+        isPostWriter: post.user.id === currentUserId,
       })),
       isMatching: false,
     };
   }
 
-  private MyPostsResponse(posts: Post[], currentUserId?: number) {
-    return {
-      posts: posts.map((post) => ({
-        content: post.content,
-        createdAt: post.createdAt,
-        imageUrl: post.postImages.find((image) => image.orderNum === 1)?.url,
-        isRepresentative: post.isRepresentative,
-        likeCount: post.postLikes.length,
-        comments: post.postComments.map((comment) => ({
-          content: comment.content,
-          createdAt: comment.createdAt,
-          user: comment.user,
-        })),
-        isPostLike: this.checkIsPostLiked(post, currentUserId),
-        isPostComment: this.checkIsPostCommented(post, currentUserId),
-      })),
-      totalComments: this.calculateTotalComments(posts),
-      totalPosts: posts.length,
-      totalLikes: this.calculateTotalLikes(posts),
-    };
-  }
+  private userPostsResponse(
+    posts: Post[],
+    currentUserId: number,
+    isMyPosts: boolean,
+  ) {
+    const commonPosts = posts.map((post) => ({
+      content: post.content,
+      createdAt: post.createdAt,
+      imageUrl: post.postImages.find((image) => image.orderNum === 1)?.url,
+      isRepresentative: post.isRepresentative,
+      likeCount: post.postLikes.length,
+      isPostLike: this.checkIsPostLiked(post, currentUserId),
+    }));
 
-  private OtherPostsResponse(posts: Post[], currentUserId?: number) {
-    return {
-      posts: posts.map((post) => ({
-        content: post.content,
-        createdAt: post.createdAt,
-        imageUrl: post.postImages.find((image) => image.orderNum === 1)?.url,
-        isRepresentative: post.isRepresentative,
-        likeCount: post.postLikes.length,
-        isPostLike: this.checkIsPostLiked(post, currentUserId),
-      })),
-      totalPosts: posts.length,
-      totalLikes: this.calculateTotalLikes(posts),
-    };
+    if (isMyPosts) {
+      // 내 게시글
+      return {
+        posts: commonPosts.map((post, index) => ({
+          ...post,
+          commentCount: posts[index].postComments.length,
+          isPostComment: this.checkIsPostCommented(posts[index], currentUserId),
+        })),
+        totalComments: this.calculateTotalComments(posts),
+        totalPosts: posts.length,
+        totalLikes: this.calculateTotalLikes(posts),
+      };
+    } else {
+      // 다른 유저 게시글
+      return {
+        posts: commonPosts,
+        totalPosts: posts.length,
+        totalLikes: this.calculateTotalLikes(posts),
+      };
+    }
   }
 
   //게시글 생성
   async createPost(uploadPostDto: CreatePostDto, userId: number) {
-    const { content, postImages, isRepresentative, postStyletags } =
-      uploadPostDto;
-
-    const user = await this.userService.findByFields({
-      where: { id: userId },
-    });
-
-    const post = this.postRepository.create({
-      user,
+    const {
       content,
+      postImages,
       isRepresentative,
-    });
+      postStyletags,
+      postClothings,
+    } = uploadPostDto;
 
-    let savedPost;
+    const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.startTransaction();
+
     try {
-      savedPost = await this.postRepository.save(post);
-    } catch (error) {
-      throw InternalServerException('게시글 저장에 실패했습니다.');
-    }
+      const user = await this.userService.findByFields({
+        where: { id: userId },
+      });
 
-    // postImage 저장
-    await this.postImageService.savePostImages(postImages, savedPost);
+      const post = this.postRepository.create({
+        user,
+        content,
+        isRepresentative,
+      });
 
-    // styletag 저장
-    if (postStyletags) {
-      await this.postStyletagService.savePostStyletags(
+      // 게시글 저장
+      const savedPost = await queryRunner.manager.save(post);
+
+      // 이미지 저장
+      await this.postImageService.savePostImages(
+        postImages,
         savedPost,
-        postStyletags,
+        queryRunner,
       );
-    }
 
-    return savedPost;
+      // 스타일태그 저장
+      if (postStyletags) {
+        await this.postStyletagService.savePostStyletags(
+          savedPost,
+          postStyletags,
+          queryRunner,
+        );
+      }
+
+      // 옷 정보 저장
+      if (postClothings) {
+        await this.postClothingService.savePostClothings(
+          savedPost,
+          postClothings,
+          queryRunner,
+        );
+      }
+
+      await queryRunner.commitTransaction();
+
+      return savedPost;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw InternalServerException('게시글 저장에 실패했습니다.');
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   // 총 댓글 수
@@ -170,5 +211,3 @@ export class PostService {
     );
   }
 }
-
-// 페이징
