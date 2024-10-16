@@ -294,7 +294,11 @@ export class PostService {
   }
 
   //대표 게시글 지정
-  async patchIsRepresentative(postId: number, currentUserId: number) {
+  async patchIsRepresentative(
+    postId: number,
+    currentUserId: number,
+    isRepresentative: boolean,
+  ) {
     const post = await this.postRepository.findOne({
       where: { id: postId, user: { id: currentUserId } },
     });
@@ -303,7 +307,18 @@ export class PostService {
       throw DataNotFoundException('게시글을 찾을 수 없습니다.');
     }
 
-    post.isRepresentative = true;
+    // 대표 게시글 설정
+    if (isRepresentative) {
+      // 기존 대표 게시글이 있다면 isRepresentative를 false로 변경
+      await this.postRepository.update(
+        { user: { id: currentUserId }, isRepresentative: true },
+        { isRepresentative: false },
+      );
+      post.isRepresentative = true;
+    } else {
+      // 대표 게시글 해제
+      post.isRepresentative = false;
+    }
 
     let updatedPost;
     try {
