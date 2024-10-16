@@ -261,6 +261,23 @@ export class PostService {
     }
   }
 
+  // 게시글 삭제
+  async deletePost(postId: number, userId: number): Promise<void> {
+    const post = await this.postRepository.findOne({
+      where: { id: postId, user: { id: userId } },
+    });
+
+    if (!post) {
+      throw DataNotFoundException('게시글을 찾을 수 없습니다.');
+    }
+
+    try {
+      await this.postRepository.remove(post);
+    } catch (error) {
+      throw InternalServerException('게시글 삭제에 실패했습니다.');
+    }
+  }
+
   // 게시글 상세 조회
   async getPost(
     postId: number,

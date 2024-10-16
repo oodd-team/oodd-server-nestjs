@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -102,6 +103,20 @@ export class PostController {
     return new BaseResponse(true, 'SUCCESS', updatedPost);
   }
 
+  @Delete(':postId')
+  @UseGuards(KakaoAuthGuard)
+  @PatchPostSwagger('게시글 삭제 API')
+  async deletePost(
+    @Param('postId') postId: number,
+    @Req() req: Request,
+  ): Promise<BaseResponse<any>> {
+    const userId = req.user.userId;
+
+    await this.postService.deletePost(postId, userId);
+
+    return new BaseResponse(true, '게시글이 삭제되었습니다.');
+  }
+  
   @Patch(':postId/is-representative')
   @UseGuards(KakaoAuthGuard)
   @PatchIsRepresentativeSwagger('대표 게시글 지정 API')
