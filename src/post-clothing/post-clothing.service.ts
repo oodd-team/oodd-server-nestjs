@@ -19,7 +19,7 @@ export class PostClothingService {
   async savePostClothings(
     post: Post,
     uploadClothingDtos: UploadClothingDto[],
-    queryRunner: QueryRunner,
+    queryRunner?: QueryRunner,
   ): Promise<void> {
     try {
       const clothingEntities = uploadClothingDtos.map(
@@ -33,7 +33,13 @@ export class PostClothingService {
           }),
       );
 
-      const savedClothings = await queryRunner.manager.save(clothingEntities);
+      let savedClothings;
+
+      if (queryRunner) {
+        savedClothings = await queryRunner.manager.save(clothingEntities);
+      } else {
+        savedClothings = await this.clothingRepository.save(clothingEntities);
+      }
 
       const postClothingEntities = savedClothings.map((clothing) =>
         this.postClothingRepository.create({
@@ -42,7 +48,11 @@ export class PostClothingService {
         }),
       );
 
-      await queryRunner.manager.save(postClothingEntities);
+      if (queryRunner) {
+        await queryRunner.manager.save(postClothingEntities);
+      } else {
+        await this.postClothingRepository.save(postClothingEntities);
+      }
     } catch (error) {
       throw InternalServerException(
         'PostClothing 저장 중 오류가 발생했습니다.',

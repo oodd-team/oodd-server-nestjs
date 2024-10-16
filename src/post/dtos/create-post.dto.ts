@@ -6,6 +6,7 @@ import {
   IsString,
   IsNumber,
   ValidateNested,
+  MaxLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -26,14 +27,17 @@ export class UploadClothingDto {
 
   @ApiProperty({ example: '브랜드 이름' })
   @IsString()
+  @MaxLength(100)
   brandName: string;
 
   @ApiProperty({ example: '모델 이름' })
   @IsString()
+  @MaxLength(100)
   modelName: string;
 
   @ApiProperty({ example: '모델 넘버' })
   @IsString()
+  @MaxLength(100)
   modelNumber: string;
 
   @ApiProperty({ example: 'http://example.com/product' })
@@ -44,6 +48,7 @@ export class UploadClothingDto {
 export class CreatePostDto {
   @ApiProperty({ example: '게시물 내용' })
   @IsString()
+  @MaxLength(100)
   content: string;
 
   @ApiProperty({ required: false, type: [UploadImageDto] })
@@ -56,6 +61,7 @@ export class CreatePostDto {
   @ApiProperty({ required: false, type: [String], example: 'tag1' })
   @IsOptional()
   @IsArray()
+  @MaxLength(20)
   postStyletags?: string[];
 
   @ApiProperty({ required: false, type: [UploadClothingDto] })
