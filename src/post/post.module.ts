@@ -12,6 +12,8 @@ import { PostStyletag } from 'src/common/entities/post-styletag.entity';
 import { StyletagModule } from 'src/styletag/styletag.module';
 import { StyletagService } from 'src/styletag/styletag.service';
 import { Styletag } from 'src/common/entities/styletag.entity';
+import { UserBlockModule } from 'src/user-block/user-block.module';
+import { PostClothingModule } from 'src/post-clothing/post-clothing.module';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { Styletag } from 'src/common/entities/styletag.entity';
     UserModule,
     StyletagModule,
     PostStyletagModule,
+    UserBlockModule,
+    PostClothingModule,
   ],
   controllers: [PostController],
   providers: [
