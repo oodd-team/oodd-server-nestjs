@@ -7,18 +7,15 @@ import {
   GetMyPostsResponse,
   GetOtherPostsResponse,
 } from './dtos/user-postsResponse.dto';
-import { UserService } from 'src/user/user.service';
-import { PostImageService } from 'src/post-image/post-image.service';
-import {
-  DataNotFoundException,
-  InternalServerException,
-} from 'src/common/exception/service.exception';
+import { DataNotFoundException } from 'src/common/exception/service.exception';
+import { UserBlockService } from 'src/user-block/user-block.service';
 
 @Injectable()
 export class PostService {
   constructor(
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
+    private readonly userBlockService: UserBlockService,
   ) {}
 
   //게시글 리스트 조회
@@ -29,24 +26,33 @@ export class PostService {
     const where = userId ? { user: { id: userId } } : {};
     const relations = ['postImages', 'postComments', 'postLikes', 'user'];
 
+    // 차단된 사용자 ID 목록 가져오기
+    const blockedUserIds = currentUserId
+      ? await this.userBlockService.getBlockedUserIds(currentUserId)
+      : [];
+
     const posts = await this.postRepository.find({
       where: where,
       relations: relations,
     });
 
-    if (!posts || posts.length === 0) {
+    const filteredPosts = posts.filter(
+      (post) => !blockedUserIds.includes(post.user.id),
+    );
+
+    if (!filteredPosts || filteredPosts.length === 0) {
       throw DataNotFoundException('게시글을 찾을 수 없습니다.');
     }
 
     if (!userId) {
       // 전체 게시글 조회
-      return this.PostsResponse(posts, currentUserId);
+      return this.PostsResponse(filteredPosts, currentUserId);
     } else if (userId === currentUserId) {
       // 내 게시글 조회
-      return this.MyPostsResponse(posts, currentUserId);
+      return this.userPostsResponse(posts, currentUserId, true);
     } else {
       // 다른 user 게시글 조회
-      return this.OtherPostsResponse(posts, currentUserId);
+      return this.userPostsResponse(posts, currentUserId, false);
     }
   }
 
@@ -70,41 +76,40 @@ export class PostService {
     };
   }
 
-  private MyPostsResponse(posts: Post[], currentUserId?: number) {
-    return {
-      posts: posts.map((post) => ({
-        content: post.content,
-        createdAt: post.createdAt,
-        imageUrl: post.postImages.find((image) => image.orderNum === 1)?.url,
-        isRepresentative: post.isRepresentative,
-        likeCount: post.postLikes.length,
-        comments: post.postComments.map((comment) => ({
-          content: comment.content,
-          createdAt: comment.createdAt,
-          user: comment.user,
-        })),
-        isPostLike: this.checkIsPostLiked(post, currentUserId),
-        isPostComment: this.checkIsPostCommented(post, currentUserId),
-      })),
-      totalComments: this.calculateTotalComments(posts),
-      totalPosts: posts.length,
-      totalLikes: this.calculateTotalLikes(posts),
-    };
-  }
+  private userPostsResponse(
+    posts: Post[],
+    currentUserId: number,
+    isMyPosts: boolean,
+  ) {
+    const commonPosts = posts.map((post) => ({
+      content: post.content,
+      createdAt: post.createdAt,
+      imageUrl: post.postImages.find((image) => image.orderNum === 1)?.url,
+      isRepresentative: post.isRepresentative,
+      likeCount: post.postLikes.length,
+      isPostLike: this.checkIsPostLiked(post, currentUserId),
+    }));
 
-  private OtherPostsResponse(posts: Post[], currentUserId?: number) {
-    return {
-      posts: posts.map((post) => ({
-        content: post.content,
-        createdAt: post.createdAt,
-        imageUrl: post.postImages.find((image) => image.orderNum === 1)?.url,
-        isRepresentative: post.isRepresentative,
-        likeCount: post.postLikes.length,
-        isPostLike: this.checkIsPostLiked(post, currentUserId),
-      })),
-      totalPosts: posts.length,
-      totalLikes: this.calculateTotalLikes(posts),
-    };
+    if (isMyPosts) {
+      // 내 게시글
+      return {
+        posts: commonPosts.map((post, index) => ({
+          ...post,
+          commentCount: posts[index].postComments.length,
+          isPostComment: this.checkIsPostCommented(posts[index], currentUserId),
+        })),
+        totalComments: this.calculateTotalComments(posts),
+        totalPosts: posts.length,
+        totalLikes: this.calculateTotalLikes(posts),
+      };
+    } else {
+      // 다른 유저 게시글
+      return {
+        posts: commonPosts,
+        totalPosts: posts.length,
+        totalLikes: this.calculateTotalLikes(posts),
+      };
+    }
   }
 
   // 총 댓글 수

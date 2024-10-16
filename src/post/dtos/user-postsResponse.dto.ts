@@ -1,60 +1,54 @@
-import { ApiProperty, OmitType, PickType } from '@nestjs/swagger';
-import { IsArray, IsNumber, IsString, ValidateNested } from 'class-validator';
-import { PostComment } from 'src/common/entities/post-comment.entity';
-import { Type } from 'class-transformer';
-
-class PostCommentDto extends PickType(PostComment, [
-  'content',
-  'createdAt',
-  'user',
-]) {}
+import { ApiProperty, OmitType } from '@nestjs/swagger';
+import { IsBoolean, IsDate, IsInt, IsString } from 'class-validator';
 
 class PostDto {
-  @ApiProperty({ example: false })
+  @ApiProperty()
+  @IsBoolean()
   isRepresentative: boolean;
 
-  @ApiProperty({ example: '2024-10-11T09:00:00.000Z' })
+  @ApiProperty()
+  @IsDate()
   createdAt: Date;
 
-  @ApiProperty({ example: 'http://example.com/image.jpg' })
+  @ApiProperty()
   @IsString()
   imageUrl: string;
 
-  @ApiProperty({ type: [PostCommentDto] })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => PostCommentDto)
-  comments: PostCommentDto[];
+  @ApiProperty()
+  @IsInt()
+  commentCount: number;
 
-  @ApiProperty({ example: 1 })
-  @IsNumber()
+  @ApiProperty()
+  @IsInt()
   likeCount: number;
 
-  @ApiProperty({ example: false })
+  @ApiProperty()
+  @IsBoolean()
   isPostLike: boolean;
 
-  @ApiProperty({ example: false })
+  @ApiProperty()
+  @IsBoolean()
   isPostComment: boolean;
 }
 export class GetMyPostsResponse {
   @ApiProperty({ type: [PostDto] })
   posts: PostDto[];
 
-  @ApiProperty({ example: 0 })
-  @IsNumber()
+  @ApiProperty()
+  @IsInt()
   totalComments: number;
 
-  @ApiProperty({ example: 0 })
-  @IsNumber()
+  @ApiProperty()
+  @IsInt()
   totalPosts: number;
 
-  @ApiProperty({ example: 0 })
-  @IsNumber()
+  @ApiProperty()
+  @IsInt()
   totalLikes: number;
 }
 
 class OtherUserPostDto extends OmitType(PostDto, [
-  'comments',
+  'commentCount',
   'isPostComment',
 ]) {}
 
@@ -62,11 +56,11 @@ export class GetOtherPostsResponse {
   @ApiProperty({ type: [OtherUserPostDto] })
   posts: OtherUserPostDto[];
 
-  @ApiProperty({ example: 0 })
-  @IsNumber()
+  @ApiProperty()
+  @IsInt()
   totalPosts: number;
 
-  @ApiProperty({ example: 0 })
-  @IsNumber()
+  @ApiProperty()
+  @IsInt()
   totalLikes: number;
 }

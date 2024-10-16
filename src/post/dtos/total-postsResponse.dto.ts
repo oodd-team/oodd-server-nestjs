@@ -2,8 +2,11 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsArray,
   IsBoolean,
-  IsNumber,
+  IsDate,
+  IsInt,
   IsString,
+  Max,
+  MaxLength,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -13,16 +16,30 @@ class PostImageDto {
   url: string;
 
   @ApiProperty()
-  @IsNumber()
+  @IsInt()
+  @Max(10)
   orderNum: number;
+}
+
+class UserDto {
+  @ApiProperty()
+  @IsString()
+  @MaxLength(10)
+  nickname: string;
+
+  @ApiProperty()
+  @IsString()
+  profilePictureUrl: string;
 }
 
 class PostDto {
   @ApiProperty()
   @IsString()
+  @MaxLength(100)
   content: string;
 
   @ApiProperty()
+  @IsDate()
   createdAt: Date;
 
   @ApiProperty({ type: [PostImageDto] })
@@ -32,18 +49,11 @@ class PostDto {
   postImages: PostImageDto[];
 
   @ApiProperty()
+  @IsBoolean()
   isPostLike: boolean;
 
-  @ApiProperty({
-    properties: {
-      nickname: { type: 'string' },
-      profilePictureUrl: { type: 'string' },
-    },
-  })
-  user: {
-    nickname: string;
-    profilePictureUrl: string;
-  };
+  @ApiProperty({ type: UserDto })
+  user: UserDto;
 
   @ApiProperty()
   @IsBoolean()
@@ -55,5 +65,6 @@ export class GetPostsResponse {
   post: PostDto[];
 
   @ApiProperty()
-  isMatching: boolean;
+  @IsBoolean()
+  isMatching: boolean = false;
 }
