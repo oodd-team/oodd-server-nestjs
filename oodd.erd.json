@@ -4,9 +4,9 @@
   "settings": {
     "width": 5000,
     "height": 5000,
-    "scrollTop": -2148.1966,
-    "scrollLeft": -2009.8505,
-    "zoomLevel": 0.25,
+    "scrollTop": 0,
+    "scrollLeft": -23.2148,
+    "zoomLevel": 1,
     "show": 511,
     "database": 4,
     "databaseName": "oodd_dev",
