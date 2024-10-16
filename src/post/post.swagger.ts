@@ -67,6 +67,21 @@ export function GetPostsSwagger(text: string) {
         ],
       },
       {
+        statusCode: 404,
+        responseOptions: [
+          {
+            model: BaseResponse,
+            exampleTitle: '실패',
+            exampleDescription: '게시글을 찾을 수 없습니다.',
+            overwriteValue: {
+              isSuccess: false,
+              code: 'NOT_FOUND',
+              data: null,
+            },
+          },
+        ],
+      },
+      {
         statusCode: 500,
         responseOptions: [
           {
@@ -127,6 +142,21 @@ export function GetPostSwagger(text: string) {
             overwriteValue: {
               isSuccess: false,
               code: 'UNAUTHORIZED',
+              data: null,
+            },
+          },
+        ],
+      },
+      {
+        statusCode: 404,
+        responseOptions: [
+          {
+            model: BaseResponse,
+            exampleTitle: '실패',
+            exampleDescription: '게시글을 찾을 수 없습니다.',
+            overwriteValue: {
+              isSuccess: false,
+              code: 'NOT_FOUND',
               data: null,
             },
           },
@@ -259,6 +289,21 @@ export function PatchPostSwagger(text: string) {
             overwriteValue: {
               isSuccess: false,
               code: 'UNAUTHORIZED',
+              data: null,
+            },
+          },
+        ],
+      },
+      {
+        statusCode: 404,
+        responseOptions: [
+          {
+            model: BaseResponse,
+            exampleTitle: '실패',
+            exampleDescription: '게시글을 찾을 수 없습니다.',
+            overwriteValue: {
+              isSuccess: false,
+              code: 'NOT_FOUND',
               data: null,
             },
           },
