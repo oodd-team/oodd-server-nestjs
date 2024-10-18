@@ -1,5 +1,5 @@
 import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { BaseEntity } from '../base.entity';
+import { BaseEntity } from './base.entity';
 import { Post } from './post.entity';
 
 @Entity('PostImage')

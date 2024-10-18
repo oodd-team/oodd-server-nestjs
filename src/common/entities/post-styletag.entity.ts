@@ -1,5 +1,5 @@
 import { Entity, JoinColumn, ManyToOne } from 'typeorm';
-import { BaseEntity } from '../base.entity';
+import { BaseEntity } from './base.entity';
 import { Post } from './post.entity';
 import { Styletag } from './styletag.entity';
 

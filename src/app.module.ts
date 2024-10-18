@@ -19,6 +19,7 @@ import { StyletagModule } from './styletag/styletag.module';
 import { UserBlockModule } from './user-block/user-block.module';
 import { UserReportModule } from './user-report/user-report.module';
 import { AuthModule } from './auth/auth.module';
+import { DayjsModule } from './common/dayjs/dayjs.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { AuthModule } from './auth/auth.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    DayjsModule, // DayjsModule 추가
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: process.env.DEV_DB_HOST
@@ -60,6 +62,9 @@ import { AuthModule } from './auth/auth.module';
     UserBlockModule,
     UserReportModule,
     AuthModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],
