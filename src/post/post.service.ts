@@ -264,7 +264,7 @@ export class PostService {
   // 게시글 삭제
   async deletePost(postId: number, userId: number): Promise<void> {
     const post = await this.postRepository.findOne({
-      where: { id: postId, user: { id: userId } },
+      where: { id: postId, user: { id: userId }, status: 'activated' },
     });
 
     if (!post) {
