@@ -1,8 +1,8 @@
 import {
   ApiBadRequestResponse,
-  ApiConflictResponse,
   ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
+  ApiNotFoundResponse,
   ApiOperation,
   ApiUnauthorizedResponse,
   ApiUnprocessableEntityResponse,
@@ -30,11 +30,23 @@ export function GetPostsSwagger(text: string) {
             exampleTitle: '성공',
             exampleDescription: '전체 게시글 조회 성공 시 값',
           },
+        ],
+        baseResponseDto: BaseResponse,
+      },
+      {
+        statusCode: 200,
+        responseOptions: [
           {
             model: GetMyPostsResponse,
             exampleTitle: '성공',
             exampleDescription: '내 게시글 조회 성공 시 값',
           },
+        ],
+        baseResponseDto: BaseResponse,
+      },
+      {
+        statusCode: 200,
+        responseOptions: [
           {
             model: GetOtherPostsResponse,
             exampleTitle: '성공',
@@ -43,68 +55,25 @@ export function GetPostsSwagger(text: string) {
         ],
         baseResponseDto: BaseResponse,
       },
-      {
-        statusCode: 400,
-        responseOptions: [
-          {
-            model: BaseResponse,
-            exampleTitle: '실패',
-            exampleDescription: '잘못된 요청입니다.',
-            overwriteValue: {
-              isSuccess: false,
-              code: 'BAD_REQUEST',
-              data: null,
-            },
-          },
-        ],
-      },
-      {
-        statusCode: 401,
-        responseOptions: [
-          {
-            model: BaseResponse,
-            exampleTitle: '실패',
-            exampleDescription: '사용자 인증 실패',
-            overwriteValue: {
-              isSuccess: false,
-              code: 'UNAUTHORIZED',
-              data: null,
-            },
-          },
-        ],
-      },
-      {
-        statusCode: 404,
-        responseOptions: [
-          {
-            model: BaseResponse,
-            exampleTitle: '실패',
-            exampleDescription: '게시글을 찾을 수 없습니다.',
-            overwriteValue: {
-              isSuccess: false,
-              code: 'NOT_FOUND',
-              data: null,
-            },
-          },
-        ],
-      },
-      {
-        statusCode: 500,
-        responseOptions: [
-          {
-            model: BaseResponse,
-            exampleTitle: '실패',
-            exampleDescription: '서버에서 오류 발생',
-            overwriteValue: {
-              isSuccess: false,
-              code: 'INTERNAL_SERVER_ERROR',
-              data: null,
-            },
-          },
-        ],
-      },
     ],
-    [],
+    [
+      ApiBadRequestResponse({
+        description: '잘못된 요청입니다.',
+        type: BaseResponse,
+      }),
+      ApiUnauthorizedResponse({
+        description: '인증에 실패했습니다.',
+        type: BaseResponse,
+      }),
+      ApiNotFoundResponse({
+        description: '존재하지 않는 게시글입니다.',
+        type: BaseResponse,
+      }),
+      ApiInternalServerErrorResponse({
+        description: '서버 에러입니다.',
+        type: BaseResponse,
+      }),
+    ],
   );
 }
 
