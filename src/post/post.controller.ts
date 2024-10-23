@@ -1,5 +1,19 @@
-import { Controller, Get, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { PostService } from './post.service';
+import { GetPostsResponse } from './dtos/total-postsResponse.dto';
+import {
+  GetMyPostsResponse,
+  GetOtherPostsResponse,
+} from './dtos/user-postsResponse.dto';
 import {
   CreatePostsSwagger,
   GetPostsSwagger,
@@ -7,17 +21,36 @@ import {
   PatchIsRepresentativeSwagger,
   PatchPostSwagger,
 } from './post.swagger';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiParam, ApiTags } from '@nestjs/swagger';
+import { CreatePostDto } from './dtos/create-post.dto';
+import { Request } from 'express';
+import { BaseResponse } from 'src/common/response/dto';
+import { KakaoAuthGuard } from 'src/auth/guards/kakao.auth.guard';
+import { PatchPostDto } from './dtos/patch-Post.dto';
 
 @Controller('post')
 @ApiTags('[서비스] 게시글')
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
-  @Get()
+  @Get(':userId?')
   @GetPostsSwagger('게시글 리스트 조회 API')
-  getPosts() {
-    // return this.userService.getHello();
+  @ApiParam({ name: 'userId', required: false, description: 'User ID' })
+  @UseGuards(KakaoAuthGuard)
+  async getPosts(
+    @Req() req: Request,
+    @Param('userId') userId?: number,
+  ): Promise<
+    BaseResponse<GetPostsResponse | GetMyPostsResponse | GetOtherPostsResponse>
+  > {
+    const currentUserId = req.user.userId;
+
+    const postsResponse = await this.postService.getPosts(
+      userId,
+      currentUserId,
+    );
+
+    return new BaseResponse(true, 'SUCCESS', postsResponse);
   }
 
   @Get()
@@ -28,14 +61,35 @@ export class PostController {
 
   @Post()
   @CreatePostsSwagger('게시글 생성 API')
-  createPost() {
-    // return this.userService.getHello();
+  async createPost(
+    @Body() createPostDto: CreatePostDto,
+    @Req() req: Request,
+  ): Promise<BaseResponse<any>> {
+    //const userId = req.user.userId;
+    const userId = 1;
+
+    const post = await this.postService.createPost(createPostDto, userId);
+
+    return new BaseResponse(true, 'SUCCESS', post);
   }
 
-  @Patch()
+  @Patch(':postId')
   @PatchPostSwagger('게시글 수정 API')
-  patchPost() {
-    // return this.userService.getHello();
+  async patchPost(
+    @Param('postId') postId: number,
+    @Body() patchPostDto: PatchPostDto,
+    @Req() req: Request,
+  ): Promise<BaseResponse<any>> {
+    //const userId = req.user.userId;
+    const userId = 1;
+
+    const updatedPost = await this.postService.patchPost(
+      postId,
+      patchPostDto,
+      userId,
+    );
+
+    return new BaseResponse(true, 'SUCCESS', updatedPost);
   }
 
   @Patch()
