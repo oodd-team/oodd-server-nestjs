@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Post } from '../common/entities/post.entity';
 import { GetPostsResponse } from './dtos/total-postsResponse.dto';
 import {
@@ -31,23 +31,14 @@ export class PostService {
       ? await this.userBlockService.getBlockedUserIds(currentUserId)
       : [];
 
-    const where: FindOptionsWhere<Post> = userId
-      ? {
-          user: {
-            id: userId,
-          },
-          status: 'activated',
-        }
-      : {
-          status: 'activated',
-        };
-    const posts = await this.postRepository.find({
-      where: where,
+    const totalposts = await this.postRepository.find({
+      where: userId
+        ? { user: { id: userId }, status: 'activated' }
+        : { status: 'activated' },
       relations: relations,
     });
-    console.log('Fetched Posts:', posts);
 
-    const filteredPosts = posts.filter(
+    const filteredPosts = totalposts.filter(
       (post) => !blockedUserIds.includes(post.user.id),
     );
 
@@ -60,10 +51,10 @@ export class PostService {
       return this.createPostsResponse(filteredPosts, currentUserId);
     } else if (userId === currentUserId) {
       // 내 게시글 조회
-      return this.createUserPostsResponse(posts, currentUserId, true);
+      return this.createUserPostsResponse(totalposts, currentUserId, true);
     } else {
       // 다른 user 게시글 조회
-      return this.createUserPostsResponse(posts, currentUserId, false);
+      return this.createUserPostsResponse(totalposts, currentUserId, false);
     }
   }
 

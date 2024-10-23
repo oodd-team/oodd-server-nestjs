@@ -26,11 +26,23 @@ export function GetPostsSwagger(text: string) {
             exampleTitle: '성공',
             exampleDescription: '전체 게시글 조회 성공 시 값',
           },
+        ],
+        baseResponseDto: BaseResponse,
+      },
+      {
+        statusCode: 200,
+        responseOptions: [
           {
             model: GetMyPostsResponse,
             exampleTitle: '성공',
             exampleDescription: '내 게시글 조회 성공 시 값',
           },
+        ],
+        baseResponseDto: BaseResponse,
+      },
+      {
+        statusCode: 200,
+        responseOptions: [
           {
             model: GetOtherPostsResponse,
             exampleTitle: '성공',
