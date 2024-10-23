@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Styletag } from 'src/common/entities/styletag.entity';
 import { Repository } from 'typeorm';
-
 @Injectable()
 export class StyletagService {
   constructor(
@@ -10,19 +9,13 @@ export class StyletagService {
     private readonly styletagRepository: Repository<Styletag>,
   ) {}
 
-  async createOrFindTags(tags: string[]): Promise<Styletag[]> {
-    const existingTags = await this.styletagRepository.find({
-      where: tags.map((tag) => ({ tag })),
-    });
+  async findStyleTags(tags: string[]): Promise<Styletag[]> {
+    // 입력된 태그들과 일치하는 스타일태그를 모두 조회
+    const styleTags = await this.styletagRepository
+      .createQueryBuilder('styletag')
+      .where('styletag.name IN (:...tags)', { tags })
+      .getMany();
 
-    const newTags = tags
-      .filter(
-        (tag) => !existingTags.some((existingTag) => existingTag.tag === tag),
-      )
-      .map((tag) => this.styletagRepository.create({ tag }));
-
-    await this.styletagRepository.save(newTags);
-
-    return [...existingTags, ...newTags];
+    return styleTags;
   }
 }

@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Req,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Req } from '@nestjs/common';
 import { PostService } from './post.service';
 import { GetPostsResponse } from './dtos/total-postsResponse.dto';
 import {
@@ -23,12 +14,10 @@ import {
 } from './post.swagger';
 import { ApiParam, ApiTags } from '@nestjs/swagger';
 import { CreatePostDto } from './dtos/create-post.dto';
-import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
 import { BaseResponse } from 'src/common/response/dto';
-import { KakaoAuthGuard } from 'src/auth/guards/kakao.auth.guard';
-import { PatchPostDto } from './dtos/patch-Post.dto';
 import { GetPostResponse } from './dtos/get-post.dto';
+import { PatchPostDto } from './dtos/patch-Post.dto';
 
 @Controller('post')
 @ApiTags('[서비스] 게시글')
@@ -38,14 +27,14 @@ export class PostController {
   @Get(':userId?')
   @GetPostsSwagger('게시글 리스트 조회 API')
   @ApiParam({ name: 'userId', required: false, description: 'User ID' })
-  @UseGuards(KakaoAuthGuard)
   async getPosts(
-    @Req() req: Request,
+    //@Req() req: Request,
     @Param('userId') userId?: number,
   ): Promise<
     BaseResponse<GetPostsResponse | GetMyPostsResponse | GetOtherPostsResponse>
   > {
-    const currentUserId = req.user.userId;
+    //const currentUserId = req.user.userId;
+    const currentUserId = 1;
 
     const postsResponse = await this.postService.getPosts(
       userId,
@@ -55,14 +44,14 @@ export class PostController {
     return new BaseResponse(true, 'SUCCESS', postsResponse);
   }
 
-  @Get(':postId')
+  @Get('detail/:postId')
   @GetPostSwagger('게시글 상세 조회 API')
-  @UseGuards(KakaoAuthGuard)
   async getPost(
     @Param('postId') postId: number,
     @Req() req: Request,
   ): Promise<BaseResponse<GetPostResponse>> {
-    const currentUserId = req.user.userId;
+    //const currentUserId = req.user.userId;
+    const currentUserId = 1;
 
     const postResponse = await this.postService.getPost(postId, currentUserId);
 
@@ -70,13 +59,13 @@ export class PostController {
   }
 
   @Post()
-  @UseGuards(KakaoAuthGuard)
   @CreatePostsSwagger('게시글 생성 API')
   async createPost(
     @Body() createPostDto: CreatePostDto,
     @Req() req: Request,
   ): Promise<BaseResponse<any>> {
-    const userId = req.user.userId;
+    //const userId = req.user.userId;
+    const userId = 1;
 
     const post = await this.postService.createPost(createPostDto, userId);
 
@@ -84,14 +73,14 @@ export class PostController {
   }
 
   @Patch(':postId')
-  @UseGuards(KakaoAuthGuard)
   @PatchPostSwagger('게시글 수정 API')
   async patchPost(
     @Param('postId') postId: number,
     @Body() patchPostDto: PatchPostDto,
     @Req() req: Request,
   ): Promise<BaseResponse<any>> {
-    const userId = req.user.userId;
+    //const userId = req.user.userId;
+    const userId = 1;
 
     const updatedPost = await this.postService.patchPost(
       postId,
@@ -103,14 +92,14 @@ export class PostController {
   }
 
   @Patch(':postId/is-representative')
-  @UseGuards(KakaoAuthGuard)
   @PatchIsRepresentativeSwagger('대표 게시글 지정 API')
   async patchIsRepresentative(
     @Param('postId') postId: number,
     @Body('isRepresentative') isRepresentative: boolean,
     @Req() req: Request,
   ): Promise<BaseResponse<any>> {
-    const userId = req.user.userId;
+    //const userId = req.user.userId;
+    const userId = 1;
 
     const updatedPost = await this.postService.patchIsRepresentative(
       postId,
