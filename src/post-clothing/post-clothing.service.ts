@@ -1,58 +1,40 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ClothingService } from 'src/clothing/clothing.service';
 import { Clothing } from 'src/common/entities/clothing.entity';
 import { PostClothing } from 'src/common/entities/post-clothing.entity';
 import { Post } from 'src/common/entities/post.entity';
 import { InternalServerException } from 'src/common/exception/service.exception';
 import { UploadClothingDto } from 'src/post/dtos/create-post.dto';
-import { QueryRunner, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class PostClothingService {
   constructor(
     @InjectRepository(PostClothing)
     private readonly postClothingRepository: Repository<PostClothing>,
-    @InjectRepository(Clothing)
-    private readonly clothingRepository: Repository<Clothing>,
+    private readonly clothingService: ClothingService, // ClothingService 주입
   ) {}
 
   async savePostClothings(
     post: Post,
     uploadClothingDtos: UploadClothingDto[],
-    queryRunner?: QueryRunner,
   ): Promise<void> {
     try {
-      const clothingEntities = uploadClothingDtos.map(
-        (clothing: UploadClothingDto) =>
-          this.clothingRepository.create({
-            imageUrl: clothing.imageUrl,
-            brandName: clothing.brandName,
-            modelName: clothing.modelName,
-            modelNumber: clothing.modelNumber,
-            url: clothing.url,
-          }),
-      );
+      // Clothing 저장은 ClothingService에서 처리
+      const savedClothings =
+        await this.clothingService.saveClothings(uploadClothingDtos);
 
-      let savedClothings;
-
-      if (queryRunner) {
-        savedClothings = await queryRunner.manager.save(clothingEntities);
-      } else {
-        savedClothings = await this.clothingRepository.save(clothingEntities);
-      }
-
-      const postClothingEntities = savedClothings.map((clothing) =>
+      // Post와 Clothing을 연결
+      const postClothingEntities = savedClothings.map((clothing: Clothing) =>
         this.postClothingRepository.create({
           post,
           clothing,
         }),
       );
 
-      if (queryRunner) {
-        await queryRunner.manager.save(postClothingEntities);
-      } else {
-        await this.postClothingRepository.save(postClothingEntities);
-      }
+      // postClothing 저장
+      await this.postClothingRepository.save(postClothingEntities);
     } catch (error) {
       throw InternalServerException(
         'PostClothing 저장 중 오류가 발생했습니다.',

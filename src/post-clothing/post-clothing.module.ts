@@ -3,10 +3,10 @@ import { PostClothingController } from './post-clothing.controller';
 import { PostClothingService } from './post-clothing.service';
 import { PostClothing } from 'src/common/entities/post-clothing.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Clothing } from 'src/common/entities/clothing.entity';
+import { ClothingModule } from 'src/clothing/clothing.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PostClothing, Clothing])],
+  imports: [TypeOrmModule.forFeature([PostClothing]), ClothingModule],
   controllers: [PostClothingController],
   providers: [PostClothingService],
   exports: [PostClothingService],
