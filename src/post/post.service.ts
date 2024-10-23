@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, Repository } from 'typeorm';
 import { Post } from '../common/entities/post.entity';
 import { GetPostsResponse } from './dtos/total-postsResponse.dto';
 import {
@@ -9,6 +9,7 @@ import {
 } from './dtos/user-postsResponse.dto';
 import { DataNotFoundException } from 'src/common/exception/service.exception';
 import { UserBlockService } from 'src/user-block/user-block.service';
+import { User } from 'src/common/entities/user.entity';
 
 @Injectable()
 export class PostService {
@@ -23,7 +24,6 @@ export class PostService {
     userId?: number,
     currentUserId?: number,
   ): Promise<GetPostsResponse | GetMyPostsResponse | GetOtherPostsResponse> {
-    const where = userId ? { user: { id: userId } } : {};
     const relations = ['postImages', 'postComments', 'postLikes', 'user'];
 
     // 차단된 사용자 ID 목록 가져오기
@@ -31,32 +31,43 @@ export class PostService {
       ? await this.userBlockService.getBlockedUserIds(currentUserId)
       : [];
 
+    const where: FindOptionsWhere<Post> = userId
+      ? {
+          user: {
+            id: userId,
+          },
+          status: 'activated',
+        }
+      : {
+          status: 'activated',
+        };
     const posts = await this.postRepository.find({
       where: where,
       relations: relations,
     });
+    console.log('Fetched Posts:', posts);
 
     const filteredPosts = posts.filter(
       (post) => !blockedUserIds.includes(post.user.id),
     );
 
     if (!filteredPosts || filteredPosts.length === 0) {
-      throw DataNotFoundException('게시글을 찾을 수 없습니다.');
+      return this.createPostsResponse([], currentUserId);
     }
 
     if (!userId) {
       // 전체 게시글 조회
-      return this.PostsResponse(filteredPosts, currentUserId);
+      return this.createPostsResponse(filteredPosts, currentUserId);
     } else if (userId === currentUserId) {
       // 내 게시글 조회
-      return this.userPostsResponse(posts, currentUserId, true);
+      return this.createUserPostsResponse(posts, currentUserId, true);
     } else {
       // 다른 user 게시글 조회
-      return this.userPostsResponse(posts, currentUserId, false);
+      return this.createUserPostsResponse(posts, currentUserId, false);
     }
   }
 
-  private PostsResponse(posts: Post[], currentUserId?: number) {
+  private createPostsResponse(posts: Post[], currentUserId?: number) {
     return {
       post: posts.map((post) => ({
         content: post.content,
@@ -76,7 +87,7 @@ export class PostService {
     };
   }
 
-  private userPostsResponse(
+  private createUserPostsResponse(
     posts: Post[],
     currentUserId: number,
     isMyPosts: boolean,
@@ -134,5 +145,3 @@ export class PostService {
     );
   }
 }
-
-// 페이징
