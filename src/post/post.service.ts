@@ -17,6 +17,7 @@ import {
 } from 'src/common/exception/service.exception';
 import { PatchPostDto } from './dtos/patch-Post.dto';
 import { UserBlockService } from 'src/user-block/user-block.service';
+import { User } from 'src/common/entities/user.entity';
 import { PostClothingService } from 'src/post-clothing/post-clothing.service';
 import { GetPostResponse } from './dtos/get-post.dto';
 
@@ -38,7 +39,6 @@ export class PostService {
     userId?: number,
     currentUserId?: number,
   ): Promise<GetPostsResponse | GetMyPostsResponse | GetOtherPostsResponse> {
-    const where = userId ? { user: { id: userId } } : {};
     const relations = ['postImages', 'postComments', 'postLikes', 'user'];
 
     // 차단된 사용자 ID 목록 가져오기
@@ -46,32 +46,34 @@ export class PostService {
       ? await this.userBlockService.getBlockedUserIds(currentUserId)
       : [];
 
-    const posts = await this.postRepository.find({
-      where: where,
+    const totalposts = await this.postRepository.find({
+      where: userId
+        ? { user: { id: userId }, status: 'activated' }
+        : { status: 'activated' },
       relations: relations,
     });
 
-    const filteredPosts = posts.filter(
+    const filteredPosts = totalposts.filter(
       (post) => !blockedUserIds.includes(post.user.id),
     );
 
     if (!filteredPosts || filteredPosts.length === 0) {
-      throw DataNotFoundException('게시글을 찾을 수 없습니다.');
+      return this.createPostsResponse([], currentUserId);
     }
 
     if (!userId) {
       // 전체 게시글 조회
-      return this.PostsResponse(filteredPosts, currentUserId);
+      return this.createPostsResponse(filteredPosts, currentUserId);
     } else if (userId === currentUserId) {
       // 내 게시글 조회
-      return this.userPostsResponse(posts, currentUserId, true);
+      return this.createUserPostsResponse(totalposts, currentUserId, true);
     } else {
       // 다른 user 게시글 조회
-      return this.userPostsResponse(posts, currentUserId, false);
+      return this.createUserPostsResponse(totalposts, currentUserId, false);
     }
   }
 
-  private PostsResponse(posts: Post[], currentUserId?: number) {
+  private createPostsResponse(posts: Post[], currentUserId?: number) {
     return {
       post: posts.map((post) => ({
         content: post.content,
@@ -91,7 +93,7 @@ export class PostService {
     };
   }
 
-  private userPostsResponse(
+  private createUserPostsResponse(
     posts: Post[],
     currentUserId: number,
     isMyPosts: boolean,
@@ -143,7 +145,7 @@ export class PostService {
 
     try {
       const user = await this.userService.findByFields({
-        where: { id: userId },
+        where: { id: userId, status: 'activated' },
       });
 
       const post = this.postRepository.create({
@@ -167,7 +169,6 @@ export class PostService {
         await this.postStyletagService.savePostStyletags(
           savedPost,
           postStyletags,
-          queryRunner,
         );
       }
 
@@ -176,7 +177,6 @@ export class PostService {
         await this.postClothingService.savePostClothings(
           savedPost,
           postClothings,
-          queryRunner,
         );
       }
 
@@ -193,21 +193,24 @@ export class PostService {
 
   // 게시글 수정
   async patchPost(postId: number, patchPostDto: PatchPostDto, userId: number) {
-    const {
-      content,
-      postImages,
-      isRepresentative,
-      postStyletags,
-      postClothings,
-    } = patchPostDto;
+    const { content, postImages, postStyletags, postClothings } = patchPostDto;
 
     const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
 
     await queryRunner.startTransaction();
 
     try {
+      console.log(
+        `postId: ${postId}, userId: ${userId}, patchPostDto:`,
+        patchPostDto,
+      );
+
       const post = await this.postRepository.findOne({
-        where: { id: postId, user: { id: userId } },
+        where: {
+          id: postId,
+          user: { id: userId },
+          status: 'activated',
+        },
       });
 
       if (!post) {
@@ -217,14 +220,11 @@ export class PostService {
       if (content !== undefined) {
         post.content = content;
       }
-      if (isRepresentative !== undefined) {
-        post.isRepresentative = isRepresentative;
-      }
 
       const updatedPost = await queryRunner.manager.save(post);
 
-      // postImage 업데이트
       if (postImages) {
+        console.log('postImages:', postImages);
         await this.postImageService.savePostImages(
           postImages,
           updatedPost,
@@ -234,19 +234,19 @@ export class PostService {
 
       // styletag 업데이트
       if (postStyletags) {
+        console.log('postStyletags:', postStyletags);
         await this.postStyletagService.savePostStyletags(
           updatedPost,
           postStyletags,
-          queryRunner,
         );
       }
 
       // clothing 업데이트
       if (postClothings) {
+        console.log('postClothings:', postClothings);
         await this.postClothingService.savePostClothings(
           updatedPost,
           postClothings,
-          queryRunner,
         );
       }
 
@@ -254,6 +254,7 @@ export class PostService {
 
       return updatedPost;
     } catch (error) {
+      console.error('오류 발생:', error);
       await queryRunner.rollbackTransaction();
       throw InternalServerException('게시글 수정에 실패했습니다.');
     } finally {
@@ -284,8 +285,8 @@ export class PostService {
     currentUserId?: number,
   ): Promise<GetPostResponse> {
     const post = await this.postRepository.findOne({
-      where: { id: postId },
-      relations: ['postImages'],
+      where: { id: postId, status: 'activated' },
+      relations: ['postImages', 'user', 'postLikes'],
     });
 
     if (!post) {
