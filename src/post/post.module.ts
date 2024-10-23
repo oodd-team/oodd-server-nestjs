@@ -13,12 +13,12 @@ import { PostImageModule } from 'src/post-image/post-image.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Post]),
+    PostImageModule,
     UserModule,
     StyletagModule,
     PostStyletagModule,
     UserBlockModule,
     PostClothingModule,
-    PostImageModule,
   ],
   controllers: [PostController],
   providers: [PostService],

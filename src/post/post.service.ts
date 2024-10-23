@@ -17,6 +17,7 @@ import {
 } from 'src/common/exception/service.exception';
 import { PatchPostDto } from './dtos/patch-Post.dto';
 import { UserBlockService } from 'src/user-block/user-block.service';
+import { User } from 'src/common/entities/user.entity';
 import { PostClothingService } from 'src/post-clothing/post-clothing.service';
 import { GetPostResponse } from './dtos/get-post.dto';
 
@@ -38,7 +39,6 @@ export class PostService {
     userId?: number,
     currentUserId?: number,
   ): Promise<GetPostsResponse | GetMyPostsResponse | GetOtherPostsResponse> {
-    const where = userId ? { user: { id: userId } } : {};
     const relations = ['postImages', 'postComments', 'postLikes', 'user'];
 
     // 차단된 사용자 ID 목록 가져오기
@@ -46,32 +46,34 @@ export class PostService {
       ? await this.userBlockService.getBlockedUserIds(currentUserId)
       : [];
 
-    const posts = await this.postRepository.find({
-      where: where,
+    const totalposts = await this.postRepository.find({
+      where: userId
+        ? { user: { id: userId }, status: 'activated' }
+        : { status: 'activated' },
       relations: relations,
     });
 
-    const filteredPosts = posts.filter(
+    const filteredPosts = totalposts.filter(
       (post) => !blockedUserIds.includes(post.user.id),
     );
 
     if (!filteredPosts || filteredPosts.length === 0) {
-      throw DataNotFoundException('게시글을 찾을 수 없습니다.');
+      return this.createPostsResponse([], currentUserId);
     }
 
     if (!userId) {
       // 전체 게시글 조회
-      return this.PostsResponse(filteredPosts, currentUserId);
+      return this.createPostsResponse(filteredPosts, currentUserId);
     } else if (userId === currentUserId) {
       // 내 게시글 조회
-      return this.userPostsResponse(posts, currentUserId, true);
+      return this.createUserPostsResponse(totalposts, currentUserId, true);
     } else {
       // 다른 user 게시글 조회
-      return this.userPostsResponse(posts, currentUserId, false);
+      return this.createUserPostsResponse(totalposts, currentUserId, false);
     }
   }
 
-  private PostsResponse(posts: Post[], currentUserId?: number) {
+  private createPostsResponse(posts: Post[], currentUserId?: number) {
     return {
       post: posts.map((post) => ({
         content: post.content,
@@ -91,7 +93,7 @@ export class PostService {
     };
   }
 
-  private userPostsResponse(
+  private createUserPostsResponse(
     posts: Post[],
     currentUserId: number,
     isMyPosts: boolean,
@@ -266,8 +268,8 @@ export class PostService {
     currentUserId?: number,
   ): Promise<GetPostResponse> {
     const post = await this.postRepository.findOne({
-      where: { id: postId },
-      relations: ['postImages'],
+      where: { id: postId, status: 'activated' },
+      relations: ['postImages', 'user', 'postLikes'],
     });
 
     if (!post) {
