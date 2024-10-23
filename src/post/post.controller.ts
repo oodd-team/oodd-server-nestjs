@@ -121,7 +121,8 @@ export class PostController {
     @Body('isRepresentative') isRepresentative: boolean,
     @Req() req: Request,
   ): Promise<BaseResponse<any>> {
-    const userId = req.user.userId;
+    //const userId = req.user.userId;
+    const userId = 1;
 
     const updatedPost = await this.postService.patchIsRepresentative(
       postId,

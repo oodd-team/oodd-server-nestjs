@@ -318,7 +318,7 @@ export class PostService {
     isRepresentative: boolean,
   ) {
     const post = await this.postRepository.findOne({
-      where: { id: postId, user: { id: currentUserId } },
+      where: { id: postId, user: { id: currentUserId }, status: 'activated' },
     });
 
     if (!post) {
@@ -326,26 +326,30 @@ export class PostService {
     }
 
     // 대표 게시글 설정
-    if (isRepresentative) {
-      // 기존 대표 게시글이 있다면 isRepresentative를 false로 변경
+    if (!post.isRepresentative) {
+      // 기존 대표 게시글이 있다면, 그 게시글의 isRepresentative를 false로 변경
       await this.postRepository.update(
-        { user: { id: currentUserId }, isRepresentative: true },
+        {
+          user: { id: currentUserId },
+          isRepresentative: true,
+          status: 'activated',
+        },
         { isRepresentative: false },
       );
+
+      // 현재 게시글을 대표로 설정
       post.isRepresentative = true;
     } else {
-      // 대표 게시글 해제
+      // 대표 설정 해제
       post.isRepresentative = false;
     }
 
-    let updatedPost;
     try {
-      updatedPost = await this.postRepository.save(post);
+      const updatedPost = await this.postRepository.save(post);
+      return updatedPost;
     } catch (error) {
       throw InternalServerException('게시글 수정에 실패했습니다.');
     }
-
-    return updatedPost;
   }
 
   // 총 댓글 수
