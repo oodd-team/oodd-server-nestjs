@@ -56,12 +56,12 @@ export class PostController {
 
   @Get(':postId')
   @GetPostSwagger('게시글 상세 조회 API')
-  @UseGuards(KakaoAuthGuard)
   async getPost(
     @Param('postId') postId: number,
     @Req() req: Request,
   ): Promise<BaseResponse<GetPostResponse>> {
-    const currentUserId = req.user.userId;
+    //const currentUserId = req.user.userId;
+    const currentUserId = 1;
 
     const postResponse = await this.postService.getPost(postId, currentUserId);
 
