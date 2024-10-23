@@ -51,7 +51,7 @@ export class CreatePostDto {
   @MaxLength(100)
   content: string;
 
-  @ApiProperty({ required: false, type: [UploadImageDto] })
+  @ApiProperty({ type: [UploadImageDto] })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })

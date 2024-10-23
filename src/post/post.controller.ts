@@ -2,11 +2,9 @@ import {
   Body,
   Controller,
   Get,
-  InternalServerErrorException,
   Param,
   Patch,
   Post,
-  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -23,15 +21,11 @@ import {
   PatchIsRepresentativeSwagger,
   PatchPostSwagger,
 } from './post.swagger';
-import { ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiParam, ApiTags } from '@nestjs/swagger';
 import { CreatePostDto } from './dtos/create-post.dto';
-import { AuthGuard } from '@nestjs/passport';
-import { JwtPayload, SocialUser } from 'src/auth/dto/auth.dto';
 import { Request } from 'express';
 import { BaseResponse } from 'src/common/response/dto';
-import { AuthService } from 'src/auth/auth.service';
 import { KakaoAuthGuard } from 'src/auth/guards/kakao.auth.guard';
-import { User } from 'src/common/entities/user.entity';
 
 @Controller('post')
 @ApiTags('[서비스] 게시글')
@@ -65,13 +59,13 @@ export class PostController {
   }
 
   @Post()
-  @UseGuards(KakaoAuthGuard)
   @CreatePostsSwagger('게시글 생성 API')
   async createPost(
     @Body() createPostDto: CreatePostDto,
     @Req() req: Request,
   ): Promise<BaseResponse<any>> {
-    const userId = req.user.userId;
+    //const userId = req.user.userId;
+    const userId = 1;
 
     const post = await this.postService.createPost(createPostDto, userId);
 

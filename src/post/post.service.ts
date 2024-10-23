@@ -141,7 +141,7 @@ export class PostService {
 
     try {
       const user = await this.userService.findByFields({
-        where: { id: userId },
+        where: { id: userId, status: 'activated' },
       });
 
       const post = this.postRepository.create({
@@ -165,7 +165,6 @@ export class PostService {
         await this.postStyletagService.savePostStyletags(
           savedPost,
           postStyletags,
-          queryRunner,
         );
       }
 
@@ -174,7 +173,6 @@ export class PostService {
         await this.postClothingService.savePostClothings(
           savedPost,
           postClothings,
-          queryRunner,
         );
       }
 

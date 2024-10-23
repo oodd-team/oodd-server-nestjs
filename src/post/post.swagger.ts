@@ -1,4 +1,12 @@
-import { ApiOperation } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiConflictResponse,
+  ApiForbiddenResponse,
+  ApiInternalServerErrorResponse,
+  ApiOperation,
+  ApiUnauthorizedResponse,
+  ApiUnprocessableEntityResponse,
+} from '@nestjs/swagger';
 import { BaseSwaggerDecorator } from 'nestjs-swagger-decorator';
 import { BaseResponse } from 'src/common/response/dto';
 import { CreatePostDto } from './dtos/create-post.dto';
@@ -110,7 +118,7 @@ export function CreatePostsSwagger(text: string) {
     { summary: text },
     [
       {
-        statusCode: 200,
+        statusCode: 201,
         responseOptions: [
           {
             model: CreatePostDto,
@@ -120,53 +128,29 @@ export function CreatePostsSwagger(text: string) {
         ],
         baseResponseDto: BaseResponse,
       },
-      {
-        statusCode: 400,
-        responseOptions: [
-          {
-            model: BaseResponse,
-            exampleTitle: '실패',
-            exampleDescription: '잘못된 요청입니다.',
-            overwriteValue: {
-              isSuccess: false,
-              code: 'BAD_REQUEST',
-              data: null,
-            },
-          },
-        ],
-      },
-      {
-        statusCode: 401,
-        responseOptions: [
-          {
-            model: BaseResponse,
-            exampleTitle: '실패',
-            exampleDescription: '사용자 인증 실패',
-            overwriteValue: {
-              isSuccess: false,
-              code: 'UNAUTHORIZED',
-              data: null,
-            },
-          },
-        ],
-      },
-      {
-        statusCode: 500,
-        responseOptions: [
-          {
-            model: BaseResponse,
-            exampleTitle: '실패',
-            exampleDescription: '서버에서 오류 발생',
-            overwriteValue: {
-              isSuccess: false,
-              code: 'INTERNAL_SERVER_ERROR',
-              data: null,
-            },
-          },
-        ],
-      },
     ],
-    [],
+    [
+      ApiBadRequestResponse({
+        description: '잘못된 요청입니다.',
+        type: BaseResponse,
+      }),
+      ApiUnauthorizedResponse({
+        description: '인증되지 않은 사용자입니다.',
+        type: BaseResponse,
+      }),
+      ApiForbiddenResponse({
+        description: '권한이 없습니다.',
+        type: BaseResponse,
+      }),
+      ApiUnprocessableEntityResponse({
+        description: '요청이 처리 불가능합니다.',
+        type: BaseResponse,
+      }),
+      ApiInternalServerErrorResponse({
+        description: '서버 오류입니다.',
+        type: BaseResponse,
+      }),
+    ],
   );
 }
 
