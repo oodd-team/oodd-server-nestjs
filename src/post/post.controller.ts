@@ -13,10 +13,10 @@ import {
   PatchPostSwagger,
 } from './post.swagger';
 import { ApiParam, ApiTags } from '@nestjs/swagger';
+import { CreatePostDto } from './dtos/create-post.dto';
 import { Request } from 'express';
 import { BaseResponse } from 'src/common/response/dto';
 import { GetPostResponse } from './dtos/get-post.dto';
-import { CreatePostDto } from './dtos/create-post.dto';
 import { PatchPostDto } from './dtos/patch-Post.dto';
 
 @Controller('post')
