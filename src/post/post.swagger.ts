@@ -341,18 +341,7 @@ export function PatchPostSwagger(text: string) {
 export function DeletePostSwagger(text: string) {
   return BaseSwaggerDecorator(
     { summary: text },
-    [
-      {
-        statusCode: 200,
-        responseOptions: [
-          {
-            model: BaseResponse,
-            exampleTitle: '성공',
-            exampleDescription: '게시글 삭제 성공',
-          },
-        ],
-      },
-    ],
+    [],
     [
       ApiBadRequestResponse({
         description: '잘못된 요청입니다.',
