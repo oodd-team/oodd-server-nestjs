@@ -190,19 +190,18 @@ export class PostService {
 
   // 게시글 수정
   async patchPost(postId: number, patchPostDto: PatchPostDto, userId: number) {
-    const {
-      content,
-      postImages,
-      isRepresentative,
-      postStyletags,
-      postClothings,
-    } = patchPostDto;
+    const { content, postImages, postStyletags, postClothings } = patchPostDto;
 
     const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
 
     await queryRunner.startTransaction();
 
     try {
+      console.log(
+        `postId: ${postId}, userId: ${userId}, patchPostDto:`,
+        patchPostDto,
+      );
+
       const post = await this.postRepository.findOne({
         where: {
           id: postId,
@@ -218,14 +217,11 @@ export class PostService {
       if (content !== undefined) {
         post.content = content;
       }
-      if (isRepresentative !== undefined) {
-        post.isRepresentative = isRepresentative;
-      }
 
       const updatedPost = await queryRunner.manager.save(post);
 
-      // postImage 업데이트
       if (postImages) {
+        console.log('postImages:', postImages);
         await this.postImageService.savePostImages(
           postImages,
           updatedPost,
@@ -235,6 +231,7 @@ export class PostService {
 
       // styletag 업데이트
       if (postStyletags) {
+        console.log('postStyletags:', postStyletags);
         await this.postStyletagService.savePostStyletags(
           updatedPost,
           postStyletags,
@@ -243,6 +240,7 @@ export class PostService {
 
       // clothing 업데이트
       if (postClothings) {
+        console.log('postClothings:', postClothings);
         await this.postClothingService.savePostClothings(
           updatedPost,
           postClothings,
@@ -253,6 +251,7 @@ export class PostService {
 
       return updatedPost;
     } catch (error) {
+      console.error('오류 발생:', error);
       await queryRunner.rollbackTransaction();
       throw InternalServerException('게시글 수정에 실패했습니다.');
     } finally {
