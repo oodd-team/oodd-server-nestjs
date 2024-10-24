@@ -197,11 +197,6 @@ export class PostService {
     await queryRunner.startTransaction();
 
     try {
-      console.log(
-        `postId: ${postId}, userId: ${userId}, patchPostDto:`,
-        patchPostDto,
-      );
-
       const post = await this.postRepository.findOne({
         where: {
           id: postId,
