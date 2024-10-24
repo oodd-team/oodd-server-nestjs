@@ -118,7 +118,6 @@ export class PostController {
   @PatchIsRepresentativeSwagger('대표 게시글 지정 API')
   async patchIsRepresentative(
     @Param('postId') postId: number,
-    @Body('isRepresentative') isRepresentative: boolean,
     @Req() req: Request,
   ): Promise<BaseResponse<any>> {
     //const userId = req.user.userId;
@@ -127,7 +126,6 @@ export class PostController {
     const updatedPost = await this.postService.patchIsRepresentative(
       postId,
       userId,
-      isRepresentative,
     );
 
     return new BaseResponse(true, 'SUCCESS', updatedPost);

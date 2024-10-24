@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, QueryRunner, Repository } from 'typeorm';
+import { DataSource, FindOneOptions, QueryRunner, Repository } from 'typeorm';
 import { Post } from '../common/entities/post.entity';
 import { GetPostsResponse } from './dtos/total-postsResponse.dto';
 import {
@@ -312,11 +312,7 @@ export class PostService {
   }
 
   //대표 게시글 지정
-  async patchIsRepresentative(
-    postId: number,
-    currentUserId: number,
-    isRepresentative: boolean,
-  ) {
+  async patchIsRepresentative(postId: number, currentUserId: number) {
     const post = await this.postRepository.findOne({
       where: { id: postId, user: { id: currentUserId }, status: 'activated' },
     });
@@ -372,5 +368,9 @@ export class PostService {
     return post.postComments.some(
       (comment) => comment.user.id === currentUserId,
     );
+  }
+
+  async findByFields(fields: FindOneOptions<Post>) {
+    return await this.postRepository.findOne(fields);
   }
 }

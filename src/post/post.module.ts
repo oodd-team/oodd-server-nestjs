@@ -22,5 +22,6 @@ import { PostImageModule } from 'src/post-image/post-image.module';
   ],
   controllers: [PostController],
   providers: [PostService],
+  exports: [PostService],
 })
 export class PostModule {}

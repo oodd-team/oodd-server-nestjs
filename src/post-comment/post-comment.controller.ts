@@ -1,13 +1,4 @@
-import {
-  Controller,
-  Post,
-  Get,
-  Patch,
-  UseGuards,
-  Param,
-  Body,
-  Req,
-} from '@nestjs/common';
+import { Controller, Post, Get, Patch, Param, Body, Req } from '@nestjs/common';
 import { PostCommentService } from './post-comment.service';
 import {
   CreatePostCommentSwagger,
@@ -15,7 +6,6 @@ import {
   GetPostCommentsSwagger,
 } from './post-comment.swagger';
 import { ApiTags } from '@nestjs/swagger';
-import { KakaoAuthGuard } from 'src/auth/guards/kakao.auth.guard';
 import { CreateCommentDto } from './dtos/create-comment.dto';
 import { PostComment } from 'src/common/entities/post-comment.entity';
 import { Request } from 'express';
@@ -27,14 +17,14 @@ export class PostCommentController {
   constructor(private readonly postCommentService: PostCommentService) {}
 
   @Post()
-  @UseGuards(KakaoAuthGuard)
   @CreatePostCommentSwagger('게시글 댓글 생성 API')
   async createPostComment(
     @Param('postId') postId: number,
     @Body() createCommentDto: CreateCommentDto,
     @Req() req: Request,
   ): Promise<BaseResponse<PostComment>> {
-    const userId = req.user.userId;
+    //const userId = req.user.userId;
+    const userId = 1;
 
     const postComment = await this.postCommentService.createPostComment(
       postId,
