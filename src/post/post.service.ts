@@ -17,7 +17,6 @@ import {
 } from 'src/common/exception/service.exception';
 import { PatchPostDto } from './dtos/patch-Post.dto';
 import { UserBlockService } from 'src/user-block/user-block.service';
-import { User } from 'src/common/entities/user.entity';
 import { PostClothingService } from 'src/post-clothing/post-clothing.service';
 import { GetPostResponse } from './dtos/get-post.dto';
 
@@ -295,11 +294,7 @@ export class PostService {
   }
 
   //대표 게시글 지정
-  async patchIsRepresentative(
-    postId: number,
-    currentUserId: number,
-    isRepresentative: boolean,
-  ) {
+  async patchIsRepresentative(postId: number, currentUserId: number) {
     const post = await this.postRepository.findOne({
       where: { id: postId, user: { id: currentUserId }, status: 'activated' },
     });
