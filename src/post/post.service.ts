@@ -272,7 +272,10 @@ export class PostService {
     }
 
     try {
-      await this.postRepository.remove(post);
+      post.status = 'deactivated';
+      post.softDelete();
+
+      await this.postRepository.save(post);
     } catch (error) {
       throw InternalServerException('게시글 삭제에 실패했습니다.');
     }
