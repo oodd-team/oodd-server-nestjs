@@ -24,7 +24,7 @@ export class PostCommentController {
     @Req() req: Request,
   ): Promise<BaseResponse<PostComment>> {
     //const userId = req.user.userId;
-    const userId = 1;
+    const userId = 1; //테스트
 
     const postComment = await this.postCommentService.createPostComment(
       postId,
