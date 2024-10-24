@@ -6,6 +6,7 @@ import { CreateCommentDto } from './dtos/create-comment.dto';
 import {
   DataNotFoundException,
   ForbiddenException,
+  InternalServerException,
 } from 'src/common/exception/service.exception';
 import { UserService } from 'src/user/user.service';
 import { PostService } from 'src/post/post.service';
@@ -61,6 +62,13 @@ export class PostCommentService {
       throw ForbiddenException('댓글을 삭제할 권한이 없습니다.');
     }
 
-    await this.postCommentRepository.remove(comment);
+    try {
+      comment.status = 'deactivated';
+      comment.softDelete();
+
+      await this.postCommentRepository.save(comment);
+    } catch (error) {
+      throw InternalServerException('댓글 삭제에 실패했습니다.');
+    }
   }
 }
