@@ -107,7 +107,7 @@ export class PostController {
     @Req() req: Request,
   ): Promise<BaseResponse<any>> {
     //const userId = req.user.userId;
-    const userId = 1;
+    const userId = 1; //테스트
 
     await this.postService.deletePost(postId, userId);
 
