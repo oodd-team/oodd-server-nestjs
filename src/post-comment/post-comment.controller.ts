@@ -2,8 +2,6 @@ import {
   Controller,
   Post,
   Get,
-  Patch,
-  UseGuards,
   Param,
   Body,
   Req,
@@ -16,7 +14,6 @@ import {
   GetPostCommentsSwagger,
 } from './post-comment.swagger';
 import { ApiTags } from '@nestjs/swagger';
-import { KakaoAuthGuard } from 'src/auth/guards/kakao.auth.guard';
 import { CreateCommentDto } from './dtos/create-comment.dto';
 import { PostComment } from 'src/common/entities/post-comment.entity';
 import { Request } from 'express';
@@ -29,14 +26,14 @@ export class PostCommentController {
   constructor(private readonly postCommentService: PostCommentService) {}
 
   @Post()
-  @UseGuards(KakaoAuthGuard)
   @CreatePostCommentSwagger('게시글 댓글 생성 API')
   async createPostComment(
     @Param('postId') postId: number,
     @Body() createCommentDto: CreateCommentDto,
     @Req() req: Request,
   ): Promise<BaseResponse<PostComment>> {
-    const userId = req.user.userId;
+    //const userId = req.user.userId;
+    const userId = 1; //테스트
 
     const postComment = await this.postCommentService.createPostComment(
       postId,
@@ -48,13 +45,13 @@ export class PostCommentController {
   }
 
   @Get(':postId')
-  @UseGuards(KakaoAuthGuard)
   @GetPostCommentsSwagger('게시글 댓글 리스트 조회 API')
   async getPostComments(
     @Param('postId') postId: number,
     @Req() req: Request,
   ): Promise<BaseResponse<GetCommentsDto>> {
-    const userId = req.user.userId;
+    //const userId = req.user.userId;
+    const userId = 1;
 
     const postComments = await this.postCommentService.getPostComments(
       postId,
@@ -65,17 +62,16 @@ export class PostCommentController {
   }
 
   @Delete(':commentId')
-  @UseGuards(KakaoAuthGuard)
   @DeletePostCommentSwagger('게시글 댓글 삭제 API')
   async deletePostComment(
     @Param('commentId') commentId: number,
     @Req() req: Request,
   ): Promise<BaseResponse<PostComment>> {
-    const userId = req.user.userId;
+    //const userId = req.user.userId;
+    const userId = 1;
 
     await this.postCommentService.deletePostComment(commentId, userId);
 
     return new BaseResponse(true, '댓글 삭제 성공');
-
   }
 }
