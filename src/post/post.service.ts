@@ -14,6 +14,7 @@ import { PostStyletagService } from '../post-styletag/post-styletag.service';
 import {
   DataNotFoundException,
   InternalServerException,
+  ServiceException,
 } from 'src/common/exception/service.exception';
 import { PatchPostDto } from './dtos/patch-Post.dto';
 import { UserBlockService } from 'src/user-block/user-block.service';
@@ -196,23 +197,23 @@ export class PostService {
 
     await queryRunner.startTransaction();
 
+    const post = await this.postRepository.findOne({
+      where: {
+        id: postId,
+        user: { id: userId },
+        status: 'activated',
+      },
+    });
+
+    if (!post) {
+      throw DataNotFoundException('게시글을 찾을 수 없습니다.');
+    }
+
+    if (content !== undefined) {
+      post.content = content;
+    }
+
     try {
-      const post = await this.postRepository.findOne({
-        where: {
-          id: postId,
-          user: { id: userId },
-          status: 'activated',
-        },
-      });
-
-      if (!post) {
-        throw DataNotFoundException('게시글을 찾을 수 없습니다.');
-      }
-
-      if (content !== undefined) {
-        post.content = content;
-      }
-
       const updatedPost = await queryRunner.manager.save(post);
 
       if (postImages) {
@@ -246,8 +247,10 @@ export class PostService {
 
       return updatedPost;
     } catch (error) {
-      console.error('오류 발생:', error);
       await queryRunner.rollbackTransaction();
+      if (error instanceof ServiceException) {
+        throw error;
+      }
       throw InternalServerException('게시글 수정에 실패했습니다.');
     } finally {
       await queryRunner.release();
