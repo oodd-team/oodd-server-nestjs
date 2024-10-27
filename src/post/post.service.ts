@@ -11,7 +11,10 @@ import { UserService } from 'src/user/user.service';
 import { PostImageService } from 'src/post-image/post-image.service';
 import { CreatePostDto } from './dtos/create-post.dto';
 import { PostStyletagService } from '../post-styletag/post-styletag.service';
-import { InternalServerException } from 'src/common/exception/service.exception';
+import {
+  InternalServerException,
+  ServiceException,
+} from 'src/common/exception/service.exception';
 import { UserBlockService } from 'src/user-block/user-block.service';
 import { PostClothingService } from 'src/post-clothing/post-clothing.service';
 @Injectable()
@@ -136,11 +139,11 @@ export class PostService {
 
     await queryRunner.startTransaction();
 
-    try {
-      const user = await this.userService.findByFields({
-        where: { id: userId, status: 'activated' },
-      });
+    const user = await this.userService.findByFields({
+      where: { id: userId, status: 'activated' },
+    });
 
+    try {
       const post = this.postRepository.create({
         user,
         content,
@@ -178,6 +181,11 @@ export class PostService {
       return savedPost;
     } catch (error) {
       await queryRunner.rollbackTransaction();
+
+      if (error instanceof ServiceException) {
+        throw error;
+      }
+
       throw InternalServerException('게시글 저장에 실패했습니다.');
     } finally {
       await queryRunner.release();
