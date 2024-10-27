@@ -4,6 +4,10 @@ import { Repository } from 'typeorm';
 import { PostStyletag } from 'src/common/entities/post-styletag.entity';
 import { Post } from 'src/common/entities/post.entity';
 import { StyletagService } from 'src/styletag/styletag.service';
+import {
+  DataNotFoundException,
+  InternalServerException,
+} from 'src/common/exception/service.exception';
 
 @Injectable()
 export class PostStyletagService {
@@ -14,8 +18,16 @@ export class PostStyletagService {
   ) {}
 
   async savePostStyletags(post: Post, tags: string[]): Promise<void> {
-    // 스타일태그 조회
+    if (!tags || tags.length === 0) {
+      return;
+    }
+
+    // Styletag 조회
     const styleTags = await this.styletagService.findStyleTags(tags);
+
+    if (styleTags.length === 0) {
+      throw DataNotFoundException('일치하는 스타일 태그가 없습니다.');
+    }
 
     for (const tag of styleTags) {
       const postStyletag = this.postStyletagRepository.create({
@@ -27,7 +39,8 @@ export class PostStyletagService {
         // postStyletag 저장
         await this.postStyletagRepository.save(postStyletag);
       } catch (error) {
-        throw new Error('postStyletag 저장에 실패했습니다.');
+        console.error('Error saving post styletags:', error);
+        throw InternalServerException('postStyletag 저장에 실패했습니다.');
       }
     }
   }

@@ -79,12 +79,12 @@ export class CreatePostDto {
   @ApiProperty({
     required: false,
     type: [String],
-    example: 'tag1',
+    example: ['tag1'],
     description: '스타일 태그 목록입니다.',
   })
   @IsOptional()
   @IsArray()
-  @MaxLength(20)
+  @MaxLength(20, { each: true })
   postStyletags?: string[];
 
   @ApiProperty({
