@@ -28,7 +28,9 @@ export class PostService {
 
     // 차단된 사용자 ID 목록 가져오기
     const blockedUserIds = currentUserId
-      ? await this.userBlockService.getBlockedUserIds(currentUserId)
+      ? await this.userBlockService.getBlockedUserIdsByRequesterId(
+          currentUserId,
+        )
       : [];
 
     const totalposts = await this.postRepository.find({
