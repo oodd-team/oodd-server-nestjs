@@ -16,6 +16,7 @@ export class PostImageService {
     private readonly postImageRepository: Repository<PostImage>,
   ) {}
 
+  // 이미지 저장
   async savePostImages(
     postImages: UploadImageDto[],
     post: Post,
@@ -41,6 +42,67 @@ export class PostImageService {
       }
     } catch (error) {
       throw InternalServerException('이미지 저장에 실패했습니다.');
+    }
+  }
+
+  // 이미지 수정
+  async updatePostImages(
+    postImages: UploadImageDto[],
+    post: Post,
+    queryRunner?: QueryRunner,
+  ) {
+    const existingImages = await this.postImageRepository.find({
+      where: { post: post },
+      order: { orderNum: 'ASC' },
+    });
+
+    // 삭제할 이미지 목록
+    const imagesToRemove = existingImages.filter(
+      (existingImage) =>
+        !postImages.some(
+          (newImage) => newImage.orderNum === existingImage.orderNum,
+        ),
+    );
+
+    // 이미지 삭제
+    if (imagesToRemove.length > 0) {
+      for (const image of imagesToRemove) {
+        image.status = 'deactivated';
+        if (queryRunner) {
+          await queryRunner.manager.save(image);
+        } else {
+          await this.postImageRepository.save(image);
+        }
+      }
+    }
+
+    // 새 이미지 추가
+    for (const newImage of postImages) {
+      const existingImage = existingImages.find(
+        (image) => image.orderNum === newImage.orderNum,
+      );
+
+      if (existingImage) {
+        existingImage.url = newImage.imageurl;
+        if (queryRunner) {
+          await queryRunner.manager.save(existingImage);
+        } else {
+          await this.postImageRepository.save(existingImage);
+        }
+      } else {
+        // 새로운 이미지 저장
+        const newPostImage = this.postImageRepository.create({
+          url: newImage.imageurl,
+          orderNum: newImage.orderNum,
+          post: post,
+        });
+
+        if (queryRunner) {
+          await queryRunner.manager.save(newPostImage);
+        } else {
+          await this.postImageRepository.save(newPostImage);
+        }
+      }
     }
   }
 }
