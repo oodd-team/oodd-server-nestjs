@@ -1,4 +1,5 @@
 import {
+  ApiAcceptedResponse,
   ApiBadRequestResponse,
   ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
@@ -62,23 +63,12 @@ export function GetPostCommentsSwagger(apiSummary: string) {
 export function DeletePostCommentSwagger(text: string) {
   return BaseSwaggerDecorator(
     { summary: text },
+    [],
     [
-      {
-        statusCode: 200,
-        responseOptions: [
-          {
-            model: BaseResponse,
-            exampleTitle: '성공',
-            exampleDescription: '댓글 삭제 성공',
-            overwriteValue: {
-              isSuccess: true,
-              data: null,
-            },
-          },
-        ],
-      },
-    ],
-    [
+      ApiAcceptedResponse({
+        description: '댓글 삭제 성공',
+        type: BaseResponse,
+      }),
       ApiBadRequestResponse({
         description: '잘못된 요청입니다.',
         type: BaseResponse,

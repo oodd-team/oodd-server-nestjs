@@ -58,7 +58,9 @@ export class PostCommentController {
     //const userId = req.user.userId;
     const userId = 1;
 
-    await this.postCommentService.deletePostComment(commentId, userId);
+    await this.postCommentService.validateUser(commentId, userId);
+
+    await this.postCommentService.deletePostComment(commentId);
 
     return new BaseResponse(true, '댓글 삭제 성공');
   }

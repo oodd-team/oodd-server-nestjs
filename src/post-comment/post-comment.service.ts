@@ -45,10 +45,20 @@ export class PostCommentService {
   }
 
   // 댓글 삭제
-  async deletePostComment(
-    commentId: number,
-    currentUserId: number,
-  ): Promise<void> {
+  async deletePostComment(commentId: number): Promise<void> {
+    const comment = await this.findCommentById(commentId);
+
+    try {
+      comment.status = 'deactivated';
+      comment.softDelete();
+
+      await this.postCommentRepository.save(comment);
+    } catch (error) {
+      throw InternalServerException('댓글 삭제에 실패했습니다.');
+    }
+  }
+
+  private async findCommentById(commentId: number): Promise<PostComment> {
     const comment = await this.postCommentRepository.findOne({
       where: { id: commentId, status: 'activated' },
       relations: ['user'],
@@ -58,17 +68,14 @@ export class PostCommentService {
       throw DataNotFoundException('댓글을 찾을 수 없습니다.');
     }
 
+    return comment;
+  }
+
+  async validateUser(commentId: number, currentUserId: number): Promise<void> {
+    const comment = await this.findCommentById(commentId);
+
     if (comment.user.id !== currentUserId) {
       throw ForbiddenException('댓글을 삭제할 권한이 없습니다.');
-    }
-
-    try {
-      comment.status = 'deactivated';
-      comment.softDelete();
-
-      await this.postCommentRepository.save(comment);
-    } catch (error) {
-      throw InternalServerException('댓글 삭제에 실패했습니다.');
     }
   }
 }
