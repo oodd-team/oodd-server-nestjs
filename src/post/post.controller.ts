@@ -143,9 +143,22 @@ export class PostController {
     return new BaseResponse(true, '게시글이 삭제되었습니다.');
   }
 
-  @Patch()
+  @Patch(':postId/is-representative')
   @PatchIsRepresentativeSwagger('대표 게시글 지정 API')
-  patchIsRepresentative() {
-    // return this.userService.getHello();
+  async patchIsRepresentative(
+    @Param('postId') postId: number,
+    @Req() req: Request,
+  ): Promise<BaseResponse<any>> {
+    //const userId = req.user.userId;
+    const userId = 1;
+
+    await this.postService.validatePost(postId, userId);
+
+    const updatedPost = await this.postService.patchIsRepresentative(
+      postId,
+      userId,
+    );
+
+    return new BaseResponse(true, '대표 게시글 설정/해제 성공', updatedPost);
   }
 }
