@@ -134,27 +134,18 @@ export class PostController {
     @Req() req: Request,
   ): Promise<BaseResponse<any>> {
     //const userId = req.user.userId;
-    const userId = 1; //테스트
+    const userId = 1;
+
+    await this.postService.validatePost(postId, userId);
 
     await this.postService.deletePost(postId, userId);
 
     return new BaseResponse(true, '게시글이 삭제되었습니다.');
   }
 
-  @Patch(':postId/is-representative')
+  @Patch()
   @PatchIsRepresentativeSwagger('대표 게시글 지정 API')
-  async patchIsRepresentative(
-    @Param('postId') postId: number,
-    @Req() req: Request,
-  ): Promise<BaseResponse<any>> {
-    //const userId = req.user.userId;
-    const userId = 1;
-
-    const updatedPost = await this.postService.patchIsRepresentative(
-      postId,
-      userId,
-    );
-
-    return new BaseResponse(true, 'SUCCESS', updatedPost);
+  patchIsRepresentative() {
+    // return this.userService.getHello();
   }
 }
