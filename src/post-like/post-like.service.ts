@@ -5,6 +5,7 @@ import { PostLike } from '../common/entities/post-like.entity';
 import { PostService } from '../post/post.service';
 import { PostLikeResponseDto } from './dtos/post-like.response';
 import { DataNotFoundException } from 'src/common/exception/service.exception';
+import { GetPostLikesResponseDto } from './dtos/get-post-like.response.dto';
 
 @Injectable()
 export class PostLikeService {
@@ -14,6 +15,29 @@ export class PostLikeService {
     private readonly postService: PostService, 
   ) {}
 
+  // 유저가 좋아요 누른 게시물들 조회
+  async getUserLikes(userId: number): Promise<GetPostLikesResponseDto> {
+    const userLikes = await this.postLikeRepository.find({
+      where: { user: { id: userId }, status: 'activated' },
+      relations: ['post', 'user'],
+    });
+
+    const likes = userLikes.map((like) => ({
+      id: like.id,
+      userId: like.user.id,
+      postId: like.post.id,
+      status: like.status,
+      createdAt: like.createdAt,
+      updatedAt: like.updatedAt,
+    }));
+
+    return {
+      totalLikes: likes.length,
+      likes: likes,
+    };
+  }
+
+  // 좋아요 상태값 
   async toggleLike(postId: number, userId: number): Promise<PostLikeResponseDto> {
     const post = await this.postService.findByFields({ where: { id: postId } });
     if (!post) {
