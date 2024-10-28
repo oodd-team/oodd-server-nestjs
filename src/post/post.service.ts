@@ -13,6 +13,7 @@ import { CreatePostDto } from './dtos/create-post.dto';
 import { PostStyletagService } from '../post-styletag/post-styletag.service';
 import {
   DataNotFoundException,
+  ForbiddenException,
   InternalServerException,
   ServiceException,
 } from 'src/common/exception/service.exception';
@@ -195,7 +196,7 @@ export class PostService {
   }
 
   // 게시글 수정
-  async patchPost(postId: number, patchPostDto: PatchPostDto, userId: number) {
+  async patchPost(postId: number, patchPostDto: PatchPostDto) {
     const { content, postImages, postStyletags, postClothings } = patchPostDto;
 
     const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
@@ -203,22 +204,13 @@ export class PostService {
     await queryRunner.startTransaction();
 
     const post = await this.postRepository.findOne({
-      where: {
-        id: postId,
-        user: { id: userId },
-        status: 'activated',
-      },
+      where: { id: postId, status: 'activated' },
     });
 
-    if (!post) {
-      throw DataNotFoundException('게시글을 찾을 수 없습니다.');
-    }
-
-    if (content !== undefined) {
-      post.content = content;
-    }
-
     try {
+      if (content !== undefined) {
+        post.content = content;
+      }
       const updatedPost = await queryRunner.manager.save(post);
 
       if (postImages) {
@@ -259,6 +251,22 @@ export class PostService {
       throw InternalServerException('게시글 수정에 실패했습니다.');
     } finally {
       await queryRunner.release();
+    }
+  }
+
+  // 게시글 검증 메서드
+  async validatePost(postId: number, userId?: number): Promise<void> {
+    const post = await this.postRepository.findOne({
+      where: { id: postId, status: 'activated' },
+      relations: ['user'],
+    });
+
+    if (!post) {
+      throw DataNotFoundException('게시글을 찾을 수 없습니다.');
+    }
+
+    if (userId && post.user.id !== userId) {
+      throw ForbiddenException('이 게시글에 대한 권한이 없습니다.');
     }
   }
 

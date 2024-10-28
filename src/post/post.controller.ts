@@ -73,11 +73,9 @@ export class PostController {
     //const userId = req.user.userId;
     const userId = 1;
 
-    const updatedPost = await this.postService.patchPost(
-      postId,
-      patchPostDto,
-      userId,
-    );
+    await this.postService.validatePost(postId, userId);
+
+    const updatedPost = await this.postService.patchPost(postId, patchPostDto);
 
     return new BaseResponse(true, 'SUCCESS', updatedPost);
   }

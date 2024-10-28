@@ -35,7 +35,7 @@ export class PatchPostDto {
   @ApiProperty({
     required: false,
     type: [String],
-    example: ['tag1'],
+    example: [],
     description: '스타일 태그 목록입니다.',
   })
   @IsOptional()
