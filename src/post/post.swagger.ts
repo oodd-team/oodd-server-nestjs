@@ -1,5 +1,7 @@
 import {
+  ApiAcceptedResponse,
   ApiBadRequestResponse,
+  ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
@@ -119,20 +121,12 @@ export function GetPostSwagger(text: string) {
 export function CreatePostsSwagger(text: string) {
   return BaseSwaggerDecorator(
     { summary: text },
+    [],
     [
-      {
-        statusCode: 201,
-        responseOptions: [
-          {
-            model: CreatePostDto,
-            exampleTitle: '성공',
-            exampleDescription: '성공했을 때 값',
-          },
-        ],
-        baseResponseDto: BaseResponse,
-      },
-    ],
-    [
+      ApiCreatedResponse({
+        description: '게시글 작성 성공.',
+        type: CreatePostDto,
+      }),
       ApiBadRequestResponse({
         description: '잘못된 요청입니다.',
         type: BaseResponse,
@@ -161,20 +155,12 @@ export function CreatePostsSwagger(text: string) {
 export function PatchPostSwagger(text: string) {
   return BaseSwaggerDecorator(
     { summary: text },
+    [],
     [
-      {
-        statusCode: 201,
-        responseOptions: [
-          {
-            model: PatchPostDto,
-            exampleTitle: '성공',
-            exampleDescription: '성공했을 때 값',
-          },
-        ],
-        baseResponseDto: BaseResponse,
-      },
-    ],
-    [
+      ApiCreatedResponse({
+        description: '게시글 수정 성공',
+        type: PatchPostDto,
+      }),
       ApiBadRequestResponse({
         description: '잘못된 요청입니다.',
         type: BaseResponse,

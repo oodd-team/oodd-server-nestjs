@@ -53,7 +53,7 @@ export class PostController {
     return new BaseResponse(true, 'SUCCESS', postsResponse);
   }
 
-  @Get('detail/:postId')
+  @Get(':postId/detail')
   @GetPostSwagger('게시글 상세 조회 API')
   async getPost(
     @Param('postId') postId: number,
@@ -62,7 +62,36 @@ export class PostController {
     //const currentUserId = req.user.userId;
     const currentUserId = 1;
 
-    const postResponse = await this.postService.getPost(postId, currentUserId);
+    await this.postService.validatePost(postId);
+
+    const post = await this.postService.getPost(postId);
+
+    const postResponse: GetPostResponse = {
+      post: {
+        content: post.content,
+        createdAt: post.createdAt,
+        postImages: post.postImages.map((image) => ({
+          url: image.url,
+          orderNum: image.orderNum,
+        })),
+        postClothings: post.postClothings.map((postClothing) => ({
+          imageUrl: postClothing.clothing.imageUrl,
+          brandName: postClothing.clothing.brandName,
+          modelName: postClothing.clothing.modelName,
+          modelNumber: postClothing.clothing.modelNumber,
+          url: postClothing.clothing.url,
+        })),
+        likeCount: post.postLikes.length,
+        commentCount: post.postComments.length,
+        isPostLike: this.postService.checkIsPostLiked(post, currentUserId),
+        user: {
+          userId: post.user.id,
+          nickname: post.user.nickname,
+          profilePictureUrl: post.user.profilePictureUrl,
+        },
+        isPostWriter: post.user.id === currentUserId,
+      },
+    };
 
     return new BaseResponse(true, 'SUCCESS', postResponse);
   }
@@ -91,11 +120,9 @@ export class PostController {
     //const userId = req.user.userId;
     const userId = 1;
 
-    const updatedPost = await this.postService.patchPost(
-      postId,
-      patchPostDto,
-      userId,
-    );
+    await this.postService.validatePost(postId, userId);
+
+    const updatedPost = await this.postService.patchPost(postId, patchPostDto);
 
     return new BaseResponse(true, 'SUCCESS', updatedPost);
   }
