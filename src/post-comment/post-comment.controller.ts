@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Patch, Param, Body, Req } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Body, Req, Query } from '@nestjs/common';
 import { PostCommentService } from './post-comment.service';
 import {
   CreatePostCommentSwagger,
@@ -6,7 +6,10 @@ import {
   GetPostCommentsSwagger,
 } from './post-comment.swagger';
 import { ApiTags } from '@nestjs/swagger';
-import { CreateCommentDto } from './dtos/create-comment.dto';
+import {
+  CreateCommentDto,
+  CreateCommentResponseDto,
+} from './dtos/create-comment.dto';
 import { PostComment } from 'src/common/entities/post-comment.entity';
 import { Request } from 'express';
 import { BaseResponse } from 'src/common/response/dto';
@@ -19,12 +22,12 @@ export class PostCommentController {
   @Post()
   @CreatePostCommentSwagger('게시글 댓글 생성 API')
   async createPostComment(
-    @Param('postId') postId: number,
+    @Query('postId') postId: number,
     @Body() createCommentDto: CreateCommentDto,
     @Req() req: Request,
-  ): Promise<BaseResponse<PostComment>> {
+  ): Promise<BaseResponse<CreateCommentResponseDto>> {
     //const userId = req.user.userId;
-    const userId = 1; //테스트
+    const userId = 1;
 
     const postComment = await this.postCommentService.createPostComment(
       postId,
@@ -32,7 +35,14 @@ export class PostCommentController {
       createCommentDto,
     );
 
-    return new BaseResponse(true, '댓글 작성 성공', postComment);
+    const responseData: CreateCommentResponseDto = {
+      content: postComment.content,
+      userId: userId,
+      postId: postId,
+      createdAt: postComment.createdAt,
+    };
+
+    return new BaseResponse(true, '댓글 작성 성공', responseData);
   }
 
   @Get()

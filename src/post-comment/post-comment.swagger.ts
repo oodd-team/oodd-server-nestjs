@@ -1,5 +1,6 @@
 import {
   ApiBadRequestResponse,
+  ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
   ApiOperation,
@@ -14,20 +15,12 @@ import { CreateCommentDto } from './dtos/create-comment.dto';
 export function CreatePostCommentSwagger(text: string) {
   return BaseSwaggerDecorator(
     { summary: text },
+    [],
     [
-      {
-        statusCode: 200,
-        responseOptions: [
-          {
-            model: CreateCommentDto,
-            exampleTitle: '댓글 작성 성공',
-            exampleDescription: '성공했을 때 값',
-          },
-        ],
-        baseResponseDto: BaseResponse,
-      },
-    ],
-    [
+      ApiCreatedResponse({
+        description: '댓글 작성 성공',
+        type: CreateCommentDto,
+      }),
       ApiBadRequestResponse({
         description: '잘못된 요청입니다.',
         type: BaseResponse,
