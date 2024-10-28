@@ -1,10 +1,12 @@
-import { Controller, Get, Post } from '@nestjs/common';
+import { Controller, Get, Param, Post, Req } from '@nestjs/common';
 import { PostLikeService } from './post-like.service';
 import {
   CreatePostLikeSwagger,
   GetPostLikesSwagger,
 } from './post-like.swagger';
 import { ApiTags } from '@nestjs/swagger';
+import { PostLikeResponseDto } from './dtos/post-like.response';
+import { BaseResponse } from 'src/common/response/dto';
 
 @Controller('post-like')
 @ApiTags('[서비스] 게시글 좋아요')
@@ -17,9 +19,15 @@ export class PostLikeController {
     // return this.userService.getHello();
   }
 
-  @Post()
-  @CreatePostLikeSwagger('게시글 좋아요 생성 및 삭제 API')
-  createPostLike() {
-    // return this.userService.getHello();
+  @Post(":postId")
+  @CreatePostLikeSwagger('게시글 좋아요 생성 및 삭제 API') 
+  async togglePostLike(
+    @Param('postId') postId: number,
+    @Req() req: Request
+  ): Promise<BaseResponse<PostLikeResponseDto>> {
+    const userId = 1; // 추후 수정
+    const postLikeResponse = await this.postLikeService.toggleLike(postId, userId);
+
+    return new BaseResponse<PostLikeResponseDto>(true, 'SUCCESS', postLikeResponse);
   }
 }
