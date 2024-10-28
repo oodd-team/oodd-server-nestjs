@@ -53,6 +53,8 @@ export class PostController {
     //const currentUserId = req.user.userId;
     const currentUserId = 1;
 
+    await this.postService.validatePost(postId);
+
     const post = await this.postService.getPost(postId);
 
     const postResponse: GetPostResponse = {
@@ -62,6 +64,13 @@ export class PostController {
         postImages: post.postImages.map((image) => ({
           url: image.url,
           orderNum: image.orderNum,
+        })),
+        postClothings: post.postClothings.map((postClothing) => ({
+          imageUrl: postClothing.clothing.imageUrl,
+          brandName: postClothing.clothing.brandName,
+          modelName: postClothing.clothing.modelName,
+          modelNumber: postClothing.clothing.modelNumber,
+          url: postClothing.clothing.url,
         })),
         likeCount: post.postLikes.length,
         commentCount: post.postComments.length,
@@ -102,11 +111,9 @@ export class PostController {
     //const userId = req.user.userId;
     const userId = 1;
 
-    const updatedPost = await this.postService.patchPost(
-      postId,
-      patchPostDto,
-      userId,
-    );
+    await this.postService.validatePost(postId, userId);
+
+    const updatedPost = await this.postService.patchPost(postId, patchPostDto);
 
     return new BaseResponse(true, 'SUCCESS', updatedPost);
   }

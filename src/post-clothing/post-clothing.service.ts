@@ -13,19 +13,23 @@ export class PostClothingService {
   constructor(
     @InjectRepository(PostClothing)
     private readonly postClothingRepository: Repository<PostClothing>,
-    private readonly clothingService: ClothingService, // ClothingService 주입
+    private readonly clothingService: ClothingService,
   ) {}
 
   async savePostClothings(
     post: Post,
     uploadClothingDtos: UploadClothingDto[],
   ): Promise<void> {
+    const queryRunner =
+      this.postClothingRepository.manager.connection.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
     try {
-      // Clothing 저장은 ClothingService에서 처리
       const savedClothings =
         await this.clothingService.saveClothings(uploadClothingDtos);
 
-      // Post와 Clothing을 연결
       const postClothingEntities = savedClothings.map((clothing: Clothing) =>
         this.postClothingRepository.create({
           post,
@@ -33,12 +37,15 @@ export class PostClothingService {
         }),
       );
 
-      // postClothing 저장
-      await this.postClothingRepository.save(postClothingEntities);
+      await queryRunner.manager.save(postClothingEntities);
+      await queryRunner.commitTransaction();
     } catch (error) {
+      await queryRunner.rollbackTransaction();
       throw InternalServerException(
-        'PostClothing 저장 중 오류가 발생했습니다.',
+        `PostClothing 저장 중 오류가 발생했습니다: ${error.message}`,
       );
+    } finally {
+      await queryRunner.release();
     }
   }
 }

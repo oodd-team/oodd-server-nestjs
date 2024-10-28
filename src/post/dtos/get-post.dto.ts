@@ -14,6 +14,32 @@ class PostImageDto {
   orderNum: number;
 }
 
+class PostClothingDto {
+  @ApiProperty({
+    example: 'http://example.com/clothing.jpg',
+    description: '옷 이미지 URL입니다.',
+  })
+  imageUrl: string;
+
+  @ApiProperty({
+    example: '브랜드 이름',
+    description: '옷 브랜드 이름입니다.',
+  })
+  brandName: string;
+
+  @ApiProperty({ example: '모델 이름', description: '옷 상품명입니다.' })
+  modelName: string;
+
+  @ApiProperty({ example: '모델 넘버', description: '옷 모델 넘버입니다.' })
+  modelNumber: string;
+
+  @ApiProperty({
+    example: 'http://example.com/product',
+    description: '옷 상품 링크입니다.',
+  })
+  url: string;
+}
+
 class UserDto {
   @ApiProperty({
     example: '1',
@@ -52,6 +78,12 @@ class PostDetailDto {
     description: '게시물에 포함된 이미지 목록',
   })
   postImages: PostImageDto[];
+
+  @ApiProperty({
+    type: [PostClothingDto],
+    description: '게시물에 포함된 옷 정보 목록',
+  })
+  postClothings: PostClothingDto[];
 
   @ApiProperty({
     type: UserDto,
