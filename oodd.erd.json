@@ -4,9 +4,9 @@
   "settings": {
     "width": 5000,
     "height": 5000,
-    "scrollTop": -141.7535,
-    "scrollLeft": -27.0249,
-    "zoomLevel": 0.94,
+    "scrollTop": -80.5046,
+    "scrollLeft": -1219.1754,
+    "zoomLevel": 0.97,
     "show": 511,
     "database": 4,
     "databaseName": "oodd_dev",
@@ -17,7 +17,15 @@
     "bracketType": 1,
     "relationshipDataTypeSync": true,
     "relationshipOptimization": false,
-    "columnOrder": [16, 8, 1, 2, 4, 32, 64],
+    "columnOrder": [
+      16,
+      8,
+      1,
+      2,
+      4,
+      32,
+      64
+    ],
     "maxWidthComment": -1,
     "ignoreSaveSettings": 0
   },

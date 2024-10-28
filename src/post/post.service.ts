@@ -214,8 +214,7 @@ export class PostService {
       const updatedPost = await queryRunner.manager.save(post);
 
       if (postImages) {
-        console.log('postImages:', postImages);
-        await this.postImageService.savePostImages(
+        await this.postImageService.updatePostImages(
           postImages,
           updatedPost,
           queryRunner,
@@ -224,8 +223,7 @@ export class PostService {
 
       // styletag 업데이트
       if (postStyletags) {
-        console.log('postStyletags:', postStyletags);
-        await this.postStyletagService.savePostStyletags(
+        await this.postStyletagService.updatePostStyletags(
           updatedPost,
           postStyletags,
         );
@@ -233,7 +231,6 @@ export class PostService {
 
       // clothing 업데이트
       if (postClothings) {
-        console.log('postClothings:', postClothings);
         await this.postClothingService.savePostClothings(
           updatedPost,
           postClothings,
