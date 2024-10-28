@@ -44,7 +44,7 @@ export class PostController {
     return new BaseResponse(true, 'SUCCESS', postsResponse);
   }
 
-  @Get('detail/:postId')
+  @Get(':postId/detail')
   @GetPostSwagger('게시글 상세 조회 API')
   async getPost(
     @Param('postId') postId: number,
@@ -53,7 +53,27 @@ export class PostController {
     //const currentUserId = req.user.userId;
     const currentUserId = 1;
 
-    const postResponse = await this.postService.getPost(postId, currentUserId);
+    const post = await this.postService.getPost(postId);
+
+    const postResponse: GetPostResponse = {
+      post: {
+        content: post.content,
+        createdAt: post.createdAt,
+        postImages: post.postImages.map((image) => ({
+          url: image.url,
+          orderNum: image.orderNum,
+        })),
+        likeCount: post.postLikes.length,
+        commentCount: post.postComments.length,
+        isPostLike: this.postService.checkIsPostLiked(post, currentUserId),
+        user: {
+          userId: post.user.id,
+          nickname: post.user.nickname,
+          profilePictureUrl: post.user.profilePictureUrl,
+        },
+        isPostWriter: post.user.id === currentUserId,
+      },
+    };
 
     return new BaseResponse(true, 'SUCCESS', postResponse);
   }

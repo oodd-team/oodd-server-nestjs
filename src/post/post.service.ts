@@ -263,35 +263,17 @@ export class PostService {
   }
 
   // 게시글 상세 조회
-  async getPost(
-    postId: number,
-    currentUserId?: number,
-  ): Promise<GetPostResponse> {
+  async getPost(postId: number): Promise<Post> {
     const post = await this.postRepository.findOne({
       where: { id: postId, status: 'activated' },
-      relations: ['postImages', 'user', 'postLikes'],
+      relations: ['postImages', 'user', 'postLikes', 'postComments'],
     });
 
     if (!post) {
       throw DataNotFoundException('게시글을 찾을 수 없습니다.');
     }
 
-    return {
-      post: {
-        content: post.content,
-        createdAt: post.createdAt,
-        postImages: post.postImages.map((image) => ({
-          url: image.url,
-          orderNum: image.orderNum,
-        })),
-        isPostLike: this.checkIsPostLiked(post, currentUserId),
-        user: {
-          nickname: post.user.nickname,
-          profilePictureUrl: post.user.profilePictureUrl,
-        },
-        isPostWriter: post.user.id === currentUserId,
-      },
-    };
+    return post;
   }
 
   // 총 댓글 수
@@ -305,7 +287,7 @@ export class PostService {
   }
 
   // 유저가 게시물에 좋아요를 눌렀는지 확인
-  private checkIsPostLiked(post: Post, currentUserId: number): boolean {
+  public checkIsPostLiked(post: Post, currentUserId: number): boolean {
     return post.postLikes.some((like) => like.user.id === currentUserId);
   }
 
