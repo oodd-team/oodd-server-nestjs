@@ -15,7 +15,6 @@ export class PostReportService {
   ) {}
 
   async reportPost(reportDto: PostReportDto): Promise<PostReport> {
-    // 게시물 존재 여부 확인
     const post = await this.postService.findByFields({ where: { id: reportDto.postId } });
     if (!post) {
       throw DataNotFoundException('신고하려는 게시글을 찾을 수 없습니다.');

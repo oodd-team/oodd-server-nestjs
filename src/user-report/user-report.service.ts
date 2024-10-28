@@ -13,7 +13,6 @@ export class UserReportService {
   constructor(
     @InjectRepository(UserReport)
     private readonly userReportRepository: Repository<UserReport>,
-    @InjectRepository(User)
     private readonly userService: UserService, 
   ) {}
 
