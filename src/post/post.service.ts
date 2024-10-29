@@ -129,7 +129,7 @@ export class PostService {
   }
 
   //게시글 생성
-  async createPost(uploadPostDto: CreatePostDto, userId: number) {
+  async createPost(uploadPostDto: CreatePostDto, currentUserId: number) {
     const {
       content,
       postImages,
@@ -143,7 +143,7 @@ export class PostService {
     await queryRunner.startTransaction();
 
     const user = await this.userService.findByFields({
-      where: { id: userId, status: 'activated' },
+      where: { id: currentUserId, status: 'activated' },
     });
 
     try {
