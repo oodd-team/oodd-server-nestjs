@@ -25,6 +25,14 @@ export class UploadImageDto {
 
 export class UploadClothingDto {
   @ApiProperty({
+    example: 1,
+    description: 'id 값입니다. 기존 옷 정보를 수정할 때 필요합니다.',
+  })
+  @IsNumber()
+  @IsOptional()
+  id?: number;
+
+  @ApiProperty({
     example: 'http://example.com/clothing.jpg',
     description: '업로드할 옷 정보 URL입니다.',
   })

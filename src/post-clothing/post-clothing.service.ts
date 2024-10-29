@@ -43,7 +43,7 @@ export class PostClothingService {
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw InternalServerException(
-        `PostClothing 저장 중 오류가 발생했습니다: ${error.message}`,
+        `PostClothing 저장 중 오류가 발생했습니다.`,
       );
     } finally {
       await queryRunner.release();
