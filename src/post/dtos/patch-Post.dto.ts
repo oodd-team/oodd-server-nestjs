@@ -11,16 +11,6 @@ import {
 import { Type } from 'class-transformer';
 import { UploadImageDto, UploadClothingDto } from './create-post.dto';
 
-export class PatchImageDto extends UploadImageDto {
-  @ApiProperty({
-    example: 1,
-    description: 'id 값입니다. 기존 이미지 수정시 필요합니다.',
-  })
-  @IsNumber()
-  @IsOptional()
-  id?: number;
-}
-
 export class PatchClothingDto extends UploadClothingDto {
   @ApiProperty({
     example: 1,
@@ -44,14 +34,14 @@ export class PatchPostDto {
 
   @ApiProperty({
     required: false,
-    type: [PatchImageDto],
+    type: [UploadImageDto],
     description: '게시물에 포함될 이미지 목록입니다.',
   })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => PatchImageDto)
-  postImages?: PatchImageDto[];
+  @Type(() => UploadImageDto)
+  postImages?: UploadImageDto[];
 
   @ApiProperty({
     required: false,

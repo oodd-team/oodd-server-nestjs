@@ -5,7 +5,6 @@ import { Repository, QueryRunner } from 'typeorm';
 import { Post } from 'src/common/entities/post.entity';
 import { UploadImageDto } from 'src/post/dtos/create-post.dto';
 import { InvalidInputValueException } from 'src/common/exception/service.exception';
-import { PatchImageDto } from 'src/post/dtos/patch-Post.dto';
 
 @Injectable()
 export class PostImageService {
@@ -37,7 +36,7 @@ export class PostImageService {
 
   // 이미지 수정
   async updatePostImages(
-    postImages: PatchImageDto[],
+    postImages: UploadImageDto[],
     post: Post,
     queryRunner?: QueryRunner,
   ) {
@@ -51,13 +50,13 @@ export class PostImageService {
       order: { orderNum: 'ASC' },
     });
 
-    const existingImageIds = new Set(existingImages.map((img) => img.id));
+    const existingImageUrls = new Set(existingImages.map((img) => img.url));
 
     // 삭제할 이미지 목록
     const imagesToRemove = existingImages.filter(
       (existingImage) =>
         existingImage.status === 'activated' &&
-        !postImages.some((newImage) => newImage.id === existingImage.id),
+        !postImages.some((newImage) => newImage.imageurl === existingImage.url),
     );
 
     // 이미지 삭제
@@ -73,9 +72,9 @@ export class PostImageService {
     // 새 이미지 추가
     await Promise.all(
       postImages.map(async (newImage) => {
-        if (existingImageIds.has(newImage.id)) {
+        if (existingImageUrls.has(newImage.imageurl)) {
           const existingImage = existingImages.find(
-            (image) => image.id === newImage.id,
+            (image) => image.url === newImage.imageurl,
           );
 
           // 기존 이미지의 orderNum이 수정된 경우
