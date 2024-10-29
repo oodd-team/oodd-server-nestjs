@@ -6,7 +6,6 @@ import { CreateUserReportDto } from '../user-report/dto/user-report.dto';
 import { User } from '../common/entities/user.entity';
 import { DataNotFoundException } from 'src/common/exception/service.exception';
 import { UserService } from 'src/user/user.service';
-import { USER_NOT_FOUND } from 'src/common/exception/error';
 
 @Injectable()
 export class UserReportService {
@@ -27,7 +26,7 @@ export class UserReportService {
     });
 
     if (!fromUser || !toUser) {
-        throw DataNotFoundException(USER_NOT_FOUND.message);
+        throw DataNotFoundException('유저를 찾을 수 없습니다.');
     }
 
     const userReport = this.userReportRepository.create({

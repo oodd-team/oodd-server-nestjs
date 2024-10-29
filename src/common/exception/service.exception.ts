@@ -29,6 +29,7 @@ export const InternalServerException = (message?: string): ServiceException => {
   return new ServiceException(INTERNAL_SERVER_ERROR, message);
 };
 
+
 export class ServiceException extends Error {
   readonly errorCode: ErrorCode;
 

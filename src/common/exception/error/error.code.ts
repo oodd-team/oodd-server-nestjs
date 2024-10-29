@@ -42,8 +42,3 @@ export const INTERNAL_SERVER_ERROR = new ErrorCodeVo(
   'INTERNAL_SERVER_ERROR',
 );
 
-export const USER_NOT_FOUND = new ErrorCodeVo(
-  404,
-  'User Not Found',
-  'USER_NOT_FOUND',
-);
