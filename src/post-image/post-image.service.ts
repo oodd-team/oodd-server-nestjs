@@ -4,10 +4,7 @@ import { PostImage } from 'src/common/entities/post-image.entity';
 import { Repository, QueryRunner } from 'typeorm';
 import { Post } from 'src/common/entities/post.entity';
 import { UploadImageDto } from 'src/post/dtos/create-post.dto';
-import {
-  InternalServerException,
-  InvalidInputValueException,
-} from 'src/common/exception/service.exception';
+import { InvalidInputValueException } from 'src/common/exception/service.exception';
 
 @Injectable()
 export class PostImageService {
@@ -21,6 +18,7 @@ export class PostImageService {
     post: Post,
     queryRunner?: QueryRunner,
   ) {
+    // 빈 배열이 들어온 경우
     if (postImages.length === 0) {
       throw InvalidInputValueException('하나 이상의 이미지를 업로드하세요.');
     }
@@ -32,15 +30,6 @@ export class PostImageService {
         post: post,
       });
     });
-
-    try {
-      if (queryRunner) {
-        await queryRunner.manager.save(postImageEntities);
-      } else {
-        await this.postImageRepository.save(postImageEntities);
-      }
-    } catch (error) {
-      throw InternalServerException('이미지 저장에 실패했습니다.');
-    }
+    await queryRunner.manager.save(postImageEntities);
   }
 }
