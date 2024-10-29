@@ -68,6 +68,7 @@ export class PostImageService {
     if (imagesToRemove.length > 0) {
       for (const image of imagesToRemove) {
         image.status = 'deactivated';
+        image.orderNum = 0;
         if (queryRunner) {
           await queryRunner.manager.save(image);
         } else {

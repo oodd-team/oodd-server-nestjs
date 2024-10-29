@@ -213,6 +213,7 @@ export class PostService {
       }
       const updatedPost = await queryRunner.manager.save(post);
 
+      // postImages 업데이트
       if (postImages) {
         await this.postImageService.updatePostImages(
           postImages,
