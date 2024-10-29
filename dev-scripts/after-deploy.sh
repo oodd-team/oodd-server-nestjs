@@ -1,5 +1,5 @@
 #!/bin/bash
-REPOSITORY=/home/ubuntu/build
+REPOSITORY=/home/ubuntu/build-dev
 APP_NAME=node_app_dev
 
 cd $REPOSITORY
