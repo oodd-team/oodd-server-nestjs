@@ -12,6 +12,14 @@ import { Type } from 'class-transformer';
 
 export class UploadImageDto {
   @ApiProperty({
+    example: 1,
+    description: 'id 값입니다. 기존 이미지 수정시 필요합니다.',
+  })
+  @IsNumber()
+  @IsOptional()
+  id?: number;
+
+  @ApiProperty({
     example: 'http://example.com/image.jpg',
     description: '업로드할 이미지의 URL입니다.',
   })
@@ -26,7 +34,7 @@ export class UploadImageDto {
 export class UploadClothingDto {
   @ApiProperty({
     example: 1,
-    description: 'id 값입니다. 기존 옷 정보를 수정할 때 필요합니다.',
+    description: 'id 값입니다. 기존 옷 정보 수정시 필요합니다.',
   })
   @IsNumber()
   @IsOptional()
