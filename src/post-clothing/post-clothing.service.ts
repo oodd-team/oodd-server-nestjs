@@ -6,7 +6,7 @@ import { PostClothing } from 'src/common/entities/post-clothing.entity';
 import { Post } from 'src/common/entities/post.entity';
 import { InternalServerException } from 'src/common/exception/service.exception';
 import { UploadClothingDto } from 'src/post/dtos/create-post.dto';
-import { Repository } from 'typeorm';
+import { QueryRunner, Repository } from 'typeorm';
 
 @Injectable()
 export class PostClothingService {
@@ -20,13 +20,8 @@ export class PostClothingService {
   async savePostClothings(
     post: Post,
     uploadClothingDtos: UploadClothingDto[],
+    queryRunner?: QueryRunner,
   ): Promise<void> {
-    const queryRunner =
-      this.postClothingRepository.manager.connection.createQueryRunner();
-
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
     try {
       const savedClothings =
         await this.clothingService.saveClothings(uploadClothingDtos);
@@ -39,14 +34,10 @@ export class PostClothingService {
       );
 
       await queryRunner.manager.save(postClothingEntities);
-      await queryRunner.commitTransaction();
     } catch (error) {
-      await queryRunner.rollbackTransaction();
       throw InternalServerException(
         `PostClothing 저장 중 오류가 발생했습니다.`,
       );
-    } finally {
-      await queryRunner.release();
     }
   }
 

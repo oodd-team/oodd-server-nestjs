@@ -179,6 +179,7 @@ export class PostService {
         await this.postClothingService.savePostClothings(
           savedPost,
           postClothings,
+          queryRunner,
         );
       }
 
