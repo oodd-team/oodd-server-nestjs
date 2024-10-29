@@ -50,13 +50,13 @@ export class PostImageService {
       order: { orderNum: 'ASC' },
     });
 
-    const existingImageUrls = new Set(existingImages.map((img) => img.url));
+    const existingImageIds = new Set(existingImages.map((img) => img.id));
 
     // 삭제할 이미지 목록
     const imagesToRemove = existingImages.filter(
       (existingImage) =>
         existingImage.status === 'activated' &&
-        !postImages.some((newImage) => newImage.imageurl === existingImage.url),
+        !postImages.some((newImage) => newImage.id === existingImage.id),
     );
 
     // 이미지 삭제
@@ -72,9 +72,9 @@ export class PostImageService {
     // 새 이미지 추가
     await Promise.all(
       postImages.map(async (newImage) => {
-        if (existingImageUrls.has(newImage.imageurl)) {
+        if (existingImageIds.has(newImage.id)) {
           const existingImage = existingImages.find(
-            (image) => image.url === newImage.imageurl,
+            (image) => image.id === newImage.id,
           );
 
           // 기존 이미지의 orderNum이 수정된 경우
