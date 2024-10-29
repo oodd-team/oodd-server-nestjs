@@ -45,6 +45,7 @@ export class PostClothingService {
   async updatePostClothings(
     post: Post,
     uploadClothingDtos: UploadClothingDto[],
+    queryRunner?: QueryRunner,
   ): Promise<void> {
     const existingPostClothings = await this.postClothingRepository.find({
       where: { post: post, status: 'activated' },
@@ -58,62 +59,46 @@ export class PostClothingService {
         existingClothing.softDelete();
         await this.clothingService.deleteClothing(existingClothing.clothing.id);
       }
-      await this.postClothingRepository.save(existingPostClothings);
+      await queryRunner.manager.save(existingPostClothings);
       return; //함수 종료
     }
 
-    const queryRunner =
-      this.postClothingRepository.manager.connection.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    // 삭제할 PostClothing
+    const postClothingsToRemove = existingPostClothings.filter(
+      (existingPostClothing) =>
+        !uploadClothingDtos.some(
+          (newClothing) => newClothing.id === existingPostClothing.clothing.id,
+        ),
+    );
 
-    try {
-      // 삭제할 PostClothing
-      const postClothingsToRemove = existingPostClothings.filter(
-        (existingPostClothing) =>
-          !uploadClothingDtos.some(
-            (newClothing) =>
-              newClothing.id === existingPostClothing.clothing.id,
-          ),
+    for (const postClothing of postClothingsToRemove) {
+      postClothing.status = 'deactivated';
+      postClothing.softDelete();
+    }
+
+    // 수정할 기존 PostClothing
+    for (const newClothing of uploadClothingDtos) {
+      const existingPostClothing = existingPostClothings.find(
+        (postClothing) => postClothing.clothing.id === newClothing.id,
       );
 
-      for (const postClothing of postClothingsToRemove) {
-        postClothing.status = 'deactivated';
-        postClothing.softDelete();
-      }
-
-      // 수정할 기존 PostClothing
-      for (const newClothing of uploadClothingDtos) {
-        const existingPostClothing = existingPostClothings.find(
-          (postClothing) => postClothing.clothing.id === newClothing.id,
-        );
-
-        if (existingPostClothing) {
-          // Clothing 정보 수정
-          await this.clothingService.updateClothing(newClothing);
-        } else {
-          // 새로운 옷 정보 추가
-          const newClothingEntity = await this.clothingService.saveClothings([
-            newClothing,
-          ]);
-          for (const clothing of newClothingEntity) {
-            const newPostClothingEntity = this.postClothingRepository.create({
-              post,
-              clothing,
-            });
-            await queryRunner.manager.save(newPostClothingEntity);
-          }
+      if (existingPostClothing) {
+        // Clothing 정보 수정
+        await this.clothingService.updateClothing(newClothing);
+      } else {
+        // 새로운 옷 정보 추가
+        const newClothingEntity = await this.clothingService.saveClothings([
+          newClothing,
+        ]);
+        for (const clothing of newClothingEntity) {
+          const newPostClothingEntity = this.postClothingRepository.create({
+            post,
+            clothing,
+          });
+          await queryRunner.manager.save(newPostClothingEntity);
         }
       }
-
-      await queryRunner.commitTransaction();
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw InternalServerException(
-        `PostClothing 저장 중 오류가 발생했습니다.`,
-      );
-    } finally {
-      await queryRunner.release();
     }
+    await this.postClothingRepository.save(existingPostClothings);
   }
 }

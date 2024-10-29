@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryRunner, Repository } from 'typeorm';
 import { PostStyletag } from 'src/common/entities/post-styletag.entity';
 import { Post } from 'src/common/entities/post.entity';
 import { StyletagService } from 'src/styletag/styletag.service';
@@ -58,7 +58,11 @@ export class PostStyletagService {
   }
 
   // 스타일 태그 수정
-  async updatePostStyletags(post: Post, newTags: string[]): Promise<void> {
+  async updatePostStyletags(
+    post: Post,
+    newTags: string[],
+    queryRunner?: QueryRunner,
+  ): Promise<void> {
     const existingPostStyletags = await this.postStyletagRepository.find({
       where: { post },
       relations: ['styletag'],
@@ -70,7 +74,7 @@ export class PostStyletagService {
         existingPostStyletag.status = 'deactivated';
       }
 
-      await this.postStyletagRepository.save(existingPostStyletags);
+      await queryRunner.manager.save(existingPostStyletags);
       return; //함수 종료
     }
 
@@ -89,36 +93,39 @@ export class PostStyletagService {
 
     // Styletag 삭제
     for (const tagToRemove of tagsToRemove) {
-      try {
-        tagToRemove.status = 'deactivated';
-      } catch (error) {
-        throw InternalServerException('postStyletag 삭제에 실패했습니다.');
-      }
+      tagToRemove.status = 'deactivated';
+      tagToRemove.softDelete();
     }
+    await queryRunner.manager.save(tagsToRemove);
 
-    // 중복 검사
+    // 기존 스타일 태그의 ID
+    const existingTagIds = existingPostStyletags.map(
+      (existingTag) => existingTag.styletag.id,
+    );
+
+    // 새로운 Styletag 중복 검사
     for (const tag of styleTags) {
-      const existingPostStyletag = await this.postStyletagRepository.findOne({
-        where: { post, styletag: tag },
-      });
+      if (!existingTagIds.includes(tag.id)) {
+        const existingPostStyletag = await queryRunner.manager.findOne(
+          PostStyletag,
+          {
+            where: { post, styletag: tag },
+          },
+        );
 
-      if (existingPostStyletag) {
-        throw InvalidInputValueException(`중복된 스타일 태그: ${tag.tag}`);
-      }
-    }
+        if (existingPostStyletag) {
+          throw InvalidInputValueException(`중복된 스타일 태그: ${tag.tag}`);
+        }
 
-    // 새로운 Styletag 추가
-    for (const tag of styleTags) {
-      const postStyletag = this.postStyletagRepository.create({
-        post,
-        styletag: tag,
-      });
+        // 새로운 Styletag 추가
+        for (const tag of styleTags) {
+          const postStyletag = this.postStyletagRepository.create({
+            post,
+            styletag: tag,
+          });
 
-      try {
-        // postStyletag 저장
-        await this.postStyletagRepository.save(postStyletag);
-      } catch (error) {
-        throw InternalServerException('postStyletag 저장에 실패했습니다.');
+          await queryRunner.manager.save(postStyletag);
+        }
       }
     }
   }

@@ -228,12 +228,14 @@ export class PostService {
       await this.postStyletagService.updatePostStyletags(
         updatedPost,
         postStyletags,
+        queryRunner,
       );
 
       // clothing 업데이트
       await this.postClothingService.updatePostClothings(
         updatedPost,
         postClothings,
+        queryRunner,
       );
 
       await queryRunner.commitTransaction();
