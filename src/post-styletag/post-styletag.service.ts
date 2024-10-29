@@ -70,12 +70,17 @@ export class PostStyletagService {
 
     // 빈 배열이 들어온 경우
     if (newTags.length === 0) {
-      for (const existingPostStyletag of existingPostStyletags) {
+      const tagsToDeactivate = existingPostStyletags.filter(
+        (existingPostStyletag) => existingPostStyletag.status === 'activated',
+      );
+
+      for (const existingPostStyletag of tagsToDeactivate) {
         existingPostStyletag.status = 'deactivated';
+        existingPostStyletag.softDelete();
       }
 
-      await queryRunner.manager.save(existingPostStyletags);
-      return; //함수 종료
+      await queryRunner.manager.save(tagsToDeactivate);
+      return; // 함수 종료
     }
 
     // Styletag 조회
@@ -85,48 +90,59 @@ export class PostStyletagService {
       throw DataNotFoundException('일치하는 스타일 태그가 없습니다.');
     }
 
-    // 삭제할 Styletag
+    // 삭제할 PostStyletag
     const newTagIds = styleTags.map((tag) => tag.id);
     const tagsToRemove = existingPostStyletags.filter(
-      (existingTag) => !newTagIds.includes(existingTag.styletag.id),
+      (existingTag) =>
+        existingTag.status === 'activated' &&
+        !newTagIds.includes(existingTag.styletag.id),
     );
 
-    // Styletag 삭제
-    for (const tagToRemove of tagsToRemove) {
-      tagToRemove.status = 'deactivated';
-      tagToRemove.softDelete();
+    // PostStyletag 삭제
+    if (tagsToRemove.length > 0) {
+      for (const tagToRemove of tagsToRemove) {
+        tagToRemove.status = 'deactivated';
+        tagToRemove.softDelete();
+      }
+      await queryRunner.manager.save(tagsToRemove);
     }
-    await queryRunner.manager.save(tagsToRemove);
 
-    // 기존 스타일 태그의 ID
+    // 기존 Styletag의 ID
     const existingTagIds = existingPostStyletags.map(
       (existingTag) => existingTag.styletag.id,
     );
 
-    // 새로운 Styletag 중복 검사
+    // 새로운 PostStyletag 추가
+    const newPostStyletags = [];
     for (const tag of styleTags) {
-      if (!existingTagIds.includes(tag.id)) {
-        const existingPostStyletag = await queryRunner.manager.findOne(
-          PostStyletag,
-          {
-            where: { post, styletag: tag },
-          },
-        );
+      // 태그 중복 검사
+      const existingPostStyletag = existingPostStyletags.find(
+        (existingTag) => existingTag.styletag.id === tag.id,
+      );
 
-        if (existingPostStyletag) {
+      if (existingPostStyletag) {
+        // 기존 태그가 있을 경우
+        if (existingPostStyletag.status === 'deactivated') {
+          // 상태가 'deactivated'인 경우, 'activated'로 변경
+          existingPostStyletag.status = 'activated';
+          await queryRunner.manager.save(existingPostStyletag);
+        }
+      } else {
+        // 새로운 태그 중복 검사
+        if (!newPostStyletags.some((newTag) => newTag.tag === tag.tag)) {
+          newPostStyletags.push(
+            this.postStyletagRepository.create({
+              post,
+              styletag: tag,
+            }),
+          );
+        } else {
           throw InvalidInputValueException(`중복된 스타일 태그: ${tag.tag}`);
         }
-
-        // 새로운 Styletag 추가
-        for (const tag of styleTags) {
-          const postStyletag = this.postStyletagRepository.create({
-            post,
-            styletag: tag,
-          });
-
-          await queryRunner.manager.save(postStyletag);
-        }
       }
+    }
+    if (newPostStyletags.length > 0) {
+      await queryRunner.manager.save(newPostStyletags);
     }
   }
 }

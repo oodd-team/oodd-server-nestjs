@@ -29,7 +29,7 @@ import { Request } from 'express';
 import { PatchPostDto } from './dtos/patch-Post.dto';
 
 @Controller('post')
-//@UseGuards(AuthGuard)
+@UseGuards(AuthGuard)
 @ApiTags('[서비스] 게시글')
 export class PostController {
   constructor(private readonly postService: PostService) {}
@@ -82,8 +82,7 @@ export class PostController {
     @Body() patchPostDto: PatchPostDto,
     @Req() req: Request,
   ): Promise<BaseResponse<any>> {
-    //const currentUserId = req.user.userId;
-    const currentUserId = 1;
+    const currentUserId = req.user.userId;
 
     await this.postService.validatePost(postId, currentUserId);
 

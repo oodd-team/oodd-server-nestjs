@@ -47,18 +47,24 @@ export class PostClothingService {
 
     // 빈 배열이 들어온 경우
     if (uploadClothingDtos.length === 0) {
-      for (const existingClothing of existingPostClothings) {
+      const clothingsToDeactivate = existingPostClothings.filter(
+        (existingClothing) => existingClothing.status === 'activated',
+      );
+
+      for (const existingClothing of clothingsToDeactivate) {
         existingClothing.status = 'deactivated';
         existingClothing.softDelete();
         await this.clothingService.deleteClothing(existingClothing.clothing.id);
       }
-      await queryRunner.manager.save(existingPostClothings);
-      return; //함수 종료
+
+      await queryRunner.manager.save(clothingsToDeactivate);
+      return; // 함수 종료
     }
 
     // 삭제할 PostClothing
     const postClothingsToRemove = existingPostClothings.filter(
       (existingPostClothing) =>
+        existingPostClothing.status === 'activated' &&
         !uploadClothingDtos.some(
           (newClothing) => newClothing.id === existingPostClothing.clothing.id,
         ),
@@ -67,9 +73,15 @@ export class PostClothingService {
     for (const postClothing of postClothingsToRemove) {
       postClothing.status = 'deactivated';
       postClothing.softDelete();
+      await this.clothingService.deleteClothing(postClothing.clothing.id);
+    }
+    if (postClothingsToRemove.length > 0) {
+      await queryRunner.manager.save(postClothingsToRemove);
     }
 
     // 수정할 기존 PostClothing
+    const newPostClothings: PostClothing[] = [];
+
     for (const newClothing of uploadClothingDtos) {
       const existingPostClothing = existingPostClothings.find(
         (postClothing) => postClothing.clothing.id === newClothing.id,
@@ -88,10 +100,12 @@ export class PostClothingService {
             post,
             clothing,
           });
-          await queryRunner.manager.save(newPostClothingEntity);
+          newPostClothings.push(newPostClothingEntity);
         }
       }
     }
-    await this.postClothingRepository.save(existingPostClothings);
+    if (newPostClothings.length > 0) {
+      await queryRunner.manager.save(newPostClothings);
+    }
   }
 }
