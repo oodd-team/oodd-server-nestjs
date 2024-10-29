@@ -217,29 +217,23 @@ export class PostService {
       const updatedPost = await queryRunner.manager.save(post);
 
       // postImages 업데이트
-      if (postImages) {
-        await this.postImageService.updatePostImages(
-          postImages,
-          updatedPost,
-          queryRunner,
-        );
-      }
+      await this.postImageService.updatePostImages(
+        postImages,
+        updatedPost,
+        queryRunner,
+      );
 
       // styletag 업데이트
-      if (postStyletags) {
-        await this.postStyletagService.updatePostStyletags(
-          updatedPost,
-          postStyletags,
-        );
-      }
+      await this.postStyletagService.updatePostStyletags(
+        updatedPost,
+        postStyletags,
+      );
 
       // clothing 업데이트
-      if (postClothings) {
-        await this.postClothingService.savePostClothings(
-          updatedPost,
-          postClothings,
-        );
-      }
+      await this.postClothingService.updatePostClothings(
+        updatedPost,
+        postClothings,
+      );
 
       await queryRunner.commitTransaction();
 

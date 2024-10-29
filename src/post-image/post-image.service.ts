@@ -51,6 +51,10 @@ export class PostImageService {
     post: Post,
     queryRunner?: QueryRunner,
   ) {
+    if (postImages.length === 0) {
+      throw InvalidInputValueException('하나 이상의 이미지를 업로드하세요.');
+    }
+
     const existingImages = await this.postImageRepository.find({
       where: { post: post },
       order: { orderNum: 'ASC' },
@@ -59,7 +63,11 @@ export class PostImageService {
     // 삭제할 이미지 목록
     const imagesToRemove = existingImages.filter(
       (existingImage) =>
-        !postImages.some((newImage) => newImage.imageurl === existingImage.url),
+        !postImages.some(
+          (newImage) =>
+            newImage.imageurl === existingImage.url &&
+            existingImage.status === 'activated',
+        ),
     );
 
     // 이미지 삭제
@@ -77,9 +85,9 @@ export class PostImageService {
 
     // 새 이미지 추가
     for (const newImage of postImages) {
-      const existingImage = existingImages.find(
-        (image) => image.url === newImage.imageurl,
-      );
+      const existingImage = existingImages.find((image) => {
+        image.url === newImage.imageurl && image.status === 'activated';
+      });
 
       if (existingImage) {
         // 기존 이미지의 orderNum이 변경된 경우 업데이트

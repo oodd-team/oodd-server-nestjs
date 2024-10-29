@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Clothing } from 'src/common/entities/clothing.entity';
 import { UploadClothingDto } from 'src/post/dtos/create-post.dto';
+import { DataNotFoundException } from 'src/common/exception/service.exception';
 
 @Injectable()
 export class ClothingService {
@@ -29,14 +30,19 @@ export class ClothingService {
     return await this.clothingRepository.save(clothingEntities);
   }
 
-  /*
   // Clothing 수정
   async updateClothing(
     uploadClothingDto: UploadClothingDto,
   ): Promise<Clothing> {
-    const existingClothing = await this.clothingRepository.findOne(
-      uploadClothingDto.id,
-    );
+    const existingClothing = await this.clothingRepository.findOne({
+      where: { id: uploadClothingDto.id, status: 'activated' },
+    });
+
+    if (!existingClothing) {
+      throw DataNotFoundException(
+        `Clothing ID ${uploadClothingDto.id}를 찾을 수 없습니다.`,
+      );
+    }
 
     // 필드 업데이트
     if (uploadClothingDto.imageUrl)
@@ -49,7 +55,17 @@ export class ClothingService {
       existingClothing.modelNumber = uploadClothingDto.modelNumber;
     if (uploadClothingDto.url) existingClothing.url = uploadClothingDto.url;
 
-    // 업데이트된 Clothing 저장
     return await this.clothingRepository.save(existingClothing);
-  }*/
+  }
+
+  // Clothing 삭제 처리
+  async deleteClothing(id: number): Promise<void> {
+    const existingClothing = await this.clothingRepository.findOne({
+      where: { id, status: 'activated' },
+    });
+
+    existingClothing.status = 'deactivated';
+    existingClothing.softDelete();
+    await this.clothingRepository.save(existingClothing);
+  }
 }

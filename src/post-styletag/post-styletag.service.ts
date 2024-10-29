@@ -64,6 +64,16 @@ export class PostStyletagService {
       relations: ['styletag'],
     });
 
+    // 빈 배열이 들어온 경우
+    if (newTags.length === 0) {
+      for (const existingPostStyletag of existingPostStyletags) {
+        existingPostStyletag.status = 'deactivated';
+      }
+
+      await this.postStyletagRepository.save(existingPostStyletags);
+      return; //함수 종료
+    }
+
     // Styletag 조회
     const styleTags = await this.styletagService.findStyleTags(newTags);
 
@@ -83,6 +93,17 @@ export class PostStyletagService {
         tagToRemove.status = 'deactivated';
       } catch (error) {
         throw InternalServerException('postStyletag 삭제에 실패했습니다.');
+      }
+    }
+
+    // 중복 검사
+    for (const tag of styleTags) {
+      const existingPostStyletag = await this.postStyletagRepository.findOne({
+        where: { post, styletag: tag },
+      });
+
+      if (existingPostStyletag) {
+        throw InvalidInputValueException(`중복된 스타일 태그: ${tag.tag}`);
       }
     }
 
