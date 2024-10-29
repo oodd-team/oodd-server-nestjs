@@ -10,6 +10,8 @@ import {
 import { DataNotFoundException } from 'src/common/exception/service.exception';
 import { UserBlockService } from 'src/user-block/user-block.service';
 import { User } from 'src/common/entities/user.entity';
+import { DayjsModule } from 'src/common/dayjs/dayjs.module';
+import dayjs, { Dayjs } from 'dayjs';
 
 @Injectable()
 export class PostService {
@@ -64,7 +66,7 @@ export class PostService {
     return {
       post: posts.map((post) => ({
         content: post.content,
-        createdAt: post.createdAt,
+        createdAt: new Dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
         postImages: post.postImages.map((image) => ({
           url: image.url,
           orderNum: image.orderNum,
@@ -87,7 +89,7 @@ export class PostService {
   ) {
     const commonPosts = posts.map((post) => ({
       content: post.content,
-      createdAt: post.createdAt,
+      createdAt: new Dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
       imageUrl: post.postImages.find((image) => image.orderNum === 1)?.url,
       isRepresentative: post.isRepresentative,
       likeCount: post.postLikes.length,

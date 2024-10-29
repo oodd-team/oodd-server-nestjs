@@ -5,7 +5,10 @@ import {
   ApiOperation,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { CustomResponseDecorator } from 'nestjs-swagger-decorator';
+import {
+  BaseSwaggerDecorator,
+  CustomResponseDecorator,
+} from 'nestjs-swagger-decorator';
 import { BaseResponse } from 'src/common/response/dto';
 import { GetPostsResponse } from './dtos/total-postsResponse.dto';
 import {
@@ -17,27 +20,29 @@ import { applyDecorators, HttpStatus } from '@nestjs/common';
 // 게시글 리스트 조회하기 API Swagger
 export function GetPostsSwagger(text: string) {
   return applyDecorators(
-    CustomResponseDecorator(
-      HttpStatus.OK,
-      [
-        {
-          model: GetPostsResponse,
-          exampleTitle: '전체 게시글 조회 예시',
-          exampleDescription: '전체 게시글 조회 성공 시 값',
-        },
-        {
-          model: GetMyPostsResponse,
-          exampleTitle: '내 게시글 조회 예시',
-          exampleDescription: '내 게시글 조회 성공 시 값',
-        },
-        {
-          model: GetOtherPostsResponse,
-          exampleTitle: '다른 사용자 게시글 조회 예시',
-          exampleDescription: '다른 사용자 게시글 조회 성공 시 값',
-        },
-      ],
-      BaseResponse,
-    ),
+    BaseSwaggerDecorator({ summary: text }, [
+      {
+        statusCode: 200,
+        responseOptions: [
+          {
+            model: GetPostsResponse,
+            exampleTitle: '전체 게시글 조회 예시',
+            exampleDescription: '전체 게시글 조회 성공 시 값',
+          },
+          {
+            model: GetMyPostsResponse,
+            exampleTitle: '내 게시글 조회 예시',
+            exampleDescription: '내 게시글 조회 성공 시 값',
+          },
+          {
+            model: GetOtherPostsResponse,
+            exampleTitle: '다른 사용자 게시글 조회 예시',
+            exampleDescription: '다른 사용자 게시글 조회 성공 시 값',
+          },
+        ],
+        baseResponseDto: BaseResponse,
+      },
+    ]),
     ApiBadRequestResponse({
       description: '잘못된 요청입니다.',
       type: BaseResponse,

@@ -6,6 +6,7 @@ import { PostService } from './post.service';
 import { UserModule } from 'src/user/user.module';
 import { UserBlockModule } from 'src/user-block/user-block.module';
 import { PostImageModule } from 'src/post-image/post-image.module';
+import { DayjsModule } from 'src/common/dayjs/dayjs.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { PostImageModule } from 'src/post-image/post-image.module';
     PostImageModule,
     UserModule,
     UserBlockModule,
+    DayjsModule,
   ],
   controllers: [PostController],
   providers: [PostService],
