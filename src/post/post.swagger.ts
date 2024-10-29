@@ -5,17 +5,14 @@ import {
   ApiOperation,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import {
-  BaseSwaggerDecorator,
-  CustomResponseDecorator,
-} from 'nestjs-swagger-decorator';
+import { BaseSwaggerDecorator } from 'nestjs-swagger-decorator';
 import { BaseResponse } from 'src/common/response/dto';
 import { GetPostsResponse } from './dtos/total-postsResponse.dto';
 import {
   GetMyPostsResponse,
   GetOtherPostsResponse,
 } from './dtos/user-postsResponse.dto';
-import { applyDecorators, HttpStatus } from '@nestjs/common';
+import { applyDecorators } from '@nestjs/common';
 
 // 게시글 리스트 조회하기 API Swagger
 export function GetPostsSwagger(text: string) {

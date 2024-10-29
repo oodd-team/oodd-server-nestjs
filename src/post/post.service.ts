@@ -7,11 +7,8 @@ import {
   GetMyPostsResponse,
   GetOtherPostsResponse,
 } from './dtos/user-postsResponse.dto';
-import { DataNotFoundException } from 'src/common/exception/service.exception';
 import { UserBlockService } from 'src/user-block/user-block.service';
-import { User } from 'src/common/entities/user.entity';
-import { DayjsModule } from 'src/common/dayjs/dayjs.module';
-import dayjs, { Dayjs } from 'dayjs';
+import { Dayjs } from 'dayjs';
 
 @Injectable()
 export class PostService {
