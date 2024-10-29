@@ -58,18 +58,14 @@ export class PostStyletagService {
   }
 
   // 스타일 태그 수정
-  async updatePostStyletags(post: Post, tags: string[]): Promise<void> {
-    if (!tags || tags.length === 0) {
-      return;
-    }
-
+  async updatePostStyletags(post: Post, newTags: string[]): Promise<void> {
     const existingPostStyletags = await this.postStyletagRepository.find({
       where: { post },
       relations: ['styletag'],
     });
 
     // Styletag 조회
-    const styleTags = await this.styletagService.findStyleTags(tags);
+    const styleTags = await this.styletagService.findStyleTags(newTags);
 
     if (styleTags.length === 0) {
       throw DataNotFoundException('일치하는 스타일 태그가 없습니다.');
@@ -85,9 +81,7 @@ export class PostStyletagService {
     for (const tagToRemove of tagsToRemove) {
       try {
         tagToRemove.status = 'deactivated';
-        tagToRemove.softDelete();
       } catch (error) {
-        console.error('Error removing post styletag:', error);
         throw InternalServerException('postStyletag 삭제에 실패했습니다.');
       }
     }
