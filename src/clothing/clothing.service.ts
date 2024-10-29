@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Clothing } from 'src/common/entities/clothing.entity';
 import { UploadClothingDto } from 'src/post/dtos/create-post.dto';
 import { DataNotFoundException } from 'src/common/exception/service.exception';
+import { PatchClothingDto } from 'src/post/dtos/patch-Post.dto';
 
 @Injectable()
 export class ClothingService {
@@ -31,9 +32,7 @@ export class ClothingService {
   }
 
   // Clothing 수정
-  async updateClothing(
-    uploadClothingDto: UploadClothingDto,
-  ): Promise<Clothing> {
+  async updateClothing(uploadClothingDto: PatchClothingDto): Promise<Clothing> {
     const existingClothing = await this.clothingRepository.findOne({
       where: { id: uploadClothingDto.id, status: 'activated' },
     });

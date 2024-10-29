@@ -5,6 +5,7 @@ import { Clothing } from 'src/common/entities/clothing.entity';
 import { PostClothing } from 'src/common/entities/post-clothing.entity';
 import { Post } from 'src/common/entities/post.entity';
 import { UploadClothingDto } from 'src/post/dtos/create-post.dto';
+import { PatchClothingDto } from 'src/post/dtos/patch-Post.dto';
 import { QueryRunner, Repository } from 'typeorm';
 
 @Injectable()
@@ -37,7 +38,7 @@ export class PostClothingService {
   // 옷 정보 수정
   async updatePostClothings(
     post: Post,
-    uploadClothingDtos: UploadClothingDto[],
+    uploadClothingDtos: PatchClothingDto[],
     queryRunner?: QueryRunner,
   ): Promise<void> {
     const existingPostClothings = await this.postClothingRepository.find({

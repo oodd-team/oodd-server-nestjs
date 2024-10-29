@@ -5,6 +5,7 @@ import { Repository, QueryRunner } from 'typeorm';
 import { Post } from 'src/common/entities/post.entity';
 import { UploadImageDto } from 'src/post/dtos/create-post.dto';
 import { InvalidInputValueException } from 'src/common/exception/service.exception';
+import { PatchImageDto } from 'src/post/dtos/patch-Post.dto';
 
 @Injectable()
 export class PostImageService {
@@ -36,7 +37,7 @@ export class PostImageService {
 
   // 이미지 수정
   async updatePostImages(
-    postImages: UploadImageDto[],
+    postImages: PatchImageDto[],
     post: Post,
     queryRunner?: QueryRunner,
   ) {
