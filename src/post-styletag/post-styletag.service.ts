@@ -7,6 +7,7 @@ import { StyletagService } from 'src/styletag/styletag.service';
 import {
   DataNotFoundException,
   InternalServerException,
+  InvalidInputValueException,
 } from 'src/common/exception/service.exception';
 
 @Injectable()
@@ -27,6 +28,17 @@ export class PostStyletagService {
 
     if (styleTags.length === 0) {
       throw DataNotFoundException('일치하는 스타일 태그가 없습니다.');
+    }
+
+    for (const tag of styleTags) {
+      // 중복 검사
+      const existingPostStyletag = await this.postStyletagRepository.findOne({
+        where: { post, styletag: tag },
+      });
+
+      if (existingPostStyletag) {
+        throw InvalidInputValueException(`중복된 스타일 태그: ${tag.tag}`);
+      }
     }
 
     for (const tag of styleTags) {

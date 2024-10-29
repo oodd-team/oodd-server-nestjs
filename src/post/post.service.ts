@@ -20,6 +20,7 @@ import {
 import { PatchPostDto } from './dtos/patch-Post.dto';
 import { UserBlockService } from 'src/user-block/user-block.service';
 import { PostClothingService } from 'src/post-clothing/post-clothing.service';
+import { Dayjs } from 'dayjs';
 @Injectable()
 export class PostService {
   constructor(
@@ -42,7 +43,9 @@ export class PostService {
 
     // 차단된 사용자 ID 목록 가져오기
     const blockedUserIds = currentUserId
-      ? await this.userBlockService.getBlockedUserIds(currentUserId)
+      ? await this.userBlockService.getBlockedUserIdsByRequesterId(
+          currentUserId,
+        )
       : [];
 
     const totalposts = await this.postRepository.find({
@@ -76,7 +79,7 @@ export class PostService {
     return {
       post: posts.map((post) => ({
         content: post.content,
-        createdAt: post.createdAt,
+        createdAt: new Dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
         postImages: post.postImages.map((image) => ({
           url: image.url,
           orderNum: image.orderNum,
@@ -99,7 +102,7 @@ export class PostService {
   ) {
     const commonPosts = posts.map((post) => ({
       content: post.content,
-      createdAt: post.createdAt,
+      createdAt: new Dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
       imageUrl: post.postImages.find((image) => image.orderNum === 1)?.url,
       isRepresentative: post.isRepresentative,
       likeCount: post.postLikes.length,
