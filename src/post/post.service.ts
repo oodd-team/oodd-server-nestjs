@@ -17,8 +17,7 @@ import {
 } from 'src/common/exception/service.exception';
 import { UserBlockService } from 'src/user-block/user-block.service';
 import { PostClothingService } from 'src/post-clothing/post-clothing.service';
-import { DayjsModule } from 'src/common/dayjs/dayjs.module';
-import dayjs, { Dayjs } from 'dayjs';
+import { Dayjs } from 'dayjs';
 @Injectable()
 export class PostService {
   constructor(
