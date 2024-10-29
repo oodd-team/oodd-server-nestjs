@@ -59,9 +59,7 @@ export class PostImageService {
     // 삭제할 이미지 목록
     const imagesToRemove = existingImages.filter(
       (existingImage) =>
-        !postImages.some(
-          (newImage) => newImage.orderNum === existingImage.orderNum,
-        ),
+        !postImages.some((newImage) => newImage.imageurl === existingImage.url),
     );
 
     // 이미지 삭제
@@ -80,15 +78,19 @@ export class PostImageService {
     // 새 이미지 추가
     for (const newImage of postImages) {
       const existingImage = existingImages.find(
-        (image) => image.orderNum === newImage.orderNum,
+        (image) => image.url === newImage.imageurl,
       );
 
       if (existingImage) {
-        existingImage.url = newImage.imageurl;
-        if (queryRunner) {
-          await queryRunner.manager.save(existingImage);
-        } else {
-          await this.postImageRepository.save(existingImage);
+        // 기존 이미지의 orderNum이 변경된 경우 업데이트
+        if (existingImage.orderNum !== newImage.orderNum) {
+          existingImage.orderNum = newImage.orderNum;
+
+          if (queryRunner) {
+            await queryRunner.manager.save(existingImage);
+          } else {
+            await this.postImageRepository.save(existingImage);
+          }
         }
       } else {
         // 새로운 이미지 저장
