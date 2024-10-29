@@ -38,4 +38,15 @@ export class Post extends BaseEntity {
 
   @OneToMany(() => PostReport, (postReport) => postReport.post)
   postReports!: PostReport[];
+    images: string[];
+
+  // 댓글 수
+  get commentCount(): number {
+    return this.postComments? this.postComments.length : 0;
+  }
+
+  // Like 수
+  get likeCount(): number {
+    return this.postLikes? this.postLikes.length : 0;
+  }
 }

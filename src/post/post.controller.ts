@@ -1,5 +1,18 @@
-import { Controller, Get, Patch, Post } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { PostService } from './post.service';
+import { GetPostsResponse } from './dtos/total-postsResponse.dto';
+import {
+  GetMyPostsResponse,
+  GetOtherPostsResponse,
+} from './dtos/user-postsResponse.dto';
 import {
   CreatePostsSwagger,
   GetPostsSwagger,
@@ -7,17 +20,34 @@ import {
   PatchIsRepresentativeSwagger,
   PatchPostSwagger,
 } from './post.swagger';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiParam, ApiTags } from '@nestjs/swagger';
+import { BaseResponse } from 'src/common/response/dto';
+import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
+import { Request } from 'express';
 
 @Controller('post')
+@UseGuards(AuthGuard)
 @ApiTags('[서비스] 게시글')
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
-  @Get()
+  @Get(':userId?')
   @GetPostsSwagger('게시글 리스트 조회 API')
-  getPosts() {
-    // return this.userService.getHello();
+  @ApiParam({ name: 'userId', required: false, description: 'User ID' })
+  async getPosts(
+    @Req() req: Request,
+    @Param('userId') userId?: number,
+  ): Promise<
+    BaseResponse<GetPostsResponse | GetMyPostsResponse | GetOtherPostsResponse>
+  > {
+    const currentUserId = req.user.userId;
+
+    const postsResponse = await this.postService.getPosts(
+      userId,
+      currentUserId,
+    );
+
+    return new BaseResponse(true, 'SUCCESS', postsResponse);
   }
 
   @Get()
