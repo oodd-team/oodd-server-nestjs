@@ -20,7 +20,13 @@ import {
 import { PatchPostDto } from './dtos/patch-Post.dto';
 import { UserBlockService } from 'src/user-block/user-block.service';
 import { PostClothingService } from 'src/post-clothing/post-clothing.service';
-import { GetPostResponse } from './dtos/get-post.dto';
+import { Dayjs } from 'dayjs';
+import { PostImage } from 'src/common/entities/post-image.entity';
+import { PostLike } from 'src/common/entities/post-like.entity';
+import { PostClothing } from 'src/common/entities/post-clothing.entity';
+import { PostComment } from 'src/common/entities/post-comment.entity';
+import { PostStyletag } from 'src/common/entities/post-styletag.entity';
+import { Clothing } from 'src/common/entities/clothing.entity';
 
 @Injectable()
 export class PostService {
@@ -44,7 +50,9 @@ export class PostService {
 
     // 차단된 사용자 ID 목록 가져오기
     const blockedUserIds = currentUserId
-      ? await this.userBlockService.getBlockedUserIds(currentUserId)
+      ? await this.userBlockService.getBlockedUserIdsByRequesterId(
+          currentUserId,
+        )
       : [];
 
     const totalposts = await this.postRepository.find({
@@ -78,7 +86,7 @@ export class PostService {
     return {
       post: posts.map((post) => ({
         content: post.content,
-        createdAt: post.createdAt,
+        createdAt: new Dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
         postImages: post.postImages.map((image) => ({
           url: image.url,
           orderNum: image.orderNum,
@@ -101,7 +109,7 @@ export class PostService {
   ) {
     const commonPosts = posts.map((post) => ({
       content: post.content,
-      createdAt: post.createdAt,
+      createdAt: new Dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
       imageUrl: post.postImages.find((image) => image.orderNum === 1)?.url,
       isRepresentative: post.isRepresentative,
       likeCount: post.postLikes.length,
@@ -131,7 +139,7 @@ export class PostService {
   }
 
   //게시글 생성
-  async createPost(uploadPostDto: CreatePostDto, userId: number) {
+  async createPost(uploadPostDto: CreatePostDto, currentUserId: number) {
     const {
       content,
       postImages,
@@ -145,7 +153,7 @@ export class PostService {
     await queryRunner.startTransaction();
 
     const user = await this.userService.findByFields({
-      where: { id: userId, status: 'activated' },
+      where: { id: currentUserId, status: 'activated' },
     });
 
     try {
@@ -178,6 +186,7 @@ export class PostService {
         await this.postClothingService.savePostClothings(
           savedPost,
           postClothings,
+          queryRunner,
         );
       }
 
@@ -215,32 +224,26 @@ export class PostService {
       }
       const updatedPost = await queryRunner.manager.save(post);
 
-      if (postImages) {
-        console.log('postImages:', postImages);
-        await this.postImageService.savePostImages(
-          postImages,
-          updatedPost,
-          queryRunner,
-        );
-      }
+      // postImages 업데이트
+      await this.postImageService.updatePostImages(
+        postImages,
+        updatedPost,
+        queryRunner,
+      );
 
       // styletag 업데이트
-      if (postStyletags) {
-        console.log('postStyletags:', postStyletags);
-        await this.postStyletagService.savePostStyletags(
-          updatedPost,
-          postStyletags,
-        );
-      }
+      await this.postStyletagService.updatePostStyletags(
+        updatedPost,
+        postStyletags,
+        queryRunner,
+      );
 
       // clothing 업데이트
-      if (postClothings) {
-        console.log('postClothings:', postClothings);
-        await this.postClothingService.savePostClothings(
-          updatedPost,
-          postClothings,
-        );
-      }
+      await this.postClothingService.updatePostClothings(
+        updatedPost,
+        postClothings,
+        queryRunner,
+      );
 
       await queryRunner.commitTransaction();
 
@@ -258,17 +261,57 @@ export class PostService {
 
   // 게시글 삭제
   async deletePost(postId: number, userId: number): Promise<void> {
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    // 게시글 조회
     const post = await this.postRepository.findOne({
       where: { id: postId, user: { id: userId }, status: 'activated' },
     });
 
     try {
+      // 게시글 상태 업데이트
       post.status = 'deactivated';
       post.softDelete();
 
-      await this.postRepository.save(post);
+      await queryRunner.manager.save(post);
+
+      await Promise.all([
+        queryRunner.manager.update(
+          PostImage,
+          { post: { id: postId } },
+          { status: 'deactivated', orderNum: 0 },
+        ),
+        queryRunner.manager.update(
+          PostLike,
+          { post: { id: postId } },
+          { status: 'deactivated' },
+        ),
+        queryRunner.manager.update(
+          PostComment,
+          { post: { id: postId } },
+          { status: 'deactivated' },
+        ),
+        queryRunner.manager.update(
+          PostClothing,
+          { post: { id: postId } },
+          { status: 'deactivated' },
+        ),
+        queryRunner.manager.update(
+          PostStyletag,
+          { post: { id: postId } },
+          { status: 'deactivated' },
+        ),
+      ]);
+
+      await queryRunner.commitTransaction();
     } catch (error) {
+      await queryRunner.rollbackTransaction();
       throw InternalServerException('게시글 삭제에 실패했습니다.');
+    } finally {
+      await queryRunner.release();
     }
   }
 
