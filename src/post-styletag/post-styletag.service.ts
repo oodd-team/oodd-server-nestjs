@@ -132,7 +132,7 @@ export class PostStyletagService {
     }
   }
   // PostStyletag 삭제 처리
-  private async deletePostStyletags(
+  async deletePostStyletags(
     tagsToDeleye: PostStyletag[],
     queryRunner?: QueryRunner,
   ): Promise<void> {
