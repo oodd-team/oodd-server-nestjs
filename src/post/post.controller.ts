@@ -117,7 +117,7 @@ export class PostController {
     return new BaseResponse(true, '게시글 작성 성공', post);
   }
 
-  @Patch('/')
+  @Patch(':postId')
   @PatchPostSwagger('게시글 수정 API')
   async patchPost(
     @Param('postId') postId: number,
