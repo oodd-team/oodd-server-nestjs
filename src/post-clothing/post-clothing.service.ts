@@ -20,8 +20,10 @@ export class PostClothingService {
     uploadClothingDtos: UploadClothingDto[],
     queryRunner?: QueryRunner,
   ): Promise<void> {
-    const savedClothings =
-      await this.clothingService.saveClothings(uploadClothingDtos);
+    const savedClothings = await this.clothingService.saveClothings(
+      uploadClothingDtos,
+      queryRunner,
+    );
 
     const postClothingEntities = savedClothings.map((clothing: Clothing) =>
       this.postClothingRepository.create({

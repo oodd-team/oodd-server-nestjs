@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryRunner, Repository } from 'typeorm';
 import { Clothing } from 'src/common/entities/clothing.entity';
 import { UploadClothingDto } from 'src/post/dtos/create-post.dto';
 
@@ -14,6 +14,7 @@ export class ClothingService {
   // Clothing 엔티티 저장
   async saveClothings(
     uploadClothingDtos: UploadClothingDto[],
+    queryRunner: QueryRunner,
   ): Promise<Clothing[]> {
     const clothingEntities = uploadClothingDtos.map(
       (clothing: UploadClothingDto) =>
@@ -26,7 +27,6 @@ export class ClothingService {
         }),
     );
 
-    // Clothing 저장
-    return await this.clothingRepository.save(clothingEntities);
+    return await queryRunner.manager.save(clothingEntities);
   }
 }

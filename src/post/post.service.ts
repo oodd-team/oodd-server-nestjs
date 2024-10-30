@@ -168,6 +168,7 @@ export class PostService {
         await this.postStyletagService.savePostStyletags(
           savedPost,
           postStyletags,
+          queryRunner,
         );
       }
 

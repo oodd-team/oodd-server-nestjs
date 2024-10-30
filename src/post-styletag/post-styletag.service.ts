@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryRunner, Repository } from 'typeorm';
 import { PostStyletag } from 'src/common/entities/post-styletag.entity';
 import { Post } from 'src/common/entities/post.entity';
 import { StyletagService } from 'src/styletag/styletag.service';
@@ -18,7 +18,11 @@ export class PostStyletagService {
     private readonly styletagService: StyletagService,
   ) {}
 
-  async savePostStyletags(post: Post, tags: string[]): Promise<void> {
+  async savePostStyletags(
+    post: Post,
+    tags: string[],
+    queryRunner: QueryRunner,
+  ): Promise<void> {
     if (!tags || tags.length === 0) {
       return;
     }
@@ -48,10 +52,8 @@ export class PostStyletagService {
       });
 
       try {
-        // postStyletag 저장
-        await this.postStyletagRepository.save(postStyletag);
+        await queryRunner.manager.save(postStyletag);
       } catch (error) {
-        console.error('Error saving post styletags:', error);
         throw InternalServerException('postStyletag 저장에 실패했습니다.');
       }
     }

@@ -79,7 +79,7 @@ export class CreatePostDto {
   @ApiProperty({
     required: false,
     type: [String],
-    example: ['tag1'],
+    example: ['가을'],
     description: '스타일 태그 목록입니다.',
   })
   @IsOptional()
