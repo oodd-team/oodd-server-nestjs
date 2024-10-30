@@ -73,7 +73,7 @@ export function GetPostSwagger(text: string) {
     [],
     [
       ApiAcceptedResponse({
-        description: '게시글 상세 조회 성공',
+        description: '게시글 조회 성공',
         type: GetPostResponse,
       }),
       ApiBadRequestResponse({
