@@ -62,9 +62,12 @@ export class ClothingService {
   }
 
   // Clothing 삭제 처리
-  async deleteClothing(clothing: Clothing): Promise<Clothing> {
+  async deleteClothing(
+    clothing: Clothing,
+    queryRunner: QueryRunner,
+  ): Promise<Clothing> {
     clothing.status = 'deactivated';
     clothing.softDelete();
-    return await this.clothingRepository.save(clothing);
+    return await queryRunner.manager.save(clothing);
   }
 }
