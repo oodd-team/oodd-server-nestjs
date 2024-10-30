@@ -52,9 +52,7 @@ export class PostClothingService {
         (existingClothing) => existingClothing.status === 'activated',
       );
 
-      for (const postClothing of clothingsToDeactivate) {
-        await this.deletePostClothing(postClothing, queryRunner);
-      }
+      await this.deletePostClothing(clothingsToDeactivate, queryRunner);
       return; // 함수 종료
     }
 
@@ -68,9 +66,7 @@ export class PostClothingService {
     );
 
     if (postClothingsToRemove.length > 0) {
-      for (const postClothing of postClothingsToRemove) {
-        await this.deletePostClothing(postClothing, queryRunner);
-      }
+      await this.deletePostClothing(postClothingsToRemove, queryRunner);
     }
 
     // PostClothing 추가 및 수정
@@ -105,12 +101,18 @@ export class PostClothingService {
 
   // PostClothing 및 Clothing 삭제 처리
   async deletePostClothing(
-    postClothing: PostClothing,
+    postClothing: PostClothing[],
     queryRunner: QueryRunner,
   ): Promise<void> {
-    postClothing.status = 'deactivated';
-    postClothing.softDelete();
-    await this.clothingService.deleteClothing(postClothing.clothing);
-    await queryRunner.manager.save(postClothing);
+    await Promise.all(
+      postClothing.map(async (postClothingItem) => {
+        postClothingItem.status = 'deactivated';
+        postClothingItem.softDelete();
+
+        await this.clothingService.deleteClothing(postClothingItem.clothing);
+
+        await queryRunner.manager.save(postClothingItem);
+      }),
+    );
   }
 }
