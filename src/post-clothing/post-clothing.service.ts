@@ -112,7 +112,10 @@ export class PostClothingService {
         postClothingItem.status = 'deactivated';
         postClothingItem.softDelete();
 
-        await this.clothingService.deleteClothing(postClothingItem.clothing);
+        await this.clothingService.deleteClothing(
+          postClothingItem.clothing,
+          queryRunner,
+        );
 
         await queryRunner.manager.save(postClothingItem);
       }),
