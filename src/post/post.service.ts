@@ -277,12 +277,13 @@ export class PostService {
 
       await queryRunner.manager.save(post);
 
-      // 관련된 엔티티 삭제 처리
+      // 연결된 PostImage 삭제
       const imagesToRemove = await queryRunner.manager.find(PostImage, {
         where: { id: postId },
       });
-      //await this.postImageService.deleteImages(imagesToRemove, queryRunner);
+      await this.postImageService.deleteImages(imagesToRemove, queryRunner);
 
+      // 연결된 PostLike 삭제
       const likesToRemove = await queryRunner.manager.find(PostLike, {
         where: { id: postId },
       });
@@ -293,6 +294,7 @@ export class PostService {
         }),
       );
 
+      // 연결된 PostComment 삭제
       const commentsToRemove = await queryRunner.manager.find(PostComment, {
         where: { id: postId },
       });
@@ -303,11 +305,15 @@ export class PostService {
         }),
       );
 
-      const clothingToRemove = await queryRunner.manager.find(PostClothing, {
-        where: { id: postId },
-      });
+      // 연결된 PostClothing 삭제
+      const PostClothingToRemove = await queryRunner.manager.find(
+        PostClothing,
+        {
+          where: { id: postId },
+        },
+      );
       await Promise.all(
-        clothingToRemove.map(async (postClothing) => {
+        PostClothingToRemove.map(async (postClothing) => {
           await this.postClothingService.deletePostClothing(
             postClothing,
             queryRunner,
@@ -315,10 +321,14 @@ export class PostService {
         }),
       );
 
+      // 연결된 PostStyleTag 삭제
       const tagsToRemove = await queryRunner.manager.find(PostStyletag, {
         where: { id: postId },
       });
-      //await this.postStyletagService.deletePostStyletags(tagsToRemove, queryRunner);
+      await this.postStyletagService.deletePostStyletags(
+        tagsToRemove,
+        queryRunner,
+      );
 
       await queryRunner.commitTransaction();
     } catch (error) {
