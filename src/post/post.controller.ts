@@ -2,9 +2,9 @@ import {
   Body,
   Controller,
   Get,
-  Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -35,29 +35,30 @@ import { PatchPostDto } from './dtos/patch-Post.dto';
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
-  @Get(':userId?')
+  @Get('/')
   @GetPostsSwagger('게시글 리스트 조회 API')
   @ApiParam({ name: 'userId', required: false, description: 'User ID' })
   async getPosts(
     @Req() req: Request,
-    @Param('userId') userId?: number,
+    @Query('userId') userId?: string,
   ): Promise<
     BaseResponse<GetPostsResponse | GetMyPostsResponse | GetOtherPostsResponse>
   > {
     const currentUserId = req.user.userId;
+    const parsedUserId = userId ? parseInt(userId, 10) : undefined;
 
     const postsResponse = await this.postService.getPosts(
-      userId,
+      parsedUserId,
       currentUserId,
     );
 
     return new BaseResponse(true, 'SUCCESS', postsResponse);
   }
 
-  @Get(':postId/detail')
+  @Get('/detail')
   @GetPostSwagger('게시글 상세 조회 API')
   async getPost(
-    @Param('postId') postId: number,
+    @Query('postId') postId: number,
     @Req() req: Request,
   ): Promise<BaseResponse<GetPostResponse>> {
     const currentUserId = req.user.userId;
@@ -116,18 +117,22 @@ export class PostController {
     return new BaseResponse(true, '게시글 작성 성공', post);
   }
 
-  @Patch(':postId')
+  @Patch('/')
   @PatchPostSwagger('게시글 수정 API')
   async patchPost(
-    @Param('postId') postId: number,
+    @Query('postId') postId: string,
     @Body() patchPostDto: PatchPostDto,
     @Req() req: Request,
   ): Promise<BaseResponse<any>> {
     const currentUserId = req.user.userId;
+    const parsedPostId = parseInt(postId, 10);
 
-    await this.postService.validatePost(postId, currentUserId);
+    await this.postService.validatePost(parsedPostId, currentUserId);
 
-    const updatedPost = await this.postService.patchPost(postId, patchPostDto);
+    const updatedPost = await this.postService.patchPost(
+      parsedPostId,
+      patchPostDto,
+    );
 
     return new BaseResponse(true, '게시글 수정 성공', updatedPost);
   }
