@@ -19,10 +19,8 @@ import {
 } from 'src/common/exception/service.exception';
 import { PatchPostDto } from './dtos/patch-Post.dto';
 import { UserBlockService } from 'src/user-block/user-block.service';
-import { User } from 'src/common/entities/user.entity';
 import { PostClothingService } from 'src/post-clothing/post-clothing.service';
 import { Dayjs } from 'dayjs';
-import { GetPostResponse } from './dtos/get-post.dto';
 
 @Injectable()
 export class PostService {
