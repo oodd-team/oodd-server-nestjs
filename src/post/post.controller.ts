@@ -155,8 +155,7 @@ export class PostController {
     @Param('postId') postId: number,
     @Req() req: Request,
   ): Promise<BaseResponse<any>> {
-    //const currentUserId = req.user.userId;
-    const currentUserId = 1;
+    const currentUserId = req.user.userId;
 
     await this.postService.validatePost(postId, currentUserId);
 
