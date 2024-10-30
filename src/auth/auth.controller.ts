@@ -8,6 +8,7 @@ import { KakaoAuthGuard } from './guards/kakao.auth.guard';
 import { BaseResponse } from 'src/common/response/dto';
 import { LoginResponse } from './dto/auth.response';
 import { NaverAuthGuard } from './guards/naver.auth.guard';
+import { AuthGuard } from './guards/jwt.auth.guard';
 
 @Controller('auth')
 @ApiTags('[서비스] Auth 관련')
@@ -47,5 +48,12 @@ export class AuthController {
     const { socialUser } = req;
     const jwtToken = await this.authService.socialLogin(socialUser, 'naver');
     return new BaseResponse<LoginResponse>(true, 'SUCCESS', { jwt: jwtToken });
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('/test')
+  async test(@Req() req: Request) {
+    console.log(req.user);
+    return req.user;
   }
 }

@@ -6,9 +6,20 @@ import {
   IsString,
   ValidateNested,
   MaxLength,
+  IsNumber,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { UploadImageDto, UploadClothingDto } from './create-post.dto';
+
+export class PatchClothingDto extends UploadClothingDto {
+  @ApiProperty({
+    example: 1,
+    description: 'id 값입니다. 기존 옷 정보 수정시 필요합니다.',
+  })
+  @IsNumber()
+  @IsOptional()
+  id?: number;
+}
 
 export class PatchPostDto {
   @ApiProperty({
@@ -45,14 +56,14 @@ export class PatchPostDto {
 
   @ApiProperty({
     required: false,
-    type: [UploadClothingDto],
+    type: [PatchClothingDto],
     description: '게시물에 포함될 옷 정보 리스트입니다.',
   })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => UploadClothingDto)
-  postClothings?: UploadClothingDto[];
+  @Type(() => PatchClothingDto)
+  postClothings?: PatchClothingDto[];
 
   @ApiProperty({
     example: false,

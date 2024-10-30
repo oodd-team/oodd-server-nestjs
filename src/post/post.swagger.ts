@@ -18,65 +18,51 @@ import {
   GetMyPostsResponse,
   GetOtherPostsResponse,
 } from './dtos/user-postsResponse.dto';
+import { applyDecorators } from '@nestjs/common';
 import { GetPostResponse } from './dtos/get-post.dto';
 
 // 게시글 리스트 조회하기 API Swagger
 export function GetPostsSwagger(text: string) {
-  return BaseSwaggerDecorator(
-    { summary: text },
-    [
+  return applyDecorators(
+    BaseSwaggerDecorator({ summary: text }, [
       {
         statusCode: 200,
         responseOptions: [
           {
             model: GetPostsResponse,
-            exampleTitle: '성공',
+            exampleTitle: '전체 게시글 조회 예시',
             exampleDescription: '전체 게시글 조회 성공 시 값',
           },
-        ],
-        baseResponseDto: BaseResponse,
-      },
-      {
-        statusCode: 200,
-        responseOptions: [
           {
             model: GetMyPostsResponse,
-            exampleTitle: '성공',
+            exampleTitle: '내 게시글 조회 예시',
             exampleDescription: '내 게시글 조회 성공 시 값',
           },
-        ],
-        baseResponseDto: BaseResponse,
-      },
-      {
-        statusCode: 200,
-        responseOptions: [
           {
             model: GetOtherPostsResponse,
-            exampleTitle: '성공',
+            exampleTitle: '다른 사용자 게시글 조회 예시',
             exampleDescription: '다른 사용자 게시글 조회 성공 시 값',
           },
         ],
         baseResponseDto: BaseResponse,
       },
-    ],
-    [
-      ApiBadRequestResponse({
-        description: '잘못된 요청입니다.',
-        type: BaseResponse,
-      }),
-      ApiUnauthorizedResponse({
-        description: '인증에 실패했습니다.',
-        type: BaseResponse,
-      }),
-      ApiNotFoundResponse({
-        description: '존재하지 않는 게시글입니다.',
-        type: BaseResponse,
-      }),
-      ApiInternalServerErrorResponse({
-        description: '서버 에러입니다.',
-        type: BaseResponse,
-      }),
-    ],
+    ]),
+    ApiBadRequestResponse({
+      description: '잘못된 요청입니다.',
+      type: BaseResponse,
+    }),
+    ApiUnauthorizedResponse({
+      description: '인증에 실패했습니다.',
+      type: BaseResponse,
+    }),
+    ApiNotFoundResponse({
+      description: '존재하지 않는 게시글입니다.',
+      type: BaseResponse,
+    }),
+    ApiInternalServerErrorResponse({
+      description: '서버 에러입니다.',
+      type: BaseResponse,
+    }),
   );
 }
 
@@ -84,20 +70,12 @@ export function GetPostsSwagger(text: string) {
 export function GetPostSwagger(text: string) {
   return BaseSwaggerDecorator(
     { summary: text },
+    [],
     [
-      {
-        statusCode: 200,
-        responseOptions: [
-          {
-            model: GetPostResponse,
-            exampleTitle: '성공',
-            exampleDescription: '게시글 조회 성공',
-          },
-        ],
-        baseResponseDto: BaseResponse,
-      },
-    ],
-    [
+      ApiAcceptedResponse({
+        description: '게시글 조회 성공',
+        type: GetPostResponse,
+      }),
       ApiBadRequestResponse({
         description: '잘못된 요청입니다.',
         type: BaseResponse,
