@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Patch,
   Post,
   Query,
@@ -120,19 +121,15 @@ export class PostController {
   @Patch('/')
   @PatchPostSwagger('게시글 수정 API')
   async patchPost(
-    @Query('postId') postId: string,
+    @Param('postId') postId: number,
     @Body() patchPostDto: PatchPostDto,
     @Req() req: Request,
   ): Promise<BaseResponse<any>> {
     const currentUserId = req.user.userId;
-    const parsedPostId = parseInt(postId, 10);
 
-    await this.postService.validatePost(parsedPostId, currentUserId);
+    await this.postService.validatePost(postId, currentUserId);
 
-    const updatedPost = await this.postService.patchPost(
-      parsedPostId,
-      patchPostDto,
-    );
+    const updatedPost = await this.postService.patchPost(postId, patchPostDto);
 
     return new BaseResponse(true, '게시글 수정 성공', updatedPost);
   }
