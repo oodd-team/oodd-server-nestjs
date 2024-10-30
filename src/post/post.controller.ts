@@ -58,7 +58,7 @@ export class PostController {
   @Get('/detail')
   @GetPostSwagger('게시글 상세 조회 API')
   async getPost(
-    @Query('postId') postId: number,
+    @Param('postId') postId: number,
     @Req() req: Request,
   ): Promise<BaseResponse<GetPostResponse>> {
     const currentUserId = req.user.userId;
