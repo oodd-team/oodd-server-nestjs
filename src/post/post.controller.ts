@@ -55,7 +55,7 @@ export class PostController {
     return new BaseResponse(true, 'SUCCESS', postsResponse);
   }
 
-  @Get('/detail')
+  @Get(':postId')
   @GetPostSwagger('게시글 상세 조회 API')
   async getPost(
     @Param('postId') postId: number,
