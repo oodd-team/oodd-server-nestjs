@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryRunner, Repository } from 'typeorm';
 import { Clothing } from 'src/common/entities/clothing.entity';
 import { UploadClothingDto } from 'src/post/dtos/create-post.dto';
 import { DataNotFoundException } from 'src/common/exception/service.exception';
@@ -16,6 +16,7 @@ export class ClothingService {
   // Clothing 엔티티 저장
   async saveClothings(
     uploadClothingDtos: UploadClothingDto[],
+    queryRunner: QueryRunner,
   ): Promise<Clothing[]> {
     const clothingEntities = uploadClothingDtos.map(
       (clothing: UploadClothingDto) =>
@@ -28,11 +29,14 @@ export class ClothingService {
         }),
     );
 
-    return await this.clothingRepository.save(clothingEntities);
+    return await queryRunner.manager.save(clothingEntities);
   }
 
   // Clothing 수정
-  async updateClothing(uploadClothingDto: PatchClothingDto): Promise<Clothing> {
+  async updateClothing(
+    uploadClothingDto: PatchClothingDto,
+    queryRunner: QueryRunner,
+  ): Promise<Clothing> {
     const existingClothing = await this.clothingRepository.findOne({
       where: { id: uploadClothingDto.id, status: 'activated' },
     });
@@ -54,7 +58,7 @@ export class ClothingService {
       existingClothing.modelNumber = uploadClothingDto.modelNumber;
     if (uploadClothingDto.url) existingClothing.url = uploadClothingDto.url;
 
-    return await this.clothingRepository.save(existingClothing);
+    return await queryRunner.manager.save(existingClothing);
   }
 
   // Clothing 삭제 처리
