@@ -70,16 +70,11 @@ export class PostStyletagService {
 
     // 빈 배열이 들어온 경우
     if (newTags.length === 0) {
-      const tagsToDeactivate = existingPostStyletags.filter(
+      const tagsToDelete = existingPostStyletags.filter(
         (existingPostStyletag) => existingPostStyletag.status === 'activated',
       );
 
-      for (const existingPostStyletag of tagsToDeactivate) {
-        existingPostStyletag.status = 'deactivated';
-        existingPostStyletag.softDelete();
-      }
-
-      await queryRunner.manager.save(tagsToDeactivate);
+      await this.deletePostStyletags(tagsToDelete, queryRunner);
       return; // 함수 종료
     }
 
@@ -100,17 +95,8 @@ export class PostStyletagService {
 
     // PostStyletag 삭제
     if (tagsToRemove.length > 0) {
-      for (const tagToRemove of tagsToRemove) {
-        tagToRemove.status = 'deactivated';
-        tagToRemove.softDelete();
-      }
-      await queryRunner.manager.save(tagsToRemove);
+      await this.deletePostStyletags(tagsToRemove, queryRunner);
     }
-
-    // 기존 Styletag의 ID
-    const existingTagIds = existingPostStyletags.map(
-      (existingTag) => existingTag.styletag.id,
-    );
 
     // 새로운 PostStyletag 추가
     const newPostStyletags = [];
@@ -144,5 +130,16 @@ export class PostStyletagService {
     if (newPostStyletags.length > 0) {
       await queryRunner.manager.save(newPostStyletags);
     }
+  }
+  // PostStyletag 삭제 처리
+  private async deletePostStyletags(
+    tagsToDeleye: PostStyletag[],
+    queryRunner?: QueryRunner,
+  ): Promise<void> {
+    for (const tag of tagsToDeleye) {
+      tag.status = 'deactivated';
+      tag.softDelete();
+    }
+    await queryRunner.manager.save(tagsToDeleye);
   }
 }
