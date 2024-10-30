@@ -300,7 +300,6 @@ export class PostService {
 
   // 유저가 게시물에 좋아요를 눌렀는지 확인
   public checkIsPostLiked(post: Post, currentUserId: number): boolean {
-    console.log(post.postLikes);
     return post.postLikes.some((like) => like.user.id === currentUserId);
   }
 
