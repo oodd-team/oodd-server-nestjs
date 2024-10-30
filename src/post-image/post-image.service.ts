@@ -88,7 +88,7 @@ export class PostImageService {
     );
   }
   // 이미지 삭제 처리
-  private async deleteImages(
+  async deleteImages(
     imagesToRemove: PostImage[],
     queryRunner?: QueryRunner,
   ): Promise<void> {

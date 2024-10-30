@@ -80,7 +80,7 @@ export function GetPostSwagger(text: string) {
         type: BaseResponse,
       }),
       ApiUnauthorizedResponse({
-        description: '인증에 실패했습니다.',
+        description: '인증되지 않은 사용자입니다.',
         type: BaseResponse,
       }),
       ApiNotFoundResponse({
