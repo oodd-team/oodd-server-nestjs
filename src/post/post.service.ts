@@ -8,7 +8,7 @@ import {
   GetOtherPostsResponse,
 } from './dtos/user-postsResponse.dto';
 import { UserBlockService } from 'src/user-block/user-block.service';
-import { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class PostService {
@@ -23,7 +23,14 @@ export class PostService {
     userId?: number,
     currentUserId?: number,
   ): Promise<GetPostsResponse | GetMyPostsResponse | GetOtherPostsResponse> {
-    const relations = ['postImages', 'postComments', 'postLikes', 'user'];
+    const relations = [
+      'postImages',
+      'postComments',
+      'postLikes',
+      'user',
+      'postLikes.user',
+      'postComments.user',
+    ];
 
     // 차단된 사용자 ID 목록 가져오기
     const blockedUserIds = currentUserId
@@ -63,7 +70,7 @@ export class PostService {
     return {
       post: posts.map((post) => ({
         content: post.content,
-        createdAt: new Dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
+        createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
         postImages: post.postImages.map((image) => ({
           url: image.url,
           orderNum: image.orderNum,
@@ -86,7 +93,7 @@ export class PostService {
   ) {
     const commonPosts = posts.map((post) => ({
       content: post.content,
-      createdAt: new Dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
+      createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
       imageUrl: post.postImages.find((image) => image.orderNum === 1)?.url,
       isRepresentative: post.isRepresentative,
       likeCount: post.postLikes.length,
@@ -127,6 +134,7 @@ export class PostService {
 
   // 유저가 게시물에 좋아요를 눌렀는지 확인
   private checkIsPostLiked(post: Post, currentUserId: number): boolean {
+    console.log(post.postLikes);
     return post.postLikes.some((like) => like.user.id === currentUserId);
   }
 
