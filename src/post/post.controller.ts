@@ -40,15 +40,14 @@ export class PostController {
   @ApiParam({ name: 'userId', required: false, description: 'User ID' })
   async getPosts(
     @Req() req: Request,
-    @Query('userId') userId?: string,
+    @Query('userId') userId?: number,
   ): Promise<
     BaseResponse<GetPostsResponse | GetMyPostsResponse | GetOtherPostsResponse>
   > {
     const currentUserId = req.user.userId;
-    const parsedUserId = userId ? parseInt(userId, 10) : undefined;
 
     const postsResponse = await this.postService.getPosts(
-      parsedUserId,
+      userId,
       currentUserId,
     );
 
