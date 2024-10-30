@@ -11,10 +11,7 @@ import { UserService } from 'src/user/user.service';
 import { PostImageService } from 'src/post-image/post-image.service';
 import { CreatePostDto } from './dtos/create-post.dto';
 import { PostStyletagService } from '../post-styletag/post-styletag.service';
-import {
-  InternalServerException,
-  ServiceException,
-} from 'src/common/exception/service.exception';
+import { InternalServerException } from 'src/common/exception/service.exception';
 import { UserBlockService } from 'src/user-block/user-block.service';
 import { PostClothingService } from 'src/post-clothing/post-clothing.service';
 import dayjs from 'dayjs';
