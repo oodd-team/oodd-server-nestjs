@@ -121,10 +121,6 @@ export function PatchPostSwagger(text: string) {
         description: '권한이 없습니다.',
         type: BaseResponse,
       }),
-      ApiUnprocessableEntityResponse({
-        description: '요청이 처리 불가능합니다.',
-        type: BaseResponse,
-      }),
       ApiInternalServerErrorResponse({
         description: '서버 오류입니다.',
         type: BaseResponse,
