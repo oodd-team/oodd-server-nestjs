@@ -32,14 +32,14 @@ export class UploadClothingDto {
   imageUrl: string;
 
   @ApiProperty({
-    example: '브랜드 이름',
-    description: '옷 브랜드 이름입니다.',
+    example: '브랜드명',
+    description: '옷 브랜드명입니다.',
   })
   @IsString()
   @MaxLength(100)
   brandName: string;
 
-  @ApiProperty({ example: '모델 이름', description: '옷 상품명입니다.' })
+  @ApiProperty({ example: '모델명', description: '옷 상품명입니다.' })
   @IsString()
   @MaxLength(100)
   modelName: string;
@@ -80,7 +80,8 @@ export class CreatePostDto {
     required: false,
     type: [String],
     example: ['가을'],
-    description: '스타일 태그 목록입니다.',
+    description:
+      '게시글에 포함될 스타일 태그 목록입니다. 스타일 태그에 저장된 태그만 입력 가능합니다.',
   })
   @IsOptional()
   @IsArray()
@@ -100,7 +101,7 @@ export class CreatePostDto {
 
   @ApiProperty({
     example: false,
-    description: '대표 게시물 여부를 나타냅니다.',
+    description: '대표 게시물 여부입니다.',
   })
   @IsBoolean()
   isRepresentative: boolean;

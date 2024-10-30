@@ -2,9 +2,9 @@ import {
   Body,
   Controller,
   Get,
-  Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -33,19 +33,20 @@ import { Request } from 'express';
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
-  @Get(':userId?')
+  @Get('/')
   @GetPostsSwagger('게시글 리스트 조회 API')
   @ApiParam({ name: 'userId', required: false, description: 'User ID' })
   async getPosts(
     @Req() req: Request,
-    @Param('userId') userId?: number,
+    @Query('userId') userId?: string,
   ): Promise<
     BaseResponse<GetPostsResponse | GetMyPostsResponse | GetOtherPostsResponse>
   > {
     const currentUserId = req.user.userId;
+    const parsedUserId = userId ? parseInt(userId, 10) : undefined;
 
     const postsResponse = await this.postService.getPosts(
-      userId,
+      parsedUserId,
       currentUserId,
     );
 
