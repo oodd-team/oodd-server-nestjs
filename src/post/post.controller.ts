@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -36,12 +37,12 @@ import { PatchPostDto } from './dtos/patch-Post.dto';
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
-  @Get(':userId?')
+  @Get('/')
   @GetPostsSwagger('게시글 리스트 조회 API')
   @ApiParam({ name: 'userId', required: false, description: 'User ID' })
   async getPosts(
     @Req() req: Request,
-    @Param('userId') userId?: number,
+    @Query('userId') userId?: number,
   ): Promise<
     BaseResponse<GetPostsResponse | GetMyPostsResponse | GetOtherPostsResponse>
   > {
@@ -55,7 +56,7 @@ export class PostController {
     return new BaseResponse(true, 'SUCCESS', postsResponse);
   }
 
-  @Get(':postId/detail')
+  @Get(':postId')
   @GetPostSwagger('게시글 상세 조회 API')
   async getPost(
     @Param('postId') postId: number,

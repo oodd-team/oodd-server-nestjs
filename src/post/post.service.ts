@@ -20,13 +20,10 @@ import {
 import { PatchPostDto } from './dtos/patch-Post.dto';
 import { UserBlockService } from 'src/user-block/user-block.service';
 import { PostClothingService } from 'src/post-clothing/post-clothing.service';
-import { Dayjs } from 'dayjs';
-import { PostImage } from 'src/common/entities/post-image.entity';
-import { PostLike } from 'src/common/entities/post-like.entity';
-import { PostClothing } from 'src/common/entities/post-clothing.entity';
-import { PostComment } from 'src/common/entities/post-comment.entity';
+import dayjs from 'dayjs';
 import { PostStyletag } from 'src/common/entities/post-styletag.entity';
-
+import { PostLikeService } from 'src/post-like/post-like.service';
+import { PostCommentService } from 'src/post-comment/post-comment.service';
 @Injectable()
 export class PostService {
   constructor(
@@ -37,6 +34,8 @@ export class PostService {
     private readonly postImageService: PostImageService,
     private readonly postStyletagService: PostStyletagService,
     private readonly postClothingService: PostClothingService,
+    private readonly postLikeService: PostLikeService,
+    private readonly postCommentService: PostCommentService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -45,7 +44,14 @@ export class PostService {
     userId?: number,
     currentUserId?: number,
   ): Promise<GetPostsResponse | GetMyPostsResponse | GetOtherPostsResponse> {
-    const relations = ['postImages', 'postComments', 'postLikes', 'user'];
+    const relations = [
+      'postImages',
+      'postComments',
+      'postLikes',
+      'user',
+      'postLikes.user',
+      'postComments.user',
+    ];
 
     // 차단된 사용자 ID 목록 가져오기
     const blockedUserIds = currentUserId
@@ -85,7 +91,7 @@ export class PostService {
     return {
       post: posts.map((post) => ({
         content: post.content,
-        createdAt: new Dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
+        createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
         postImages: post.postImages.map((image) => ({
           url: image.url,
           orderNum: image.orderNum,
@@ -108,7 +114,7 @@ export class PostService {
   ) {
     const commonPosts = posts.map((post) => ({
       content: post.content,
-      createdAt: new Dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
+      createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
       imageUrl: post.postImages.find((image) => image.orderNum === 1)?.url,
       isRepresentative: post.isRepresentative,
       likeCount: post.postLikes.length,
@@ -177,6 +183,7 @@ export class PostService {
         await this.postStyletagService.savePostStyletags(
           savedPost,
           postStyletags,
+          queryRunner,
         );
       }
 
@@ -194,11 +201,6 @@ export class PostService {
       return savedPost;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-
-      if (error instanceof ServiceException) {
-        throw error;
-      }
-
       throw InternalServerException('게시글 저장에 실패했습니다.');
     } finally {
       await queryRunner.release();
@@ -278,43 +280,17 @@ export class PostService {
       await queryRunner.manager.save(post);
 
       // 연결된 PostImage 삭제
-      const imagesToRemove = await queryRunner.manager.find(PostImage, {
-        where: { post: { id: postId } },
-      });
-      await this.postImageService.deleteImages(imagesToRemove, queryRunner);
+      await this.postImageService.deleteImagesByPostId(postId, queryRunner);
 
       // 연결된 PostLike 삭제
-      const likesToRemove = await queryRunner.manager.find(PostLike, {
-        where: { post: { id: postId } },
-      });
-      await Promise.all(
-        likesToRemove.map((like) => {
-          like.status = 'deactivated';
-          return queryRunner.manager.save(like);
-        }),
-      );
+      await this.postLikeService.deletePostLikeByPostId(postId, queryRunner);
 
       // 연결된 PostComment 삭제
-      const commentsToRemove = await queryRunner.manager.find(PostComment, {
-        where: { post: { id: postId } },
-      });
-      await Promise.all(
-        commentsToRemove.map((comment) => {
-          comment.status = 'deactivated';
-          return queryRunner.manager.save(comment);
-        }),
-      );
+      await this.postCommentService.deleteCommentsByPostId(postId, queryRunner);
 
       // 연결된 PostClothing 삭제
-      const postClothingToRemove = await queryRunner.manager.find(
-        PostClothing,
-        {
-          where: { post: { id: postId } },
-          relations: ['clothing'],
-        },
-      );
-      await this.postClothingService.deletePostClothing(
-        postClothingToRemove,
+      await this.postClothingService.deletePostClothingByPostId(
+        postId,
         queryRunner,
       );
 

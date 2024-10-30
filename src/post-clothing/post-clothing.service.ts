@@ -22,8 +22,10 @@ export class PostClothingService {
     uploadClothingDtos: UploadClothingDto[],
     queryRunner?: QueryRunner,
   ): Promise<void> {
-    const savedClothings =
-      await this.clothingService.saveClothings(uploadClothingDtos);
+    const savedClothings = await this.clothingService.saveClothings(
+      uploadClothingDtos,
+      queryRunner,
+    );
 
     const postClothingEntities = savedClothings.map((clothing: Clothing) =>
       this.postClothingRepository.create({
@@ -79,12 +81,13 @@ export class PostClothingService {
 
       if (existingPostClothing) {
         // Clothing 정보 수정
-        await this.clothingService.updateClothing(newClothing);
+        await this.clothingService.updateClothing(newClothing, queryRunner);
       } else {
         // 새로운 Clothing 추가
-        const newClothingEntity = await this.clothingService.saveClothings([
-          newClothing,
-        ]);
+        const newClothingEntity = await this.clothingService.saveClothings(
+          [newClothing],
+          queryRunner,
+        );
         for (const clothing of newClothingEntity) {
           const newPostClothingEntity = this.postClothingRepository.create({
             post,
@@ -112,6 +115,27 @@ export class PostClothingService {
         await this.clothingService.deleteClothing(postClothingItem.clothing);
 
         await queryRunner.manager.save(postClothingItem);
+      }),
+    );
+  }
+
+  // Post에 연결된 PostClothing 및 Clothing 삭제 처리
+  async deletePostClothingByPostId(
+    postId: number,
+    queryRunner: QueryRunner,
+  ): Promise<void> {
+    const clothingToRemove = await queryRunner.manager.find(PostClothing, {
+      where: { post: { id: postId } },
+      relations: ['clothing'],
+    });
+
+    await Promise.all(
+      clothingToRemove.map(async (Postclothing) => {
+        Postclothing.status = 'deactivated';
+        Postclothing.softDelete();
+        await this.clothingService.deleteClothing(Postclothing.clothing);
+
+        return queryRunner.manager.save(Postclothing);
       }),
     );
   }
