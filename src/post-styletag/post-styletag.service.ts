@@ -144,4 +144,22 @@ export class PostStyletagService {
     }
     await queryRunner.manager.save(tagsToDeleye);
   }
+
+  // Post에 연결된 PostStyletag 삭제 처리
+  async deletePostStyletagsByPostId(
+    postId: number,
+    queryRunner: QueryRunner,
+  ): Promise<void> {
+    const tagsToRemove = await queryRunner.manager.find(PostStyletag, {
+      where: { post: { id: postId } },
+    });
+
+    await Promise.all(
+      tagsToRemove.map(async (tag) => {
+        tag.status = 'deactivated';
+        tag.softDelete();
+        return queryRunner.manager.save(tag);
+      }),
+    );
+  }
 }

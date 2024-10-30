@@ -21,7 +21,6 @@ import { PatchPostDto } from './dtos/patch-Post.dto';
 import { UserBlockService } from 'src/user-block/user-block.service';
 import { PostClothingService } from 'src/post-clothing/post-clothing.service';
 import dayjs from 'dayjs';
-import { PostStyletag } from 'src/common/entities/post-styletag.entity';
 import { PostLikeService } from 'src/post-like/post-like.service';
 import { PostCommentService } from 'src/post-comment/post-comment.service';
 @Injectable()
@@ -273,7 +272,7 @@ export class PostService {
     });
 
     try {
-      // 게시글 상태 업데이트
+      // 게시글 삭제
       post.status = 'deactivated';
       post.softDelete();
 
@@ -295,11 +294,8 @@ export class PostService {
       );
 
       // 연결된 PostStyleTag 삭제
-      const tagsToRemove = await queryRunner.manager.find(PostStyletag, {
-        where: { post: { id: postId } },
-      });
-      await this.postStyletagService.deletePostStyletags(
-        tagsToRemove,
+      await this.postStyletagService.deletePostStyletagsByPostId(
+        postId,
         queryRunner,
       );
 

@@ -136,7 +136,7 @@ export class PostClothingService {
       clothingToRemove.map(async (Postclothing) => {
         Postclothing.status = 'deactivated';
         Postclothing.softDelete();
-        await this.clothingService.deleteClothing(Postclothing.clothing);
+        await this.clothingService.deleteClothing(Postclothing.clothing, queryRunner);
 
         return queryRunner.manager.save(Postclothing);
       }),
