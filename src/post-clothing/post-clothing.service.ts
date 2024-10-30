@@ -52,13 +52,9 @@ export class PostClothingService {
         (existingClothing) => existingClothing.status === 'activated',
       );
 
-      for (const existingClothing of clothingsToDeactivate) {
-        existingClothing.status = 'deactivated';
-        existingClothing.softDelete();
-        await this.clothingService.deleteClothing(existingClothing.clothing.id);
+      for (const postClothing of clothingsToDeactivate) {
+        await this.deletePostClothing(postClothing, queryRunner);
       }
-
-      await queryRunner.manager.save(clothingsToDeactivate);
       return; // 함수 종료
     }
 
@@ -71,16 +67,13 @@ export class PostClothingService {
         ),
     );
 
-    for (const postClothing of postClothingsToRemove) {
-      postClothing.status = 'deactivated';
-      postClothing.softDelete();
-      await this.clothingService.deleteClothing(postClothing.clothing.id);
-    }
     if (postClothingsToRemove.length > 0) {
-      await queryRunner.manager.save(postClothingsToRemove);
+      for (const postClothing of postClothingsToRemove) {
+        await this.deletePostClothing(postClothing, queryRunner);
+      }
     }
 
-    // 수정할 기존 PostClothing
+    // PostClothing 추가 및 수정
     const newPostClothings: PostClothing[] = [];
 
     for (const newClothing of uploadClothingDtos) {
@@ -92,7 +85,7 @@ export class PostClothingService {
         // Clothing 정보 수정
         await this.clothingService.updateClothing(newClothing);
       } else {
-        // 새로운 옷 정보 추가
+        // 새로운 Clothing 추가
         const newClothingEntity = await this.clothingService.saveClothings([
           newClothing,
         ]);
@@ -108,5 +101,16 @@ export class PostClothingService {
     if (newPostClothings.length > 0) {
       await queryRunner.manager.save(newPostClothings);
     }
+  }
+
+  // PostClothing 및 Clothing 삭제 처리
+  async deletePostClothing(
+    postClothing: PostClothing,
+    queryRunner: QueryRunner,
+  ): Promise<void> {
+    postClothing.status = 'deactivated';
+    postClothing.softDelete();
+    await this.clothingService.deleteClothing(postClothing.clothing);
+    await queryRunner.manager.save(postClothing);
   }
 }

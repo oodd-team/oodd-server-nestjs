@@ -58,13 +58,9 @@ export class ClothingService {
   }
 
   // Clothing 삭제 처리
-  async deleteClothing(id: number): Promise<void> {
-    const existingClothing = await this.clothingRepository.findOne({
-      where: { id, status: 'activated' },
-    });
-
-    existingClothing.status = 'deactivated';
-    existingClothing.softDelete();
-    await this.clothingRepository.save(existingClothing);
+  async deleteClothing(clothing: Clothing): Promise<Clothing> {
+    clothing.status = 'deactivated';
+    clothing.softDelete();
+    return await this.clothingRepository.save(clothing);
   }
 }

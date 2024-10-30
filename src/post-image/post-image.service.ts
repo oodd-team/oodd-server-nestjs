@@ -60,14 +60,7 @@ export class PostImageService {
     );
 
     // 이미지 삭제
-    await Promise.all(
-      imagesToRemove.map(async (image) => {
-        image.status = 'deactivated';
-        image.softDelete();
-        image.orderNum = 0;
-        return queryRunner.manager.save(image);
-      }),
-    );
+    await this.deleteImages(imagesToRemove, queryRunner);
 
     // 새 이미지 추가
     await Promise.all(
@@ -91,6 +84,20 @@ export class PostImageService {
           });
           return queryRunner.manager.save(newPostImage);
         }
+      }),
+    );
+  }
+  // 이미지 삭제 처리
+  private async deleteImages(
+    imagesToRemove: PostImage[],
+    queryRunner?: QueryRunner,
+  ): Promise<void> {
+    await Promise.all(
+      imagesToRemove.map(async (image) => {
+        image.status = 'deactivated';
+        image.softDelete();
+        image.orderNum = 0;
+        return queryRunner.manager.save(image);
       }),
     );
   }
