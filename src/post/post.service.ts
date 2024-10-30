@@ -263,7 +263,6 @@ export class PostService {
   async deletePost(postId: number, userId: number): Promise<void> {
     const queryRunner = this.dataSource.createQueryRunner();
 
-    await queryRunner.connect();
     await queryRunner.startTransaction();
 
     // 게시글 조회

@@ -161,6 +161,10 @@ export function DeletePostSwagger(text: string) {
     { summary: text },
     [],
     [
+      ApiAcceptedResponse({
+        description: '게시글 삭제 성공',
+        type: BaseResponse,
+      }),
       ApiBadRequestResponse({
         description: '잘못된 요청입니다.',
         type: BaseResponse,
