@@ -26,7 +26,6 @@ import { PostLike } from 'src/common/entities/post-like.entity';
 import { PostClothing } from 'src/common/entities/post-clothing.entity';
 import { PostComment } from 'src/common/entities/post-comment.entity';
 import { PostStyletag } from 'src/common/entities/post-styletag.entity';
-import { Clothing } from 'src/common/entities/clothing.entity';
 
 @Injectable()
 export class PostService {
@@ -278,33 +277,48 @@ export class PostService {
 
       await queryRunner.manager.save(post);
 
-      await Promise.all([
-        queryRunner.manager.update(
-          PostImage,
-          { post: { id: postId } },
-          { status: 'deactivated', orderNum: 0 },
-        ),
-        queryRunner.manager.update(
-          PostLike,
-          { post: { id: postId } },
-          { status: 'deactivated' },
-        ),
-        queryRunner.manager.update(
-          PostComment,
-          { post: { id: postId } },
-          { status: 'deactivated' },
-        ),
-        queryRunner.manager.update(
-          PostClothing,
-          { post: { id: postId } },
-          { status: 'deactivated' },
-        ),
-        queryRunner.manager.update(
-          PostStyletag,
-          { post: { id: postId } },
-          { status: 'deactivated' },
-        ),
-      ]);
+      // 관련된 엔티티 삭제 처리
+      const imagesToRemove = await queryRunner.manager.find(PostImage, {
+        where: { id: postId },
+      });
+      //await this.postImageService.deleteImages(imagesToRemove, queryRunner);
+
+      const likesToRemove = await queryRunner.manager.find(PostLike, {
+        where: { id: postId },
+      });
+      await Promise.all(
+        likesToRemove.map((like) => {
+          like.status = 'deactivated';
+          return queryRunner.manager.save(like);
+        }),
+      );
+
+      const commentsToRemove = await queryRunner.manager.find(PostComment, {
+        where: { id: postId },
+      });
+      await Promise.all(
+        commentsToRemove.map((comment) => {
+          comment.status = 'deactivated';
+          return queryRunner.manager.save(comment);
+        }),
+      );
+
+      const clothingToRemove = await queryRunner.manager.find(PostClothing, {
+        where: { id: postId },
+      });
+      await Promise.all(
+        clothingToRemove.map(async (postClothing) => {
+          await this.postClothingService.deletePostClothing(
+            postClothing,
+            queryRunner,
+          );
+        }),
+      );
+
+      const tagsToRemove = await queryRunner.manager.find(PostStyletag, {
+        where: { id: postId },
+      });
+      //await this.postStyletagService.deletePostStyletags(tagsToRemove, queryRunner);
 
       await queryRunner.commitTransaction();
     } catch (error) {
