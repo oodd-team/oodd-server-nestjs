@@ -325,16 +325,25 @@ export class PostService {
     return post;
   }
 
-    // 대표 게시글 설정
-    async patchIsRepresentative(postId: number, currentUserId: number) {
-      const post = await this.postRepository.findOne({
-        where: { id: postId, user: { id: currentUserId }, status: 'activated' },
-      });
-  
+  // 대표 게시글 설정
+  async patchIsRepresentative(
+    postId: number,
+    currentUserId: number,
+  ): Promise<Post> {
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.startTransaction();
+
+    const post = await this.postRepository.findOne({
+      where: { id: postId, user: { id: currentUserId }, status: 'activated' },
+    });
+
+    try {
       // 대표 게시글 지정
       if (!post.isRepresentative) {
         // 기존 대표 게시글이 있다면, 그 게시글의 isRepresentative를 false로 변경
-        await this.postRepository.update(
+        await queryRunner.manager.update(
+          Post,
           {
             user: { id: currentUserId },
             isRepresentative: true,
@@ -342,21 +351,24 @@ export class PostService {
           },
           { isRepresentative: false },
         );
-  
+
         // 현재 게시글을 대표로 설정
         post.isRepresentative = true;
       } else {
         // 대표 설정 해제
         post.isRepresentative = false;
       }
-  
-      try {
-        const updatedPost = await this.postRepository.save(post);
-        return updatedPost;
-      } catch (error) {
-        throw InternalServerException('게시글 수정에 실패했습니다.');
-      }
+
+      const updatedPost = await queryRunner.manager.save(post);
+      await queryRunner.commitTransaction();
+      return updatedPost;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw InternalServerException('게시글 수정에 실패했습니다.');
+    } finally {
+      await queryRunner.release();
     }
+  }
 
   // 게시글 검증 메서드
   async validatePost(postId: number, userId?: number): Promise<void> {
