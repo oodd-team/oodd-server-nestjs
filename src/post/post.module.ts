@@ -20,7 +20,6 @@ import { DayjsModule } from 'src/common/dayjs/dayjs.module';
     PostStyletagModule,
     UserBlockModule,
     PostClothingModule,
-    PostImageModule,
     DayjsModule,
   ],
   controllers: [PostController],

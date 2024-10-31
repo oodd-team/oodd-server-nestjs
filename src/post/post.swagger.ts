@@ -1,4 +1,5 @@
 import {
+  ApiAcceptedResponse,
   ApiBadRequestResponse,
   ApiCreatedResponse,
   ApiForbiddenResponse,
@@ -18,6 +19,7 @@ import {
   GetOtherPostsResponse,
 } from './dtos/user-postsResponse.dto';
 import { applyDecorators } from '@nestjs/common';
+import { GetPostResponse } from './dtos/get-post.dto';
 
 // 게시글 리스트 조회하기 API Swagger
 export function GetPostsSwagger(text: string) {
@@ -65,8 +67,33 @@ export function GetPostsSwagger(text: string) {
 }
 
 // 게시글 상세 조회하기 API Swagger
-export function GetPostSwagger(apiSummary: string) {
-  return ApiOperation({ summary: apiSummary });
+export function GetPostSwagger(text: string) {
+  return BaseSwaggerDecorator(
+    { summary: text },
+    [],
+    [
+      ApiAcceptedResponse({
+        description: '게시글 조회 성공',
+        type: GetPostResponse,
+      }),
+      ApiBadRequestResponse({
+        description: '잘못된 요청입니다.',
+        type: BaseResponse,
+      }),
+      ApiUnauthorizedResponse({
+        description: '인증되지 않은 사용자입니다.',
+        type: BaseResponse,
+      }),
+      ApiNotFoundResponse({
+        description: '존재하지 않는 게시글입니다.',
+        type: BaseResponse,
+      }),
+      ApiInternalServerErrorResponse({
+        description: '서버 에러입니다.',
+        type: BaseResponse,
+      }),
+    ],
+  );
 }
 
 // 게시글 생성하기 API Swagger

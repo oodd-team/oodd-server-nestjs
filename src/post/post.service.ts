@@ -255,6 +255,23 @@ export class PostService {
     }
   }
 
+  // 게시글 상세 조회
+  async getPost(postId: number): Promise<Post> {
+    const post = await this.postRepository.findOne({
+      where: { id: postId, status: 'activated' },
+      relations: [
+        'postImages',
+        'user',
+        'postLikes',
+        'postComments',
+        'postClothings',
+        'postClothings.clothing',
+      ],
+    });
+
+    return post;
+  }
+
   // 게시글 검증 메서드
   async validatePost(postId: number, userId?: number): Promise<void> {
     const post = await this.postRepository.findOne({

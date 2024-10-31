@@ -27,6 +27,7 @@ import { CreatePostDto } from './dtos/create-post.dto';
 import { BaseResponse } from 'src/common/response/dto';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { Request } from 'express';
+import { GetPostResponse } from './dtos/get-post.dto';
 import { PatchPostDto } from './dtos/patch-Post.dto';
 
 @Controller('post')
@@ -54,10 +55,50 @@ export class PostController {
     return new BaseResponse(true, 'SUCCESS', postsResponse);
   }
 
-  @Get()
+  @Get(':postId')
   @GetPostSwagger('게시글 상세 조회 API')
-  getPost() {
-    // return this.userService.getHello();
+  async getPost(
+    @Param('postId') postId: number,
+    @Req() req: Request,
+  ): Promise<BaseResponse<GetPostResponse>> {
+    const currentUserId = req.user.userId;
+
+    await this.postService.validatePost(postId);
+
+    const post = await this.postService.getPost(postId);
+
+    const postResponse: GetPostResponse = {
+      post: {
+        content: post.content,
+        createdAt: post.createdAt,
+        postImages: post.postImages
+          .filter((image) => image.status === 'activated')
+          .map((image) => ({
+            url: image.url,
+            orderNum: image.orderNum,
+          })),
+        postClothings: post.postClothings
+          .filter((postClothing) => postClothing.status === 'activated')
+          .map((postClothing) => ({
+            imageUrl: postClothing.clothing.imageUrl,
+            brandName: postClothing.clothing.brandName,
+            modelName: postClothing.clothing.modelName,
+            modelNumber: postClothing.clothing.modelNumber,
+            url: postClothing.clothing.url,
+          })),
+        likeCount: post.postLikes.length,
+        commentCount: post.postComments.length,
+        isPostLike: this.postService.checkIsPostLiked(post, currentUserId),
+        user: {
+          userId: post.user.id,
+          nickname: post.user.nickname,
+          profilePictureUrl: post.user.profilePictureUrl,
+        },
+        isPostWriter: post.user.id === currentUserId,
+      },
+    };
+
+    return new BaseResponse(true, '게시글 조회 성공', postResponse);
   }
 
   @Post()
