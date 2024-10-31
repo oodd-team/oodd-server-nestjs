@@ -1,9 +1,10 @@
 import {
+  Body,
   Controller,
   Get,
-  Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -21,6 +22,7 @@ import {
   PatchPostSwagger,
 } from './post.swagger';
 import { ApiParam, ApiTags } from '@nestjs/swagger';
+import { CreatePostDto } from './dtos/create-post.dto';
 import { BaseResponse } from 'src/common/response/dto';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { Request } from 'express';
@@ -31,12 +33,12 @@ import { Request } from 'express';
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
-  @Get(':userId?')
+  @Get('/')
   @GetPostsSwagger('게시글 리스트 조회 API')
   @ApiParam({ name: 'userId', required: false, description: 'User ID' })
   async getPosts(
     @Req() req: Request,
-    @Param('userId') userId?: number,
+    @Query('userId') userId?: number,
   ): Promise<
     BaseResponse<GetPostsResponse | GetMyPostsResponse | GetOtherPostsResponse>
   > {
@@ -58,8 +60,18 @@ export class PostController {
 
   @Post()
   @CreatePostsSwagger('게시글 생성 API')
-  createPost() {
-    // return this.userService.getHello();
+  async createPost(
+    @Body() createPostDto: CreatePostDto,
+    @Req() req: Request,
+  ): Promise<BaseResponse<any>> {
+    const currentUserId = req.user.userId;
+
+    const post = await this.postService.createPost(
+      createPostDto,
+      currentUserId,
+    );
+
+    return new BaseResponse(true, '게시글 작성 성공', post);
   }
 
   @Patch()
