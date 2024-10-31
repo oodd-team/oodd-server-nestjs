@@ -70,7 +70,7 @@ export function DeletePostCommentSwagger(text: string) {
         type: BaseResponse,
       }),
       ApiNotFoundResponse({
-        description: '게시글을 찾을 수 없습니다.',
+        description: '댓글을 찾을 수 없습니다.',
         type: BaseResponse,
       }),
       ApiInternalServerErrorResponse({
