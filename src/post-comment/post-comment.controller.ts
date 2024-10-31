@@ -23,9 +23,10 @@ import { PostService } from 'src/post/post.service';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { PostComment } from 'src/common/entities/post-comment.entity';
 import { GetCommentsDto } from './dtos/get-comment.dto';
+import dayjs from 'dayjs';
 
 @Controller('post-comment')
-//@UseGuards(AuthGuard)
+@UseGuards(AuthGuard)
 @ApiTags('[서비스] 게시글 댓글')
 export class PostCommentController {
   constructor(
@@ -59,19 +60,19 @@ export class PostCommentController {
     @Query('postId') postId: number,
     @Req() req: Request,
   ): Promise<BaseResponse<GetCommentsDto>> {
-    //const currentUserId = req.user.userId;
-    const currentUserId = 1;
+    const currentUserId = req.user.userId;
+
     const comments = await this.postCommentService.getPostComments(postId);
 
     const commenteResponse: GetCommentsDto = {
       comments: comments.map((comment) => ({
         content: comment.content,
-        createdAt: comment.createdAt,
+        createdAt: dayjs(comment.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
         user: {
           nickname: comment.user.nickname,
           profilePictureUrl: comment.user.profilePictureUrl,
         },
-        isCommentWriter: comment.user.id === currentUserId,
+        isCommentWriter: comment.user.id == currentUserId,
       })),
       totalComments: comments.length,
     };

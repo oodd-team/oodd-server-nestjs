@@ -7,7 +7,7 @@ class CommentDto {
   content: string;
 
   @ApiProperty({ example: '2024-10-04 17:49:53' })
-  createdAt: Date;
+  createdAt: String;
 
   @ApiProperty({
     properties: {
