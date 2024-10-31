@@ -1,4 +1,13 @@
-import { Controller, Post, Get, Patch, Body, Req, Query } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Patch,
+  Body,
+  Req,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { PostCommentService } from './post-comment.service';
 import {
   CreatePostCommentSwagger,
@@ -10,14 +19,19 @@ import {
   CreateCommentDto,
   CreateCommentResponseDto,
 } from './dtos/create-comment.dto';
-import { PostComment } from 'src/common/entities/post-comment.entity';
 import { Request } from 'express';
 import { BaseResponse } from 'src/common/response/dto';
+import { PostService } from 'src/post/post.service';
+import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 
 @Controller('post-comment')
+@UseGuards(AuthGuard)
 @ApiTags('[서비스] 게시글 댓글')
 export class PostCommentController {
-  constructor(private readonly postCommentService: PostCommentService) {}
+  constructor(
+    private readonly postCommentService: PostCommentService,
+    private readonly postService: PostService,
+  ) {}
 
   @Post()
   @CreatePostCommentSwagger('게시글 댓글 생성 API')
@@ -26,18 +40,19 @@ export class PostCommentController {
     @Body() createCommentDto: CreateCommentDto,
     @Req() req: Request,
   ): Promise<BaseResponse<CreateCommentResponseDto>> {
-    //const userId = req.user.userId;
-    const userId = 1;
+    const currentUserId = req.user.userId;
+
+    await this.postService.validatePost(postId);
 
     const postComment = await this.postCommentService.createPostComment(
       postId,
-      userId,
+      currentUserId,
       createCommentDto,
     );
 
     const responseData: CreateCommentResponseDto = {
       content: postComment.content,
-      userId: userId,
+      userId: currentUserId,
       postId: postId,
       createdAt: postComment.createdAt,
     };
