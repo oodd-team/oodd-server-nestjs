@@ -13,6 +13,7 @@ export class PostImageService {
     private readonly postImageRepository: Repository<PostImage>,
   ) {}
 
+  // 이미지 저장
   async savePostImages(
     postImages: UploadImageDto[],
     post: Post,
@@ -31,5 +32,73 @@ export class PostImageService {
       });
     });
     await queryRunner.manager.save(postImageEntities);
+  }
+
+  // 이미지 수정
+  async updatePostImages(
+    postImages: UploadImageDto[],
+    post: Post,
+    queryRunner?: QueryRunner,
+  ) {
+    // 빈 배열이 들어온 경우
+    if (postImages.length === 0) {
+      throw InvalidInputValueException('하나 이상의 이미지를 업로드하세요.');
+    }
+
+    const existingImages = await queryRunner.manager.find(PostImage, {
+      where: { post: post },
+      order: { orderNum: 'ASC' },
+    });
+
+    const existingImageUrls = new Set(existingImages.map((img) => img.url));
+
+    // 삭제할 이미지 목록
+    const imagesToRemove = existingImages.filter(
+      (existingImage) =>
+        existingImage.status === 'activated' &&
+        !postImages.some((newImage) => newImage.imageurl === existingImage.url),
+    );
+
+    // 이미지 삭제
+    await this.deleteImages(imagesToRemove, queryRunner);
+
+    // 새 이미지 추가
+    await Promise.all(
+      postImages.map(async (newImage) => {
+        if (existingImageUrls.has(newImage.imageurl)) {
+          const existingImage = existingImages.find(
+            (image) => image.url === newImage.imageurl,
+          );
+
+          // 기존 이미지의 orderNum이 수정된 경우
+          if (existingImage && existingImage.orderNum !== newImage.orderNum) {
+            existingImage.orderNum = newImage.orderNum;
+            return queryRunner.manager.save(existingImage);
+          }
+        } else {
+          // 새로운 이미지 저장
+          const newPostImage = this.postImageRepository.create({
+            url: newImage.imageurl,
+            orderNum: newImage.orderNum,
+            post,
+          });
+          return queryRunner.manager.save(newPostImage);
+        }
+      }),
+    );
+  }
+  // 이미지 삭제 처리
+  async deleteImages(
+    imagesToRemove: PostImage[],
+    queryRunner?: QueryRunner,
+  ): Promise<void> {
+    await Promise.all(
+      imagesToRemove.map(async (image) => {
+        image.status = 'deactivated';
+        image.softDelete();
+        image.orderNum = 0;
+        return queryRunner.manager.save(image);
+      }),
+    );
   }
 }

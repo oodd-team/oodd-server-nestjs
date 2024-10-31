@@ -11,7 +11,13 @@ import { UserService } from 'src/user/user.service';
 import { PostImageService } from 'src/post-image/post-image.service';
 import { CreatePostDto } from './dtos/create-post.dto';
 import { PostStyletagService } from '../post-styletag/post-styletag.service';
-import { InternalServerException } from 'src/common/exception/service.exception';
+import {
+  DataNotFoundException,
+  ForbiddenException,
+  InternalServerException,
+  ServiceException,
+} from 'src/common/exception/service.exception';
+import { PatchPostDto } from './dtos/patch-Post.dto';
 import { UserBlockService } from 'src/user-block/user-block.service';
 import { PostClothingService } from 'src/post-clothing/post-clothing.service';
 import dayjs from 'dayjs';
@@ -193,6 +199,75 @@ export class PostService {
       throw InternalServerException('게시글 저장에 실패했습니다.');
     } finally {
       await queryRunner.release();
+    }
+  }
+
+  // 게시글 수정
+  async patchPost(postId: number, patchPostDto: PatchPostDto) {
+    const { content, postImages, postStyletags, postClothings } = patchPostDto;
+
+    const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.startTransaction();
+
+    const post = await this.postRepository.findOne({
+      where: { id: postId, status: 'activated' },
+    });
+
+    try {
+      if (content !== undefined) {
+        post.content = content;
+      }
+      const updatedPost = await queryRunner.manager.save(post);
+
+      // postImages 업데이트
+      await this.postImageService.updatePostImages(
+        postImages,
+        updatedPost,
+        queryRunner,
+      );
+
+      // styletag 업데이트
+      await this.postStyletagService.updatePostStyletags(
+        updatedPost,
+        postStyletags,
+        queryRunner,
+      );
+
+      // clothing 업데이트
+      await this.postClothingService.updatePostClothings(
+        updatedPost,
+        postClothings,
+        queryRunner,
+      );
+
+      await queryRunner.commitTransaction();
+
+      return updatedPost;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      if (error instanceof ServiceException) {
+        throw error;
+      }
+      throw InternalServerException('게시글 수정에 실패했습니다.');
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  // 게시글 검증 메서드
+  async validatePost(postId: number, userId?: number): Promise<void> {
+    const post = await this.postRepository.findOne({
+      where: { id: postId, status: 'activated' },
+      relations: ['user'],
+    });
+
+    if (!post) {
+      throw DataNotFoundException('게시글을 찾을 수 없습니다.');
+    }
+
+    if (userId && post.user.id !== userId) {
+      throw ForbiddenException('이 게시글에 대한 권한이 없습니다.');
     }
   }
 

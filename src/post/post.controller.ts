@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Patch,
   Post,
   Query,
@@ -26,6 +27,7 @@ import { CreatePostDto } from './dtos/create-post.dto';
 import { BaseResponse } from 'src/common/response/dto';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { Request } from 'express';
+import { PatchPostDto } from './dtos/patch-Post.dto';
 
 @Controller('post')
 @UseGuards(AuthGuard)
@@ -74,10 +76,20 @@ export class PostController {
     return new BaseResponse(true, '게시글 작성 성공', post);
   }
 
-  @Patch()
+  @Patch(':postId')
   @PatchPostSwagger('게시글 수정 API')
-  patchPost() {
-    // return this.userService.getHello();
+  async patchPost(
+    @Param('postId') postId: number,
+    @Body() patchPostDto: PatchPostDto,
+    @Req() req: Request,
+  ): Promise<BaseResponse<any>> {
+    const currentUserId = req.user.userId;
+
+    await this.postService.validatePost(postId, currentUserId);
+
+    const updatedPost = await this.postService.patchPost(postId, patchPostDto);
+
+    return new BaseResponse(true, '게시글 수정 성공', updatedPost);
   }
 
   @Patch()
