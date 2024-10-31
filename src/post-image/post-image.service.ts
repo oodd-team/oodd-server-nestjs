@@ -101,4 +101,23 @@ export class PostImageService {
       }),
     );
   }
+
+  // Post와 연결된 이미지 삭제 처리
+  async deleteImagesByPostId(
+    postId: number,
+    queryRunner: QueryRunner,
+  ): Promise<void> {
+    const imagesToRemove = await queryRunner.manager.find(PostImage, {
+      where: { post: { id: postId } },
+    });
+
+    await Promise.all(
+      imagesToRemove.map(async (image) => {
+        image.status = 'deactivated';
+        image.softDelete();
+        image.orderNum = 0;
+        return queryRunner.manager.save(image);
+      }),
+    );
+  }
 }

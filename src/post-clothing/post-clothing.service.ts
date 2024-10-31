@@ -121,4 +121,25 @@ export class PostClothingService {
       }),
     );
   }
+
+  // Post에 연결된 PostClothing 및 Clothing 삭제 처리
+  async deletePostClothingByPostId(
+    postId: number,
+    queryRunner: QueryRunner,
+  ): Promise<void> {
+    const clothingToRemove = await queryRunner.manager.find(PostClothing, {
+      where: { post: { id: postId } },
+      relations: ['clothing'],
+    });
+
+    await Promise.all(
+      clothingToRemove.map(async (Postclothing) => {
+        Postclothing.status = 'deactivated';
+        Postclothing.softDelete();
+        await this.clothingService.deleteClothing(Postclothing.clothing, queryRunner);
+
+        return queryRunner.manager.save(Postclothing);
+      }),
+    );
+  }
 }

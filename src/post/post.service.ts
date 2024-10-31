@@ -21,6 +21,8 @@ import { PatchPostDto } from './dtos/patch-Post.dto';
 import { UserBlockService } from 'src/user-block/user-block.service';
 import { PostClothingService } from 'src/post-clothing/post-clothing.service';
 import dayjs from 'dayjs';
+import { PostLikeService } from 'src/post-like/post-like.service';
+import { PostCommentService } from 'src/post-comment/post-comment.service';
 @Injectable()
 export class PostService {
   constructor(
@@ -31,6 +33,8 @@ export class PostService {
     private readonly postImageService: PostImageService,
     private readonly postStyletagService: PostStyletagService,
     private readonly postClothingService: PostClothingService,
+    private readonly postLikeService: PostLikeService,
+    private readonly postCommentService: PostCommentService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -250,6 +254,54 @@ export class PostService {
         throw error;
       }
       throw InternalServerException('게시글 수정에 실패했습니다.');
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  // 게시글 삭제
+  async deletePost(postId: number, userId: number): Promise<void> {
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.startTransaction();
+
+    // 게시글 조회
+    const post = await this.postRepository.findOne({
+      where: { id: postId, user: { id: userId }, status: 'activated' },
+    });
+
+    try {
+      // 게시글 삭제
+      post.status = 'deactivated';
+      post.softDelete();
+
+      await queryRunner.manager.save(post);
+
+      // 연결된 PostImage 삭제
+      await this.postImageService.deleteImagesByPostId(postId, queryRunner);
+
+      // 연결된 PostLike 삭제
+      await this.postLikeService.deletePostLikeByPostId(postId, queryRunner);
+
+      // 연결된 PostComment 삭제
+      await this.postCommentService.deleteCommentsByPostId(postId, queryRunner);
+
+      // 연결된 PostClothing 삭제
+      await this.postClothingService.deletePostClothingByPostId(
+        postId,
+        queryRunner,
+      );
+
+      // 연결된 PostStyleTag 삭제
+      await this.postStyletagService.deletePostStyletagsByPostId(
+        postId,
+        queryRunner,
+      );
+
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw InternalServerException('게시글 삭제에 실패했습니다.');
     } finally {
       await queryRunner.release();
     }

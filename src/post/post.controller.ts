@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -131,6 +132,21 @@ export class PostController {
     const updatedPost = await this.postService.patchPost(postId, patchPostDto);
 
     return new BaseResponse(true, '게시글 수정 성공', updatedPost);
+  }
+
+  @Delete(':postId')
+  @PatchPostSwagger('게시글 삭제 API')
+  async deletePost(
+    @Param('postId') postId: number,
+    @Req() req: Request,
+  ): Promise<BaseResponse<any>> {
+    const currentUserId = req.user.userId;
+
+    await this.postService.validatePost(postId, currentUserId);
+
+    await this.postService.deletePost(postId, currentUserId);
+
+    return new BaseResponse(true, '게시글이 삭제되었습니다.');
   }
 
   @Patch()
