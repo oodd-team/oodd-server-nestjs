@@ -5,7 +5,6 @@ import {
   ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
-  ApiOperation,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { BaseSwaggerDecorator } from 'nestjs-swagger-decorator';
@@ -190,6 +189,31 @@ export function DeletePostSwagger(text: string) {
 }
 
 // 대표 게시글 지정 API Swagger
-export function PatchIsRepresentativeSwagger(apiSummary: string) {
-  return ApiOperation({ summary: apiSummary });
+export function PatchIsRepresentativeSwagger(text: string) {
+  return BaseSwaggerDecorator(
+    { summary: text },
+    [],
+    [
+      ApiCreatedResponse({
+        description: '대표 게시글 수정 성공',
+        type: PatchPostDto,
+      }),
+      ApiBadRequestResponse({
+        description: '잘못된 요청입니다.',
+        type: BaseResponse,
+      }),
+      ApiUnauthorizedResponse({
+        description: '인증되지 않은 사용자입니다.',
+        type: BaseResponse,
+      }),
+      ApiForbiddenResponse({
+        description: '권한이 없습니다.',
+        type: BaseResponse,
+      }),
+      ApiInternalServerErrorResponse({
+        description: '서버 오류입니다.',
+        type: BaseResponse,
+      }),
+    ],
+  );
 }
