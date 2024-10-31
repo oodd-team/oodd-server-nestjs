@@ -17,10 +17,7 @@ import {
   GetPostCommentsSwagger,
 } from './post-comment.swagger';
 import { ApiTags } from '@nestjs/swagger';
-import {
-  CreateCommentDto,
-  CreateCommentResponseDto,
-} from './dtos/create-comment.dto';
+import { CreateCommentDto } from './dtos/create-comment.dto';
 import { Request } from 'express';
 import { BaseResponse } from 'src/common/response/dto';
 import { PostService } from 'src/post/post.service';
@@ -42,7 +39,7 @@ export class PostCommentController {
     @Query('postId') postId: number,
     @Body() createCommentDto: CreateCommentDto,
     @Req() req: Request,
-  ): Promise<BaseResponse<CreateCommentResponseDto>> {
+  ): Promise<BaseResponse<any>> {
     const currentUserId = req.user.userId;
 
     await this.postService.validatePost(postId);
@@ -53,14 +50,7 @@ export class PostCommentController {
       createCommentDto,
     );
 
-    const responseData: CreateCommentResponseDto = {
-      content: postComment.content,
-      userId: currentUserId,
-      postId: postId,
-      createdAt: postComment.createdAt,
-    };
-
-    return new BaseResponse(true, '댓글 작성 성공', responseData);
+    return new BaseResponse(true, '댓글 작성 성공', postComment);
   }
 
   @Get()
