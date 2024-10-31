@@ -1,5 +1,5 @@
 import { Entity, Column, OneToMany } from 'typeorm';
-import { BaseEntity } from './base.entity';
+import { BaseEntity } from '../base.entity';
 import { PostStyletag } from './post-styletag.entity';
 
 @Entity('Styletag')

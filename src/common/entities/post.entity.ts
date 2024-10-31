@@ -1,6 +1,6 @@
 import { Entity, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { User } from './user.entity';
-import { BaseEntity } from './base.entity';
+import { BaseEntity } from '../base.entity';
 import { PostComment } from './post-comment.entity';
 import { PostImage } from './post-image.entity';
 import { PostLike } from './post-like.entity';
@@ -38,15 +38,4 @@ export class Post extends BaseEntity {
 
   @OneToMany(() => PostReport, (postReport) => postReport.post)
   postReports!: PostReport[];
-    images: string[];
-
-  // 댓글 수
-  get commentCount(): number {
-    return this.postComments? this.postComments.length : 0;
-  }
-
-  // Like 수
-  get likeCount(): number {
-    return this.postLikes? this.postLikes.length : 0;
-  }
 }
