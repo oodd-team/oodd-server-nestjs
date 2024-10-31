@@ -10,10 +10,10 @@ export class StyletagService {
   ) {}
 
   async findStyleTags(tags: string[]): Promise<Styletag[]> {
-    // 입력된 태그들과 일치하는 스타일태그를 모두 조회
+    // 입력된 태그들과 일치하는 스타일태그 조회
     const styleTags = await this.styletagRepository
       .createQueryBuilder('styletag')
-      .where('styletag.name IN (:...tags)', { tags })
+      .where('styletag.tag IN (:...tags)', { tags })
       .getMany();
 
     return styleTags;

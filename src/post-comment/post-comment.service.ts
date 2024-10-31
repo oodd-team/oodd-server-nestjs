@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { PostComment } from 'src/common/entities/post-comment.entity';
+import { QueryRunner } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateCommentDto } from './dtos/create-comment.dto';
 import {
@@ -17,6 +18,7 @@ export class PostCommentService {
     @InjectRepository(PostComment)
     private readonly postCommentRepository: Repository<PostComment>,
     private readonly userService: UserService,
+    @Inject(forwardRef(() => PostService))
     private readonly postService: PostService,
   ) {}
 
@@ -26,15 +28,12 @@ export class PostCommentService {
     currentUserId: number,
     createCommentDto: CreateCommentDto,
   ): Promise<PostComment> {
-    const post = await this.postService.findByFields({ where: { id: postId } });
-    if (!post) {
-      throw DataNotFoundException('게시글을 찾을 수 없습니다.');
-    }
-
+    const post = await this.postService.findByFields({
+      where: { id: postId, status: 'activated' },
+    });
     const user = await this.userService.findByFields({
       where: { id: currentUserId, status: 'activated' },
     });
-
     const postComment = this.postCommentRepository.create({
       content: createCommentDto.content,
       post,
@@ -44,17 +43,44 @@ export class PostCommentService {
     return await this.postCommentRepository.save(postComment);
   }
 
+  // post와 연결된 댓글 삭제
+  async deleteCommentsByPostId(
+    postId: number,
+    queryRunner: QueryRunner,
+  ): Promise<void> {
+    const commentsToRemove = await queryRunner.manager.find(PostComment, {
+      where: { post: { id: postId } },
+    });
+
+    await Promise.all(
+      commentsToRemove.map(async (comment) => {
+        comment.status = 'deactivated';
+        comment.softDelete();
+        return queryRunner.manager.save(comment);
+      }),
+    );
+  }
+
   // 댓글 삭제
   async deletePostComment(commentId: number): Promise<void> {
+    const queryRunner =
+      this.postCommentRepository.manager.connection.createQueryRunner();
+    await queryRunner.startTransaction();
+
     const comment = await this.findCommentById(commentId);
 
     try {
       comment.status = 'deactivated';
       comment.softDelete();
 
-      await this.postCommentRepository.save(comment);
+      await queryRunner.manager.save(comment);
+
+      await queryRunner.commitTransaction();
     } catch (error) {
+      await queryRunner.rollbackTransaction();
       throw InternalServerException('댓글 삭제에 실패했습니다.');
+    } finally {
+      await queryRunner.release();
     }
   }
 
