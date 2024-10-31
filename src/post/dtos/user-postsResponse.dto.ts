@@ -11,7 +11,7 @@ class PostDto {
     example: '2024-10-21T09:00:00.000Z',
     description: '게시글이 작성된 시간입니다.',
   })
-  createdAt: Date;
+  createdAt: string;
 
   @ApiProperty({
     example: 'http://imageurl.example',

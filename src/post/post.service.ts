@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, FindOneOptions, QueryRunner, Repository } from 'typeorm';
 import { Post } from '../common/entities/post.entity';
@@ -13,13 +13,16 @@ import { CreatePostDto } from './dtos/create-post.dto';
 import { PostStyletagService } from '../post-styletag/post-styletag.service';
 import {
   DataNotFoundException,
+  ForbiddenException,
   InternalServerException,
+  ServiceException,
 } from 'src/common/exception/service.exception';
 import { PatchPostDto } from './dtos/patch-Post.dto';
 import { UserBlockService } from 'src/user-block/user-block.service';
 import { PostClothingService } from 'src/post-clothing/post-clothing.service';
-import { GetPostResponse } from './dtos/get-post.dto';
-
+import dayjs from 'dayjs';
+import { PostLikeService } from 'src/post-like/post-like.service';
+import { PostCommentService } from 'src/post-comment/post-comment.service';
 @Injectable()
 export class PostService {
   constructor(
@@ -30,6 +33,9 @@ export class PostService {
     private readonly postImageService: PostImageService,
     private readonly postStyletagService: PostStyletagService,
     private readonly postClothingService: PostClothingService,
+    private readonly postLikeService: PostLikeService,
+    @Inject(forwardRef(() => PostCommentService))
+    private readonly postCommentService: PostCommentService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -38,11 +44,20 @@ export class PostService {
     userId?: number,
     currentUserId?: number,
   ): Promise<GetPostsResponse | GetMyPostsResponse | GetOtherPostsResponse> {
-    const relations = ['postImages', 'postComments', 'postLikes', 'user'];
+    const relations = [
+      'postImages',
+      'postComments',
+      'postLikes',
+      'user',
+      'postLikes.user',
+      'postComments.user',
+    ];
 
     // 차단된 사용자 ID 목록 가져오기
     const blockedUserIds = currentUserId
-      ? await this.userBlockService.getBlockedUserIds(currentUserId)
+      ? await this.userBlockService.getBlockedUserIdsByRequesterId(
+          currentUserId,
+        )
       : [];
 
     const totalposts = await this.postRepository.find({
@@ -76,7 +91,7 @@ export class PostService {
     return {
       post: posts.map((post) => ({
         content: post.content,
-        createdAt: post.createdAt,
+        createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
         postImages: post.postImages.map((image) => ({
           url: image.url,
           orderNum: image.orderNum,
@@ -99,7 +114,7 @@ export class PostService {
   ) {
     const commonPosts = posts.map((post) => ({
       content: post.content,
-      createdAt: post.createdAt,
+      createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
       imageUrl: post.postImages.find((image) => image.orderNum === 1)?.url,
       isRepresentative: post.isRepresentative,
       likeCount: post.postLikes.length,
@@ -129,7 +144,7 @@ export class PostService {
   }
 
   //게시글 생성
-  async createPost(uploadPostDto: CreatePostDto, userId: number) {
+  async createPost(uploadPostDto: CreatePostDto, currentUserId: number) {
     const {
       content,
       postImages,
@@ -142,11 +157,11 @@ export class PostService {
 
     await queryRunner.startTransaction();
 
-    try {
-      const user = await this.userService.findByFields({
-        where: { id: userId, status: 'activated' },
-      });
+    const user = await this.userService.findByFields({
+      where: { id: currentUserId, status: 'activated' },
+    });
 
+    try {
       const post = this.postRepository.create({
         user,
         content,
@@ -168,6 +183,7 @@ export class PostService {
         await this.postStyletagService.savePostStyletags(
           savedPost,
           postStyletags,
+          queryRunner,
         );
       }
 
@@ -176,6 +192,7 @@ export class PostService {
         await this.postClothingService.savePostClothings(
           savedPost,
           postClothings,
+          queryRunner,
         );
       }
 
@@ -191,70 +208,52 @@ export class PostService {
   }
 
   // 게시글 수정
-  async patchPost(postId: number, patchPostDto: PatchPostDto, userId: number) {
+  async patchPost(postId: number, patchPostDto: PatchPostDto) {
     const { content, postImages, postStyletags, postClothings } = patchPostDto;
 
     const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
 
     await queryRunner.startTransaction();
 
+    const post = await this.postRepository.findOne({
+      where: { id: postId, status: 'activated' },
+    });
+
     try {
-      console.log(
-        `postId: ${postId}, userId: ${userId}, patchPostDto:`,
-        patchPostDto,
-      );
-
-      const post = await this.postRepository.findOne({
-        where: {
-          id: postId,
-          user: { id: userId },
-          status: 'activated',
-        },
-      });
-
-      if (!post) {
-        throw DataNotFoundException('게시글을 찾을 수 없습니다.');
-      }
-
       if (content !== undefined) {
         post.content = content;
       }
-
       const updatedPost = await queryRunner.manager.save(post);
 
-      if (postImages) {
-        console.log('postImages:', postImages);
-        await this.postImageService.savePostImages(
-          postImages,
-          updatedPost,
-          queryRunner,
-        );
-      }
+      // postImages 업데이트
+      await this.postImageService.updatePostImages(
+        postImages,
+        updatedPost,
+        queryRunner,
+      );
 
       // styletag 업데이트
-      if (postStyletags) {
-        console.log('postStyletags:', postStyletags);
-        await this.postStyletagService.savePostStyletags(
-          updatedPost,
-          postStyletags,
-        );
-      }
+      await this.postStyletagService.updatePostStyletags(
+        updatedPost,
+        postStyletags,
+        queryRunner,
+      );
 
       // clothing 업데이트
-      if (postClothings) {
-        console.log('postClothings:', postClothings);
-        await this.postClothingService.savePostClothings(
-          updatedPost,
-          postClothings,
-        );
-      }
+      await this.postClothingService.updatePostClothings(
+        updatedPost,
+        postClothings,
+        queryRunner,
+      );
 
       await queryRunner.commitTransaction();
 
       return updatedPost;
     } catch (error) {
-      console.error('오류 발생:', error);
       await queryRunner.rollbackTransaction();
+      if (error instanceof ServiceException) {
+        throw error;
+      }
       throw InternalServerException('게시글 수정에 실패했습니다.');
     } finally {
       await queryRunner.release();
@@ -263,87 +262,127 @@ export class PostService {
 
   // 게시글 삭제
   async deletePost(postId: number, userId: number): Promise<void> {
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.startTransaction();
+
+    // 게시글 조회
     const post = await this.postRepository.findOne({
       where: { id: postId, user: { id: userId }, status: 'activated' },
     });
 
-    if (!post) {
-      throw DataNotFoundException('게시글을 찾을 수 없습니다.');
-    }
-
     try {
-      await this.postRepository.remove(post);
+      // 게시글 삭제
+      post.status = 'deactivated';
+      post.softDelete();
+
+      await queryRunner.manager.save(post);
+
+      // 연결된 PostImage 삭제
+      await this.postImageService.deleteImagesByPostId(postId, queryRunner);
+
+      // 연결된 PostLike 삭제
+      await this.postLikeService.deletePostLikeByPostId(postId, queryRunner);
+
+      // 연결된 PostComment 삭제
+      await this.postCommentService.deleteCommentsByPostId(postId, queryRunner);
+
+      // 연결된 PostClothing 삭제
+      await this.postClothingService.deletePostClothingByPostId(
+        postId,
+        queryRunner,
+      );
+
+      // 연결된 PostStyleTag 삭제
+      await this.postStyletagService.deletePostStyletagsByPostId(
+        postId,
+        queryRunner,
+      );
+
+      await queryRunner.commitTransaction();
     } catch (error) {
+      await queryRunner.rollbackTransaction();
       throw InternalServerException('게시글 삭제에 실패했습니다.');
+    } finally {
+      await queryRunner.release();
     }
   }
 
   // 게시글 상세 조회
-  async getPost(
-    postId: number,
-    currentUserId?: number,
-  ): Promise<GetPostResponse> {
+  async getPost(postId: number): Promise<Post> {
     const post = await this.postRepository.findOne({
       where: { id: postId, status: 'activated' },
-      relations: ['postImages', 'user', 'postLikes'],
+      relations: [
+        'postImages',
+        'user',
+        'postLikes',
+        'postComments',
+        'postClothings',
+        'postClothings.clothing',
+      ],
     });
 
-    if (!post) {
-      throw DataNotFoundException('게시글을 찾을 수 없습니다.');
-    }
-
-    return {
-      post: {
-        content: post.content,
-        createdAt: post.createdAt,
-        postImages: post.postImages.map((image) => ({
-          url: image.url,
-          orderNum: image.orderNum,
-        })),
-        isPostLike: this.checkIsPostLiked(post, currentUserId),
-        user: {
-          nickname: post.user.nickname,
-          profilePictureUrl: post.user.profilePictureUrl,
-        },
-        isPostWriter: post.user.id === currentUserId,
-      },
-    };
+    return post;
   }
 
-  //대표 게시글 지정
-  async patchIsRepresentative(postId: number, currentUserId: number) {
+  // 대표 게시글 설정
+  async patchIsRepresentative(
+    postId: number,
+    currentUserId: number,
+  ): Promise<Post> {
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.startTransaction();
+
     const post = await this.postRepository.findOne({
       where: { id: postId, user: { id: currentUserId }, status: 'activated' },
     });
 
+    try {
+      // 대표 게시글 지정
+      if (!post.isRepresentative) {
+        // 기존 대표 게시글이 있다면, 그 게시글의 isRepresentative를 false로 변경
+        await queryRunner.manager.update(
+          Post,
+          {
+            user: { id: currentUserId },
+            isRepresentative: true,
+            status: 'activated',
+          },
+          { isRepresentative: false },
+        );
+
+        // 현재 게시글을 대표로 설정
+        post.isRepresentative = true;
+      } else {
+        // 대표 설정 해제
+        post.isRepresentative = false;
+      }
+
+      const updatedPost = await queryRunner.manager.save(post);
+      await queryRunner.commitTransaction();
+      return updatedPost;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw InternalServerException('게시글 수정에 실패했습니다.');
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  // 게시글 검증 메서드
+  async validatePost(postId: number, userId?: number): Promise<void> {
+    const post = await this.postRepository.findOne({
+      where: { id: postId, status: 'activated' },
+      relations: ['user'],
+    });
+
     if (!post) {
       throw DataNotFoundException('게시글을 찾을 수 없습니다.');
     }
 
-    // 대표 게시글 설정
-    if (!post.isRepresentative) {
-      // 기존 대표 게시글이 있다면, 그 게시글의 isRepresentative를 false로 변경
-      await this.postRepository.update(
-        {
-          user: { id: currentUserId },
-          isRepresentative: true,
-          status: 'activated',
-        },
-        { isRepresentative: false },
-      );
-
-      // 현재 게시글을 대표로 설정
-      post.isRepresentative = true;
-    } else {
-      // 대표 설정 해제
-      post.isRepresentative = false;
-    }
-
-    try {
-      const updatedPost = await this.postRepository.save(post);
-      return updatedPost;
-    } catch (error) {
-      throw InternalServerException('게시글 수정에 실패했습니다.');
+    if (userId && post.user.id !== userId) {
+      throw ForbiddenException('이 게시글에 대한 권한이 없습니다.');
     }
   }
 
@@ -358,7 +397,7 @@ export class PostService {
   }
 
   // 유저가 게시물에 좋아요를 눌렀는지 확인
-  private checkIsPostLiked(post: Post, currentUserId: number): boolean {
+  public checkIsPostLiked(post: Post, currentUserId: number): boolean {
     return post.postLikes.some((like) => like.user.id === currentUserId);
   }
 
@@ -369,6 +408,7 @@ export class PostService {
     );
   }
 
+  // Post 조회
   async findByFields(fields: FindOneOptions<Post>) {
     return await this.postRepository.findOne(fields);
   }

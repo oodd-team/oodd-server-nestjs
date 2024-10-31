@@ -2,10 +2,12 @@ import {
   Controller,
   Post,
   Get,
-  Param,
   Body,
   Req,
+  Query,
+  UseGuards,
   Delete,
+  Param,
 } from '@nestjs/common';
 import { PostCommentService } from './post-comment.service';
 import {
@@ -14,63 +16,91 @@ import {
   GetPostCommentsSwagger,
 } from './post-comment.swagger';
 import { ApiTags } from '@nestjs/swagger';
-import { CreateCommentDto } from './dtos/create-comment.dto';
-import { PostComment } from 'src/common/entities/post-comment.entity';
+import {
+  CreateCommentDto,
+  CreateCommentResponseDto,
+} from './dtos/create-comment.dto';
 import { Request } from 'express';
 import { BaseResponse } from 'src/common/response/dto';
+import { PostService } from 'src/post/post.service';
+import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
+import { PostComment } from 'src/common/entities/post-comment.entity';
 import { GetCommentsDto } from './dtos/get-comment.dto';
 
 @Controller('post-comment')
+//@UseGuards(AuthGuard)
 @ApiTags('[서비스] 게시글 댓글')
 export class PostCommentController {
-  constructor(private readonly postCommentService: PostCommentService) {}
+  constructor(
+    private readonly postCommentService: PostCommentService,
+    private readonly postService: PostService,
+  ) {}
 
   @Post()
   @CreatePostCommentSwagger('게시글 댓글 생성 API')
   async createPostComment(
-    @Param('postId') postId: number,
+    @Query('postId') postId: number,
     @Body() createCommentDto: CreateCommentDto,
     @Req() req: Request,
-  ): Promise<BaseResponse<PostComment>> {
-    //const userId = req.user.userId;
-    const userId = 1; //테스트
+  ): Promise<BaseResponse<CreateCommentResponseDto>> {
+    const currentUserId = req.user.userId;
+
+    await this.postService.validatePost(postId);
 
     const postComment = await this.postCommentService.createPostComment(
       postId,
-      userId,
+      currentUserId,
       createCommentDto,
     );
 
-    return new BaseResponse(true, '댓글 작성 성공', postComment);
+    const responseData: CreateCommentResponseDto = {
+      content: postComment.content,
+      userId: currentUserId,
+      postId: postId,
+      createdAt: postComment.createdAt,
+    };
+
+    return new BaseResponse(true, '댓글 작성 성공', responseData);
   }
 
   @Get(':postId')
   @GetPostCommentsSwagger('게시글 댓글 리스트 조회 API')
   async getPostComments(
-    @Param('postId') postId: number,
+    @Query('postId') postId: number,
     @Req() req: Request,
   ): Promise<BaseResponse<GetCommentsDto>> {
-    //const userId = req.user.userId;
-    const userId = 1;
+    //const currentUserId = req.user.userId;
+    const currentUserId = 1;
+    const comments = await this.postCommentService.getPostComments(postId);
 
-    const postComments = await this.postCommentService.getPostComments(
-      postId,
-      userId,
-    );
+    const commenteResponse: GetCommentsDto = {
+      comments: comments.map((comment) => ({
+        content: comment.content,
+        createdAt: comment.createdAt,
+        user: {
+          nickname: comment.user.nickname,
+          profilePictureUrl: comment.user.profilePictureUrl,
+        },
+        isCommentWriter: comment.user.id === currentUserId,
+      })),
+      totalComments: comments.length,
+    };
 
-    return new BaseResponse(true, '댓글 조회 성공', postComments);
+    return new BaseResponse(true, '댓글 조회 성공', commenteResponse);
   }
 
   @Delete(':commentId')
   @DeletePostCommentSwagger('게시글 댓글 삭제 API')
   async deletePostComment(
-    @Param('commentId') commentId: number,
+    @Param('commentId')
+    commentId: number,
     @Req() req: Request,
   ): Promise<BaseResponse<PostComment>> {
-    //const userId = req.user.userId;
-    const userId = 1;
+    const currentUserId = req.user.userId;
 
-    await this.postCommentService.deletePostComment(commentId, userId);
+    await this.postCommentService.validateUser(commentId, currentUserId);
+
+    await this.postCommentService.deletePostComment(commentId);
 
     return new BaseResponse(true, '댓글 삭제 성공');
   }
