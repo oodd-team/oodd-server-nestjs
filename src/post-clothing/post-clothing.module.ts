@@ -6,7 +6,6 @@ import { ClothingModule } from 'src/clothing/clothing.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([PostClothing]), ClothingModule],
-  controllers: [],
   providers: [PostClothingService],
   exports: [PostClothingService],
 })

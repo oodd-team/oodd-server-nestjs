@@ -5,7 +5,6 @@ import { PostImage } from 'src/common/entities/post-image.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([PostImage])],
-  controllers: [],
   providers: [PostImageService],
   exports: [PostImageService],
 })

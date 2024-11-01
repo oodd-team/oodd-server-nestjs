@@ -47,7 +47,7 @@ export class PostController {
   ): Promise<
     BaseResponse<GetPostsResponse | GetMyPostsResponse | GetOtherPostsResponse>
   > {
-    const currentUserId = req.user.userId;
+    const currentUserId = req.user.id;
 
     const postsResponse = await this.postService.getPosts(
       userId,
@@ -63,7 +63,7 @@ export class PostController {
     @Param('postId') postId: number,
     @Req() req: Request,
   ): Promise<BaseResponse<GetPostResponse>> {
-    const currentUserId = req.user.userId;
+    const currentUserId = req.user.id;
 
     await this.postService.validatePost(postId);
 
@@ -109,7 +109,7 @@ export class PostController {
     @Body() createPostDto: CreatePostDto,
     @Req() req: Request,
   ): Promise<BaseResponse<any>> {
-    const currentUserId = req.user.userId;
+    const currentUserId = req.user.id;
 
     const post = await this.postService.createPost(
       createPostDto,
@@ -126,7 +126,7 @@ export class PostController {
     @Body() patchPostDto: PatchPostDto,
     @Req() req: Request,
   ): Promise<BaseResponse<any>> {
-    const currentUserId = req.user.userId;
+    const currentUserId = req.user.id;
 
     await this.postService.validatePost(postId, currentUserId);
 
@@ -141,7 +141,7 @@ export class PostController {
     @Param('postId') postId: number,
     @Req() req: Request,
   ): Promise<BaseResponse<any>> {
-    const currentUserId = req.user.userId;
+    const currentUserId = req.user.id;
 
     await this.postService.validatePost(postId, currentUserId);
 
@@ -156,7 +156,7 @@ export class PostController {
     @Param('postId') postId: number,
     @Req() req: Request,
   ): Promise<BaseResponse<any>> {
-    const currentUserId = req.user.userId;
+    const currentUserId = req.user.id;
 
     await this.postService.validatePost(postId, currentUserId);
 

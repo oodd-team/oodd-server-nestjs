@@ -1,6 +1,8 @@
 import { BaseSwaggerDecorator } from 'nestjs-swagger-decorator';
 import { LoginResponse } from './dto/auth.response';
 import { BaseResponse } from 'src/common/response/dto';
+import { ErrorCodeVo } from 'src/common/exception/error';
+import { ApiInternalServerErrorResponse } from '@nestjs/swagger';
 
 // 카카오 로그인 API Swagger
 export const KakaoLoginSwagger = (text: string) => {
@@ -19,7 +21,12 @@ export const KakaoLoginSwagger = (text: string) => {
         baseResponseDto: BaseResponse,
       },
     ],
-    [],
+    [
+      ApiInternalServerErrorResponse({
+        type: ErrorCodeVo,
+        description: '서버에서 발생한 오류',
+      }),
+    ],
   );
 };
 
