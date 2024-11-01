@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsString, Max, Min } from 'class-validator';
+import { IsInt, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class CreateMatchingReqeust {
   @ApiProperty({ example: 1, description: '신청하는 유저 아이디' })
@@ -15,7 +15,7 @@ export class CreateMatchingReqeust {
     example: '안녕하세요! 매칭 요청합니다.',
   })
   @IsString()
-  @Min(1)
-  @Max(100)
+  @MinLength(1)
+  @MaxLength(100)
   message: string;
 }

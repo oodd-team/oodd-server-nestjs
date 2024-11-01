@@ -9,12 +9,12 @@ import { ApiProperty } from '@nestjs/swagger';
 export class ChatRoom extends BaseEntity {
   @ManyToOne(() => User, (user) => user.sentChatRooms)
   @JoinColumn({ name: 'fromUserId' })
-  @ApiProperty({ type: User, description: '채팅 요청자' })
+  @ApiProperty({ type: () => User, description: '채팅 요청자' })
   fromUser!: User;
 
   @ManyToOne(() => User, (user) => user.receivedChatRooms)
   @JoinColumn({ name: 'toUserId' })
-  @ApiProperty({ type: User, description: '채팅 신청 받는사람' })
+  @ApiProperty({ type: () => User, description: '채팅 신청 받는사람' })
   toUser!: User;
 
   @ManyToOne(() => Matching, (matching) => matching.chatRooms)

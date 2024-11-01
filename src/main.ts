@@ -9,7 +9,7 @@ async function bootstrap() {
   app.useGlobalFilters(new ServiceExceptionToHttpExceptionFilter());
   app.useGlobalPipes(new ValidationPipe());
   setupSwagger(app);
-  await app.listen(8080);
+  await app.listen(process.env.PORT);
   console.log(`Application is running on: ${await app.getUrl()}`);
 }
 bootstrap();

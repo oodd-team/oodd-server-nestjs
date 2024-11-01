@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Patch, Post, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { MatchingService } from './matching.service';
 import {
   CreateMatchingSwagger,
@@ -7,7 +15,7 @@ import {
   GetMatchingSwagger,
   PatchMatchingRequestStatusSwagger,
 } from './matching.swagger';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CreateMatchingReqeust } from './dto/matching.request';
 import { UserService } from 'src/user/user.service';
 import { Request } from 'express';
@@ -17,7 +25,9 @@ import {
 } from 'src/common/exception/service.exception';
 import { BaseResponse } from 'src/common/response/dto';
 import { PostMatchingResponse } from './dto/matching.response';
+import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 
+@ApiBearerAuth()
 @Controller('matching')
 @ApiTags('[서비스] 매칭')
 export class MatchingController {
@@ -27,6 +37,7 @@ export class MatchingController {
   ) {}
 
   @Post()
+  @UseGuards(AuthGuard)
   @CreateMatchingSwagger('매칭 생성 API')
   async createMatching(
     @Req() req: Request,
@@ -40,9 +51,9 @@ export class MatchingController {
 
     const chatRoom = await this.matchingService.createMatching(body);
     return new BaseResponse<PostMatchingResponse>(true, 'SUCCESS', {
-      id: chatRoom.id,
-      toUser: chatRoom.toUser,
-      fromUser: chatRoom.fromUser,
+      chatRoomId: chatRoom.id,
+      toUserId: chatRoom.toUser.id,
+      fromUserId: chatRoom.fromUser.id,
     });
   }
 

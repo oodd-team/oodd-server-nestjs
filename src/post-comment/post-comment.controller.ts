@@ -5,8 +5,9 @@ import {
   DeletePostCommentSwagger,
   GetPostCommentsSwagger,
 } from './post-comment.swagger';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiBearerAuth()
 @Controller('post-comment')
 @ApiTags('[서비스] 게시글 댓글')
 export class PostCommentController {

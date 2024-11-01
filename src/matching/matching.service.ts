@@ -6,10 +6,12 @@ import { ChatRoomService } from '../chat-room/chat-room.service';
 import { InternalServerException } from 'src/common/exception/service.exception';
 import { ChatMessageService } from 'src/chat-message/chat-message.service';
 import { ChatRoom } from 'src/common/entities/chat-room.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class MatchingService {
   constructor(
+    @InjectRepository(Matching)
     private readonly matchingRepository: Repository<Matching>,
     private readonly chatRoomService: ChatRoomService,
     private readonly chatMessageService: ChatMessageService,
@@ -22,14 +24,22 @@ export class MatchingService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      matching = await this.matchingRepository.save({
+      queryRunner.manager.save(Matching, {
         requester: { id: body.requesterId },
         target: { id: body.targetId },
       });
 
-      chatRoom = await this.chatRoomService.createChatRoom(matching, body);
+      chatRoom = await this.chatRoomService.createChatRoom(
+        queryRunner,
+        matching,
+        body,
+      );
 
-      await this.chatMessageService.createChatMessage(chatRoom, body);
+      await this.chatMessageService.createChatMessage(
+        queryRunner,
+        chatRoom,
+        body,
+      );
       await queryRunner.commitTransaction();
 
       return chatRoom;

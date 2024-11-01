@@ -1,4 +1,9 @@
-import { ApiOperation } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiInternalServerErrorResponse,
+  ApiNotFoundResponse,
+  ApiOperation,
+} from '@nestjs/swagger';
 import { BaseSwaggerDecorator } from 'nestjs-swagger-decorator';
 import { PostMatchingResponse } from './dto/matching.response';
 import { BaseResponse } from 'src/common/response/dto';
@@ -20,7 +25,11 @@ export function CreateMatchingSwagger(apiSummary: string) {
         baseResponseDto: BaseResponse,
       },
     ],
-    [],
+    [
+      ApiBadRequestResponse({ description: 'Bad Request' }),
+      ApiNotFoundResponse({ description: '해당 유저가 존재하지 않습니다.' }),
+      ApiInternalServerErrorResponse({ description: 'Internal Server Error' }),
+    ],
   );
 }
 

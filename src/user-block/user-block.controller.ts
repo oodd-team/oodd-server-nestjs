@@ -1,8 +1,9 @@
 import { Controller, Post } from '@nestjs/common';
 import { UserBlockService } from './user-block.service';
 import { CreateBlockUserSwagger } from './user-block.swagget';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiBearerAuth()
 @Controller('user-block')
 @ApiTags('[서비스] 유저 차단')
 export class UserBlockController {
