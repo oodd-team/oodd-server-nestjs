@@ -1,6 +1,6 @@
 import { Controller, Get, Patch } from '@nestjs/common';
 import { UserService } from './user.service';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   GetUserSwagger,
   PatchUserSwagger,
@@ -8,6 +8,7 @@ import {
   SignOutSwagger,
 } from './user.swagger';
 
+@ApiBearerAuth()
 @Controller('user')
 @ApiTags('[서비스] 유저')
 export class UserController {
