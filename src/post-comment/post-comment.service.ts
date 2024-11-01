@@ -84,6 +84,14 @@ export class PostCommentService {
     }
   }
 
+  // 댓글 리스트 조회
+  async getPostComments(postId: number): Promise<PostComment[]> {
+    return await this.postCommentRepository.find({
+      where: { post: { id: postId }, status: 'activated' },
+      relations: ['user'],
+    });
+  }
+
   private async findCommentById(commentId: number): Promise<PostComment> {
     const comment = await this.postCommentRepository.findOne({
       where: { id: commentId, status: 'activated' },

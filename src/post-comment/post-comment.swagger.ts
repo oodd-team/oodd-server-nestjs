@@ -5,12 +5,12 @@ import {
   ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
-  ApiOperation,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { BaseSwaggerDecorator } from 'nestjs-swagger-decorator';
 import { BaseResponse } from 'src/common/response/dto';
 import { CreateCommentDto } from './dtos/create-comment.dto';
+import { GetCommentsDto } from './dtos/get-comment.dto';
 
 // 게시글 댓글 생성 API Swagger
 export function CreatePostCommentSwagger(text: string) {
@@ -43,8 +43,33 @@ export function CreatePostCommentSwagger(text: string) {
 }
 
 // 게시글 댓글 조회 API Swagger
-export function GetPostCommentsSwagger(apiSummary: string) {
-  return ApiOperation({ summary: apiSummary });
+export function GetPostCommentsSwagger(text: string) {
+  return BaseSwaggerDecorator(
+    { summary: text },
+    [],
+    [
+      ApiAcceptedResponse({
+        description: '댓글 리스트 조회 성공',
+        type: GetCommentsDto,
+      }),
+      ApiBadRequestResponse({
+        description: '잘못된 요청입니다.',
+        type: BaseResponse,
+      }),
+      ApiUnauthorizedResponse({
+        description: '인증되지 않은 사용자입니다.',
+        type: BaseResponse,
+      }),
+      ApiNotFoundResponse({
+        description: '존재하지 않는 댓글입니다.',
+        type: BaseResponse,
+      }),
+      ApiInternalServerErrorResponse({
+        description: '서버 에러입니다.',
+        type: BaseResponse,
+      }),
+    ],
+  );
 }
 
 // 게시글 댓글 삭제 API Swagger
