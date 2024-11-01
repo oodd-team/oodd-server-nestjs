@@ -23,7 +23,7 @@ import {
   PatchIsRepresentativeSwagger,
   PatchPostSwagger,
 } from './post.swagger';
-import { ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger';
 import { CreatePostDto } from './dtos/create-post.dto';
 import { BaseResponse } from 'src/common/response/dto';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
@@ -32,6 +32,7 @@ import { GetPostResponse } from './dtos/get-post.dto';
 import { PatchPostDto } from './dtos/patch-Post.dto';
 
 @Controller('post')
+@ApiBearerAuth()
 @UseGuards(AuthGuard)
 @ApiTags('[서비스] 게시글')
 export class PostController {
