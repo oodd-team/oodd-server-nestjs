@@ -4,6 +4,11 @@ import { QueryRunner } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateCommentDto } from './dtos/create-comment.dto';
+import {
+  DataNotFoundException,
+  ForbiddenException,
+  InternalServerException,
+} from 'src/common/exception/service.exception';
 import { UserService } from 'src/user/user.service';
 import { PostService } from 'src/post/post.service';
 
@@ -54,5 +59,49 @@ export class PostCommentService {
         return queryRunner.manager.save(comment);
       }),
     );
+  }
+
+  // 댓글 삭제
+  async deletePostComment(commentId: number): Promise<void> {
+    const queryRunner =
+      this.postCommentRepository.manager.connection.createQueryRunner();
+    await queryRunner.startTransaction();
+
+    const comment = await this.findCommentById(commentId);
+
+    try {
+      comment.status = 'deactivated';
+      comment.softDelete();
+
+      await queryRunner.manager.save(comment);
+
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw InternalServerException('댓글 삭제에 실패했습니다.');
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  private async findCommentById(commentId: number): Promise<PostComment> {
+    const comment = await this.postCommentRepository.findOne({
+      where: { id: commentId, status: 'activated' },
+      relations: ['user'],
+    });
+
+    if (!comment) {
+      throw DataNotFoundException('댓글을 찾을 수 없습니다.');
+    }
+
+    return comment;
+  }
+
+  async validateUser(commentId: number, currentUserId: number): Promise<void> {
+    const comment = await this.findCommentById(commentId);
+
+    if (comment.user.id !== currentUserId) {
+      throw ForbiddenException('댓글을 삭제할 권한이 없습니다.');
+    }
   }
 }

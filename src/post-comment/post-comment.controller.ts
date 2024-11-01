@@ -2,11 +2,12 @@ import {
   Controller,
   Post,
   Get,
-  Patch,
   Body,
   Req,
   Query,
   UseGuards,
+  Delete,
+  Param,
 } from '@nestjs/common';
 import { PostCommentService } from './post-comment.service';
 import {
@@ -20,6 +21,7 @@ import { BaseResponse } from 'src/common/response/dto';
 import { PostService } from 'src/post/post.service';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { PostComment } from 'src/common/entities/post-comment.entity';
 
 @ApiBearerAuth()
 @Controller('post-comment')
@@ -57,9 +59,19 @@ export class PostCommentController {
     // return this.userService.getHello();
   }
 
-  @Patch()
+  @Delete(':commentId')
   @DeletePostCommentSwagger('게시글 댓글 삭제 API')
-  deletePostComment() {
-    // return this.userService.getHello();
+  async deletePostComment(
+    @Param('commentId')
+    commentId: number,
+    @Req() req: Request,
+  ): Promise<BaseResponse<PostComment>> {
+    const currentUserId = req.user.userId;
+
+    await this.postCommentService.validateUser(commentId, currentUserId);
+
+    await this.postCommentService.deletePostComment(commentId);
+
+    return new BaseResponse(true, '댓글 삭제 성공');
   }
 }
