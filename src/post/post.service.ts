@@ -23,6 +23,10 @@ import { PostClothingService } from 'src/post-clothing/post-clothing.service';
 import dayjs from 'dayjs';
 import { PostLikeService } from 'src/post-like/post-like.service';
 import { PostCommentService } from 'src/post-comment/post-comment.service';
+import { PageOptionsDto } from './dtos/page-options.dto';
+import { PageDto } from './dtos/page.dto';
+import { PageMetaDto } from './dtos/page-meta.dto';
+
 @Injectable()
 export class PostService {
   constructor(
@@ -41,9 +45,12 @@ export class PostService {
 
   //게시글 리스트 조회
   async getPosts(
+    pageOptionsDto: PageOptionsDto,
     userId?: number,
     currentUserId?: number,
-  ): Promise<GetPostsResponse | GetMyPostsResponse | GetOtherPostsResponse> {
+  ): Promise<
+    PageDto<GetPostsResponse | GetMyPostsResponse | GetOtherPostsResponse>
+  > {
     const relations = [
       'postImages',
       'postComments',
@@ -53,94 +60,144 @@ export class PostService {
       'postComments.user',
     ];
 
-    // 차단된 사용자 ID 목록 가져오기
+    // 전체 게시물 리스트 조회
+    const [totalPosts, total] = await this.postRepository.findAndCount({
+      where: userId
+        ? { user: { id: userId }, status: 'activated' }
+        : { status: 'activated' },
+      relations: relations,
+      take: pageOptionsDto.take,
+      skip: (pageOptionsDto.page - 1) * pageOptionsDto.take,
+    });
+
+    const pageMetaDto = new PageMetaDto({
+      pageOptionsDto,
+      total,
+    });
+
+    const last_page = pageMetaDto.last_page;
+
+    if (last_page < pageMetaDto.page) {
+      throw DataNotFoundException('해당 페이지는 존재하지 않습니다');
+    }
+
+    // totalPosts가 없을 경우 빈 배열 반환
+    if (!totalPosts.length) {
+      return new PageDto([], pageMetaDto);
+    }
+
+    // 차단한 사용자 ID 목록 가져오기
     const blockedUserIds = currentUserId
       ? await this.userBlockService.getBlockedUserIdsByRequesterId(
           currentUserId,
         )
       : [];
 
-    const totalposts = await this.postRepository.find({
-      where: userId
-        ? { user: { id: userId }, status: 'activated' }
-        : { status: 'activated' },
-      relations: relations,
-    });
-
-    const filteredPosts = totalposts.filter(
+    const filteredPosts = totalPosts.filter(
       (post) => !blockedUserIds.includes(post.user.id),
     );
 
-    if (!filteredPosts || filteredPosts.length === 0) {
-      return this.createPostsResponse([], currentUserId);
+    // filteredPosts 없을 경우 빈 배열 반환
+    if (!filteredPosts.length) {
+      return new PageDto([], pageMetaDto);
     }
 
-    if (!userId) {
-      // 전체 게시글 조회
-      return this.createPostsResponse(filteredPosts, currentUserId);
-    } else if (userId === currentUserId) {
-      // 내 게시글 조회
-      return this.createUserPostsResponse(totalposts, currentUserId, true);
-    } else {
-      // 다른 user 게시글 조회
-      return this.createUserPostsResponse(totalposts, currentUserId, false);
-    }
+    // userId 여부에 따라 응답 생성
+    const postsResponse = userId
+      ? this.createUserPostsResponse(
+          totalPosts,
+          currentUserId,
+          userId == currentUserId,
+        )
+      : this.createPostsResponse(filteredPosts, currentUserId);
+
+    return new PageDto([postsResponse], pageMetaDto);
   }
 
-  private createPostsResponse(posts: Post[], currentUserId?: number) {
+  // 전체 게시물 리스트 응답
+  private createPostsResponse(
+    posts: Post[],
+    currentUserId?: number,
+  ): GetPostsResponse {
     return {
       post: posts.map((post) => ({
         content: post.content,
         createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
-        postImages: post.postImages.map((image) => ({
-          url: image.url,
-          orderNum: image.orderNum,
-        })),
+        postImages: post.postImages
+          .filter((image) => image.status === 'activated')
+          .map((image) => ({
+            url: image.url,
+            orderNum: image.orderNum,
+          })),
         isPostLike: this.checkIsPostLiked(post, currentUserId),
+        isPostWriter: post.user.id === currentUserId,
         user: {
           nickname: post.user.nickname,
           profilePictureUrl: post.user.profilePictureUrl,
         },
-        isPostWriter: post.user.id === currentUserId,
       })),
       isMatching: false,
     };
   }
 
+  // 사용자 게시물 응답
   private createUserPostsResponse(
     posts: Post[],
     currentUserId: number,
     isMyPosts: boolean,
-  ) {
-    const commonPosts = posts.map((post) => ({
-      content: post.content,
+  ): GetMyPostsResponse | GetOtherPostsResponse {
+    const commonPosts = this.createCommonPosts(posts, currentUserId);
+
+    if (isMyPosts) {
+      // 내 게시물 리스트 조회
+      return this.createMyPostsResponse(commonPosts, posts, currentUserId);
+    } else {
+      // 다른 사용자 게시물 리스트 조회
+      return this.createOtherPostsResponse(commonPosts, posts);
+    }
+  }
+
+  // 공통 응답
+  private createCommonPosts(posts: Post[], currentUserId: number) {
+    return posts.map((post) => ({
       createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
-      imageUrl: post.postImages.find((image) => image.orderNum === 1)?.url,
+      imageUrl: post.postImages.find(
+        (image) => image.orderNum == 1 && image.status === 'activated',
+      )?.url,
       isRepresentative: post.isRepresentative,
       likeCount: post.postLikes.length,
       isPostLike: this.checkIsPostLiked(post, currentUserId),
     }));
+  }
 
-    if (isMyPosts) {
-      // 내 게시글
-      return {
-        posts: commonPosts.map((post, index) => ({
-          ...post,
-          commentCount: posts[index].postComments.length,
-          isPostComment: this.checkIsPostCommented(posts[index], currentUserId),
-        })),
-        totalComments: this.calculateTotalComments(posts),
-        totalPosts: posts.length,
-        totalLikes: this.calculateTotalLikes(posts),
-      };
-    } else {
-      // 다른 유저 게시글
-      return {
-        posts: commonPosts,
-        totalPosts: posts.length,
-        totalLikes: this.calculateTotalLikes(posts),
-      };
-    }
+  // 내 게시물 응답
+  private createMyPostsResponse(
+    commonPosts: any[],
+    posts: Post[],
+    currentUserId: number,
+  ): GetMyPostsResponse {
+    return {
+      posts: commonPosts.map((post, index) => ({
+        ...post,
+        commentCount: posts[index].postComments.length,
+        isPostComment: this.checkIsPostCommented(posts[index], currentUserId),
+      })),
+      totalComments: this.calculateTotalComments(posts),
+      totalPosts: posts.length,
+      totalLikes: this.calculateTotalLikes(posts),
+    };
+  }
+
+  // 다른 사용자 게시물 응답
+  private createOtherPostsResponse(
+    commonPosts: any[],
+    posts: Post[],
+  ): GetOtherPostsResponse {
+    return {
+      posts: commonPosts,
+      totalPosts: posts.length,
+      totalLikes: this.calculateTotalLikes(posts),
+    };
   }
 
   //게시글 생성

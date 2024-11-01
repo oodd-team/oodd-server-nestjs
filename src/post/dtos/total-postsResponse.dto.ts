@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+
 class PostImageDto {
   @ApiProperty({
     example: 'http://postimageurl.example',

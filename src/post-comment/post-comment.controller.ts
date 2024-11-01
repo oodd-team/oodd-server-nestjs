@@ -42,7 +42,7 @@ export class PostCommentController {
     @Body() createCommentDto: CreateCommentDto,
     @Req() req: Request,
   ): Promise<BaseResponse<any>> {
-    const currentUserId = req.user.userId;
+    const currentUserId = req.user.id;
 
     await this.postService.validatePost(postId);
 
@@ -61,7 +61,7 @@ export class PostCommentController {
     @Query('postId') postId: number,
     @Req() req: Request,
   ): Promise<BaseResponse<GetCommentsDto>> {
-    const currentUserId = req.user.userId;
+    const currentUserId = req.user.id;
 
     const comments = await this.postCommentService.getPostComments(postId);
 
@@ -88,7 +88,7 @@ export class PostCommentController {
     commentId: number,
     @Req() req: Request,
   ): Promise<BaseResponse<PostComment>> {
-    const currentUserId = req.user.userId;
+    const currentUserId = req.user.id;
 
     await this.postCommentService.validateUser(commentId, currentUserId);
 

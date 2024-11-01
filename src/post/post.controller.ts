@@ -23,13 +23,15 @@ import {
   PatchIsRepresentativeSwagger,
   PatchPostSwagger,
 } from './post.swagger';
-import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { CreatePostDto } from './dtos/create-post.dto';
 import { BaseResponse } from 'src/common/response/dto';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { Request } from 'express';
 import { GetPostResponse } from './dtos/get-post.dto';
 import { PatchPostDto } from './dtos/patch-Post.dto';
+import { PageOptionsDto } from './dtos/page-options.dto';
+import { PageDto } from './dtos/page.dto';
 
 @Controller('post')
 @ApiBearerAuth()
@@ -40,21 +42,48 @@ export class PostController {
 
   @Get('/')
   @GetPostsSwagger('게시글 리스트 조회 API')
-  @ApiParam({ name: 'userId', required: false, description: 'User ID' })
+  @ApiQuery({
+    name: 'userId',
+    required: false,
+    description: 'User ID',
+    type: Number,
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: '페이지 번호',
+    type: Number,
+  })
+  @ApiQuery({
+    name: 'take',
+    required: false,
+    description: '한 페이지에 불러올 데이터 개수',
+  })
   async getPosts(
     @Req() req: Request,
+    @Query() pageOptionsDto?: PageOptionsDto,
     @Query('userId') userId?: number,
   ): Promise<
-    BaseResponse<GetPostsResponse | GetMyPostsResponse | GetOtherPostsResponse>
+    BaseResponse<
+      PageDto<GetPostsResponse | GetMyPostsResponse | GetOtherPostsResponse>
+    >
   > {
     const currentUserId = req.user.id;
 
+    const options = pageOptionsDto
+      ? {
+          ...new PageOptionsDto(),
+          ...pageOptionsDto, // Dto에 전달된 기본값
+        }
+      : new PageOptionsDto();
+
     const postsResponse = await this.postService.getPosts(
+      options,
       userId,
       currentUserId,
     );
 
-    return new BaseResponse(true, 'SUCCESS', postsResponse);
+    return new BaseResponse(true, '게시글 리스트 조회 성공', postsResponse);
   }
 
   @Get(':postId')
