@@ -1,6 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
-import { PostImageService } from './post-image.service';
+import { Controller } from '@nestjs/common';
+
 @Controller('post-image')
-export class PostImageController {
-  constructor(private readonly postImageService: PostImageService) {}
-}
+export class PostImageController {}

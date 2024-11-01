@@ -1,6 +1,6 @@
 import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './user.entity';
-import { BaseEntity } from './base.entity';
+import { BaseEntity } from '../base.entity';
 import { Post } from './post.entity';
 
 @Entity('PostReport')
