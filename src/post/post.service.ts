@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, QueryRunner, Repository } from 'typeorm';
+import { DataSource, FindOneOptions, QueryRunner, Repository } from 'typeorm';
 import { Post } from '../common/entities/post.entity';
 import { GetPostsResponse } from './dtos/total-postsResponse.dto';
 import {
@@ -34,6 +34,7 @@ export class PostService {
     private readonly postStyletagService: PostStyletagService,
     private readonly postClothingService: PostClothingService,
     private readonly postLikeService: PostLikeService,
+    @Inject(forwardRef(() => PostCommentService))
     private readonly postCommentService: PostCommentService,
     private readonly dataSource: DataSource,
   ) {}
@@ -405,5 +406,10 @@ export class PostService {
     return post.postComments.some(
       (comment) => comment.user.id === currentUserId,
     );
+  }
+
+  // Post 조회
+  async findByFields(fields: FindOneOptions<Post>) {
+    return await this.postRepository.findOne(fields);
   }
 }

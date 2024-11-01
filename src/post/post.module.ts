@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Post } from '../common/entities/post.entity';
 import { PostController } from './post.controller';
@@ -24,9 +24,10 @@ import { PostCommentModule } from 'src/post-comment/post-comment.module';
     PostClothingModule,
     DayjsModule,
     PostLikeModule,
-    PostCommentModule,
+    forwardRef(() => PostCommentModule),
   ],
   controllers: [PostController],
   providers: [PostService],
+  exports: [PostService],
 })
 export class PostModule {}
