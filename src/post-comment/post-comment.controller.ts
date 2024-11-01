@@ -78,7 +78,7 @@ export class PostCommentController {
       totalComments: comments.length,
     };
 
-    return new BaseResponse(true, '댓글 조회 성공', commenteResponse);
+    return new BaseResponse(true, '댓글 목록 조회 성공', commenteResponse);
   }
 
   @Delete(':commentId')
