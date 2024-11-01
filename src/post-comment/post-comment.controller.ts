@@ -14,13 +14,14 @@ import {
   DeletePostCommentSwagger,
   GetPostCommentsSwagger,
 } from './post-comment.swagger';
-import { ApiTags } from '@nestjs/swagger';
 import { CreateCommentDto } from './dtos/create-comment.dto';
 import { Request } from 'express';
 import { BaseResponse } from 'src/common/response/dto';
 import { PostService } from 'src/post/post.service';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiBearerAuth()
 @Controller('post-comment')
 @UseGuards(AuthGuard)
 @ApiTags('[서비스] 게시글 댓글')

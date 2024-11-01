@@ -4,8 +4,9 @@ import {
   CreatePostLikeSwagger,
   GetPostLikesSwagger,
 } from './post-like.swagger';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiBearerAuth()
 @Controller('post-like')
 @ApiTags('[서비스] 게시글 좋아요')
 export class PostLikeController {
