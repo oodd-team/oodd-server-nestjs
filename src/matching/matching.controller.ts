@@ -7,8 +7,9 @@ import {
   GetMatchingSwagger,
   PatchMatchingRequestStatusSwagger,
 } from './matching.swagger';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiBearerAuth()
 @Controller('matching')
 @ApiTags('[서비스] 매칭')
 export class MatchingController {
