@@ -15,6 +15,7 @@ async function bootstrap() {
       'https://dev.oodd.today',
     ], // 프론트엔드에서 접근 가능한 도메인
     credentials: true,
+    allowedHeaders: '*', // 모든 헤더 허용
   });
   setupSwagger(app);
   await app.listen(process.env.PORT);
