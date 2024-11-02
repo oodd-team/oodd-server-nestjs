@@ -75,15 +75,15 @@ export class PostService {
       total,
     });
 
+    // totalPosts가 없을 경우 빈 배열 반환
+    if (!totalPosts.length) {
+      return new PageDto([], pageMetaDto);
+    }
+
     const last_page = pageMetaDto.last_page;
 
     if (last_page < pageMetaDto.page) {
       throw DataNotFoundException('해당 페이지는 존재하지 않습니다');
-    }
-
-    // totalPosts가 없을 경우 빈 배열 반환
-    if (!totalPosts.length) {
-      return new PageDto([], pageMetaDto);
     }
 
     // 차단한 사용자 ID 목록 가져오기
