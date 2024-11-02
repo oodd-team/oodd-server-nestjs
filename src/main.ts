@@ -9,11 +9,7 @@ async function bootstrap() {
   app.useGlobalFilters(new ServiceExceptionToHttpExceptionFilter());
   app.useGlobalPipes(new ValidationPipe());
   app.enableCors({
-    origin: [
-      'http://localhost:3000',
-      'https://oodd.today',
-      'https://dev.oodd.today',
-    ], // 프론트엔드에서 접근 가능한 도메인
+    origin: '*', // 프론트엔드에서 접근 가능한 도메인
     credentials: true,
     allowedHeaders: '*', // 모든 헤더 허용
   });

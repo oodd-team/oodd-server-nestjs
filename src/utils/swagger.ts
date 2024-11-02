@@ -18,7 +18,7 @@ export function setupSwagger(app: INestApplication): void {
         name: 'JWT',
         in: 'header',
       },
-      'access-token',
+      'Authorization',
     )
     .build();
 

@@ -27,7 +27,7 @@ import { BaseResponse } from 'src/common/response/dto';
 import { PostMatchingResponse } from './dto/matching.response';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 
-@ApiBearerAuth()
+@ApiBearerAuth('Authorization')
 @Controller('matching')
 @ApiTags('[서비스] 매칭')
 export class MatchingController {

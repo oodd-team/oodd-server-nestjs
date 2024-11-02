@@ -3,7 +3,7 @@ import { ChatRoomService } from './chat-room.service';
 import { GetChatRoomsSwagger, LeaveChatRoomSwagger } from './chat-room.swagger';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
-@ApiBearerAuth()
+@ApiBearerAuth('Authorization')
 @Controller('chat-room')
 @ApiTags('[서비스] 채팅방')
 export class ChatRoomController {

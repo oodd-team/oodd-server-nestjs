@@ -8,7 +8,7 @@ import {
   SignOutSwagger,
 } from './user.swagger';
 
-@ApiBearerAuth()
+@ApiBearerAuth('Authorization')
 @Controller('user')
 @ApiTags('[서비스] 유저')
 export class UserController {

@@ -3,7 +3,7 @@ import { PostReportService } from './post-report.service';
 import { CreatePostReportSwagger } from './post-report.swagger';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
-@ApiBearerAuth()
+@ApiBearerAuth('Authorization')
 @Controller('post-report')
 @ApiTags('[서비스] 게시글 신고')
 export class PostReportController {

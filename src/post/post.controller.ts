@@ -34,7 +34,7 @@ import { PageOptionsDto } from './dtos/page-options.dto';
 import { PageDto } from './dtos/page.dto';
 
 @Controller('post')
-@ApiBearerAuth()
+@ApiBearerAuth('Authorization')
 @UseGuards(AuthGuard)
 @ApiTags('[서비스] 게시글')
 export class PostController {
