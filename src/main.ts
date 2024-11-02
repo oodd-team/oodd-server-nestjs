@@ -14,7 +14,6 @@ async function bootstrap() {
       'https://oodd.today',
       'https://dev.oodd.today',
     ], // 프론트엔드에서 접근 가능한 도메인
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
   setupSwagger(app);
