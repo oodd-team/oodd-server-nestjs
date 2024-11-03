@@ -21,6 +21,7 @@ import { UserService } from 'src/user/user.service';
 import { Request } from 'express';
 import {
   DataNotFoundException,
+  InternalServerException,
   UnauthorizedException,
 } from 'src/common/exception/service.exception';
 import { BaseResponse } from 'src/common/response/dto';
@@ -68,8 +69,16 @@ export class MatchingController {
     if (req.user.id !== body.targetId) {
       throw UnauthorizedException('권한이 없습니다.');
     }
+
+    if (
+      (await this.matchingService.getMatchingById(body.matchingId))
+        .requestStatus !== 'pending'
+    ) {
+      throw InternalServerException('이미 처리된 요청입니다.');
+    }
+
     await this.matchingService.patchMatchingRequestStatus(body);
-    return new BaseResponse(true, 'SUCCESS');
+    return new BaseResponse(true, '매칭 상태 변경 성공');
   }
 
   @Patch()

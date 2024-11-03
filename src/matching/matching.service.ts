@@ -62,7 +62,7 @@ export class MatchingService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
-    const matching = await this.validateMatching(body.matchingId);
+    const matching = await this.getMatchingById(body.matchingId);
 
     try {
       if (body.action === 'accept') {
@@ -85,15 +85,12 @@ export class MatchingService {
     }
   }
 
-  private async validateMatching(matchingId: number): Promise<Matching> {
+  async getMatchingById(matchingId: number): Promise<Matching> {
     const matching = await this.matchingRepository.findOne({
       where: { id: matchingId },
     });
     if (!matching) {
       throw DataNotFoundException('해당 매칭 요청을 찾을 수 없습니다.');
-    }
-    if (matching.requestStatus !== 'pending') {
-      throw InternalServerException('이미 처리된 요청입니다.');
     }
     return matching;
   }
