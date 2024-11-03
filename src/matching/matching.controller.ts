@@ -26,6 +26,7 @@ import {
 import { BaseResponse } from 'src/common/response/dto';
 import { PostMatchingResponse } from './dto/matching.response';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
+import { PatchMatchingRequestDto } from './dto/Patch-matching.request';
 
 @ApiBearerAuth('Authorization')
 @Controller('matching')
@@ -58,9 +59,17 @@ export class MatchingController {
   }
 
   @Patch()
+  @UseGuards(AuthGuard)
   @PatchMatchingRequestStatusSwagger('매칭 요청 수락 및 거절 API')
-  patchMatchingRequestStatus() {
-    // return this.userService.getHello();
+  async patchMatchingRequestStatus(
+    @Req() req: Request,
+    @Body() body: PatchMatchingRequestDto,
+  ): Promise<BaseResponse<any>> {
+    if (req.user.id !== body.targetId) {
+      throw UnauthorizedException('권한이 없습니다.');
+    }
+    await this.matchingService.patchMatchingRequestStatus(body);
+    return new BaseResponse(true, 'SUCCESS');
   }
 
   @Patch()
