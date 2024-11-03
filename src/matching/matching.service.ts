@@ -97,4 +97,20 @@ export class MatchingService {
     }
     return matching;
   }
+
+  async getMatchings(currentUserId: number): Promise<Matching[]> {
+    return await this.matchingRepository.find({
+      where: {
+        requestStatus: 'pending',
+        status: 'activated',
+        target: { id: currentUserId },
+      },
+      relations: [
+        'requester',
+        'requester.representativePost',
+        'requester.representativePost.postImages',
+        'requester.representativePost.postStyletags.styletag',
+      ],
+    });
+  }
 }
