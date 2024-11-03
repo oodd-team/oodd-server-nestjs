@@ -6,7 +6,7 @@ export class PatchMatchingRequestDto {
   @IsInt()
   matchingId: number;
 
-  @ApiProperty({ example: 1, description: '신청하는 유저 아이디' })
+  @ApiProperty({ example: 1, description: '신청한 유저 아이디' })
   @IsInt()
   requesterId: number;
 
