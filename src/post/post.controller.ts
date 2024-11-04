@@ -18,6 +18,7 @@ import {
 } from './dtos/user-postsResponse.dto';
 import {
   CreatePostsSwagger,
+  DeletePostSwagger,
   GetPostsSwagger,
   GetPostSwagger,
   PatchIsRepresentativeSwagger,
@@ -165,7 +166,7 @@ export class PostController {
   }
 
   @Delete(':postId')
-  @PatchPostSwagger('게시글 삭제 API')
+  @DeletePostSwagger('게시글 삭제 API')
   async deletePost(
     @Param('postId') postId: number,
     @Req() req: Request,
