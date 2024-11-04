@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   Patch,
+  Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -61,9 +62,21 @@ export class UserController {
     return new BaseResponse(true, '유저 정보 수정 성공', updatedUser);
   }
 
-  @Patch()
+  @Post(':userId')
+  @UseGuards(AuthGuard)
   @PatchUserTermsSwagger('이용약관 동의 API')
-  patchUserTerms() {
-    // return this.userService.getHello();
+  async patchUserTerms(
+    @Req() req: Request,
+    @Param('userId') userId: number,
+  ): Promise<BaseResponse<any>> {
+    if (!(await this.userService.getUserById(userId)))
+      throw DataNotFoundException('유저가 존재하지 않습니다.');
+    if (req.user.id !== Number(userId)) {
+      throw UnauthorizedException('권한이 없습니다.');
+    }
+
+    const updatedUser = await this.userService.patchUserTerms(userId);
+
+    return new BaseResponse(true, 'Success', updatedUser.privateTermAcceptedAt);
   }
 }
