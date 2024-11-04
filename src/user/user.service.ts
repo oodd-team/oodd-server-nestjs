@@ -5,6 +5,7 @@ import { SocialUser } from 'src/auth/dto/auth.dto';
 import { User } from 'src/common/entities/user.entity';
 import { InternalServerException } from 'src/common/exception/service.exception';
 import { DataSource, FindOneOptions, Repository } from 'typeorm';
+import { PatchUserRequest } from './dto/patch-user.request';
 
 @Injectable()
 export class UserService {
@@ -46,6 +47,40 @@ export class UserService {
       const jwtToken = await this.authService.generateJwtToken(userData);
       await queryRunner.commitTransaction();
       return jwtToken;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw InternalServerException(error.message);
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async PatchUser(
+    id: number,
+    patchUserRequest: PatchUserRequest,
+  ): Promise<User> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const user = await queryRunner.manager.findOne(User, {
+        where: { id: id, status: 'activated' },
+      });
+
+      if (patchUserRequest.nickname !== undefined) {
+        user.nickname = patchUserRequest.nickname;
+      }
+      if (patchUserRequest.profilePictureUrl !== undefined) {
+        user.profilePictureUrl = patchUserRequest.profilePictureUrl;
+      }
+      if (patchUserRequest.bio !== undefined) {
+        user.bio = patchUserRequest.bio;
+      }
+
+      const updatedUser = await queryRunner.manager.save(User, user);
+      await queryRunner.commitTransaction();
+      return updatedUser;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw InternalServerException(error.message);
