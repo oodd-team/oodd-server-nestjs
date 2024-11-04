@@ -21,9 +21,9 @@ class RequesterResponse {
   profilePictureUrl: string;
 }
 
-class RepresentativePostResponse {
+class RequesterPostResponse {
   @ApiProperty({
-    description: '대표 게시물의 이미지 목록',
+    description: '매칭 요청자의 게시물 이미지 목록',
     type: [String],
     example: [
       { url: 'https://example.com/image1.jpg', orderNum: 1 },
@@ -33,7 +33,7 @@ class RepresentativePostResponse {
   postImages: { url: string; orderNum: number }[];
 
   @ApiProperty({
-    description: '스타일 태그 목록',
+    description: '매칭 요청자의 게시물 스타일 태그 목록',
     type: [String],
     example: ['classic', 'basic'],
   })
@@ -49,11 +49,11 @@ class MatchingResponse {
   requester: RequesterResponse;
 
   @ApiProperty({
-    description: '대표 게시물 정보',
-    type: RepresentativePostResponse,
+    description: '매칭 요청자의 대표 게시물이 없을 경우, 가장 최근 게시물 정보',
+    type: RequesterPostResponse,
   })
-  @Type(() => RepresentativePostResponse)
-  representativePost: RepresentativePostResponse;
+  @Type(() => RequesterPostResponse)
+  requesterPost: RequesterPostResponse;
 }
 
 export class GetMatchingsResponse {

@@ -39,12 +39,20 @@ export function CreateMatchingSwagger(apiSummary: string) {
 export function PatchMatchingRequestStatusSwagger(apiSummary: string) {
   return BaseSwaggerDecorator(
     { summary: apiSummary },
-    [],
     [
-      ApiAcceptedResponse({
-        description: '매칭 리스트 불러오기 성공',
-        type: GetMatchingsResponse,
-      }),
+      {
+        statusCode: 200,
+        responseOptions: [
+          {
+            model: BaseResponse,
+            exampleTitle: '성공',
+            exampleDescription: '성공했을 때 값',
+          },
+        ],
+        baseResponseDto: BaseResponse,
+      },
+    ],
+    [
       ApiBadRequestResponse({ description: 'Bad Request' }),
       ApiNotFoundResponse({ description: '해당 유저가 존재하지 않습니다.' }),
       ApiInternalServerErrorResponse({ description: 'Internal Server Error' }),
