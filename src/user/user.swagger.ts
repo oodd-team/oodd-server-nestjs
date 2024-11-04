@@ -44,5 +44,25 @@ export function PatchUserSwagger(apiSummary: string) {
 
 // 이용약관 동의 API Swagger
 export function PatchUserTermsSwagger(apiSummary: string) {
-  return ApiOperation({ summary: apiSummary });
+  return BaseSwaggerDecorator(
+    { summary: apiSummary },
+    [
+      {
+        statusCode: 200,
+        responseOptions: [
+          {
+            model: BaseResponse,
+            exampleTitle: '성공',
+            exampleDescription: '성공했을 때 값',
+          },
+        ],
+        baseResponseDto: BaseResponse,
+      },
+    ],
+    [
+      ApiBadRequestResponse({ description: 'Bad Request' }),
+      ApiNotFoundResponse({ description: '해당 유저가 존재하지 않습니다.' }),
+      ApiInternalServerErrorResponse({ description: 'Internal Server Error' }),
+    ],
+  );
 }
