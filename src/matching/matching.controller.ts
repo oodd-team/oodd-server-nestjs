@@ -21,11 +21,13 @@ import { UserService } from 'src/user/user.service';
 import { Request } from 'express';
 import {
   DataNotFoundException,
+  InternalServerException,
   UnauthorizedException,
 } from 'src/common/exception/service.exception';
 import { BaseResponse } from 'src/common/response/dto';
 import { PostMatchingResponse } from './dto/matching.response';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
+import { PatchMatchingRequestDto } from './dto/Patch-matching.request';
 
 @ApiBearerAuth('Authorization')
 @Controller('matching')
@@ -58,9 +60,25 @@ export class MatchingController {
   }
 
   @Patch()
+  @UseGuards(AuthGuard)
   @PatchMatchingRequestStatusSwagger('매칭 요청 수락 및 거절 API')
-  patchMatchingRequestStatus() {
-    // return this.userService.getHello();
+  async patchMatchingRequestStatus(
+    @Req() req: Request,
+    @Body() body: PatchMatchingRequestDto,
+  ): Promise<BaseResponse<any>> {
+    if (req.user.id !== body.targetId) {
+      throw UnauthorizedException('권한이 없습니다.');
+    }
+
+    if (
+      (await this.matchingService.getMatchingById(body.matchingId))
+        .requestStatus !== 'pending'
+    ) {
+      throw InternalServerException('이미 처리된 요청입니다.');
+    }
+
+    await this.matchingService.patchMatchingRequestStatus(body);
+    return new BaseResponse(true, '매칭 상태 변경 성공');
   }
 
   @Patch()
