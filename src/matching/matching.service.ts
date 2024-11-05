@@ -85,6 +85,22 @@ export class MatchingService {
     }
   }
 
+  async getMatchings(currentUserId: number): Promise<Matching[]> {
+    return await this.matchingRepository.find({
+      where: {
+        requestStatus: 'pending',
+        status: 'activated',
+        target: { id: currentUserId },
+      },
+      relations: [
+        'requester',
+        'requester.posts',
+        'requester.posts.postImages',
+        'requester.posts.postStyletags.styletag',
+      ],
+    });
+  }
+
   async getMatchingById(matchingId: number): Promise<Matching> {
     const matching = await this.matchingRepository.findOne({
       where: { id: matchingId },
