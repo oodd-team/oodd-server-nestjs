@@ -6,6 +6,7 @@ import {
 } from '@nestjs/swagger';
 import { BaseSwaggerDecorator } from 'nestjs-swagger-decorator';
 import { BaseResponse } from 'src/common/response/dto';
+import { PatchUserResponse } from './dto/patch-user.response';
 
 // 유저 조회 API Swagger
 export function GetUserSwagger(apiSummary: string) {
@@ -26,7 +27,7 @@ export function PatchUserSwagger(apiSummary: string) {
         statusCode: 200,
         responseOptions: [
           {
-            model: BaseResponse,
+            model: PatchUserResponse,
             exampleTitle: '성공',
             exampleDescription: '성공했을 때 값',
           },
