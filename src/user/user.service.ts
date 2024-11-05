@@ -59,11 +59,11 @@ export class UserService {
     id: number,
     patchUserRequest: PatchUserRequest,
   ): Promise<User> {
-    try {
-      const user = await this.userRepository.findOne({
-        where: { id: id, status: 'activated' },
-      });
+    const user = await this.userRepository.findOne({
+      where: { id: id, status: 'activated' },
+    });
 
+    try {
       if (patchUserRequest.nickname !== undefined) {
         user.nickname = patchUserRequest.nickname;
       }
