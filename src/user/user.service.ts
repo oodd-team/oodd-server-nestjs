@@ -81,26 +81,15 @@ export class UserService {
   }
 
   async patchUserTerms(id: number): Promise<User> {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
+    const user = await this.userRepository.findOne({
+      where: { id: id, status: 'activated' },
+    });
     try {
-      const user = await queryRunner.manager.findOne(User, {
-        where: { id: id, status: 'activated' },
-      });
-
-      user.privateTermAcceptedAt = new Date();
-
-      await queryRunner.manager.save(user);
-      await queryRunner.commitTransaction();
-
+      user.privacyTermAcceptedAt = new Date();
+      await this.userRepository.save(user);
       return user;
     } catch (error) {
-      await queryRunner.rollbackTransaction();
       throw InternalServerException(error.message);
-    } finally {
-      await queryRunner.release();
     }
   }
 }

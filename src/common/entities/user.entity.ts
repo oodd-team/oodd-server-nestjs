@@ -55,7 +55,7 @@ export class User extends BaseEntity {
     example: '2021-08-01 00:00:00',
   })
   @Column('datetime')
-  privateTermAcceptedAt!: Date;
+  privacyTermAcceptedAt!: Date;
 
   //one to many 관계 설정
 

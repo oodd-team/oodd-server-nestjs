@@ -83,6 +83,6 @@ export class UserController {
 
     const updatedUser = await this.userService.patchUserTerms(userId);
 
-    return new BaseResponse(true, 'Success', updatedUser.privateTermAcceptedAt);
+    return new BaseResponse(true, 'Success', updatedUser.privacyTermAcceptedAt);
   }
 }
