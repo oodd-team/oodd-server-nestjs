@@ -1,10 +1,8 @@
 import {
   ApiBadRequestResponse,
-  ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
-  ApiUnauthorizedResponse,
-  ApiUnprocessableEntityResponse,
+  ApiOkResponse,
 } from '@nestjs/swagger';
 import { BaseSwaggerDecorator } from 'nestjs-swagger-decorator';
 import { BaseResponse } from 'src/common/response/dto';
@@ -15,65 +13,48 @@ import {
   GetMyPostsResponse,
   GetOtherPostsResponse,
 } from './dtos/user-postsResponse.dto';
+import { applyDecorators } from '@nestjs/common';
 import { GetPostResponse } from './dtos/get-post.dto';
+import { PageDto } from './dtos/page.dto';
 
 // 게시글 리스트 조회하기 API Swagger
 export function GetPostsSwagger(text: string) {
-  return BaseSwaggerDecorator(
-    { summary: text },
-    [
-      {
-        statusCode: 200,
-        responseOptions: [
-          {
-            model: GetPostsResponse,
-            exampleTitle: '성공',
-            exampleDescription: '전체 게시글 조회 성공 시 값',
-          },
-        ],
-        baseResponseDto: BaseResponse,
-      },
-      {
-        statusCode: 200,
-        responseOptions: [
-          {
-            model: GetMyPostsResponse,
-            exampleTitle: '성공',
-            exampleDescription: '내 게시글 조회 성공 시 값',
-          },
-        ],
-        baseResponseDto: BaseResponse,
-      },
-      {
-        statusCode: 200,
-        responseOptions: [
-          {
-            model: GetOtherPostsResponse,
-            exampleTitle: '성공',
-            exampleDescription: '다른 사용자 게시글 조회 성공 시 값',
-          },
-        ],
-        baseResponseDto: BaseResponse,
-      },
-    ],
-    [
-      ApiBadRequestResponse({
-        description: '잘못된 요청입니다.',
-        type: BaseResponse,
-      }),
-      ApiUnauthorizedResponse({
-        description: '인증에 실패했습니다.',
-        type: BaseResponse,
-      }),
-      ApiNotFoundResponse({
-        description: '존재하지 않는 게시글입니다.',
-        type: BaseResponse,
-      }),
-      ApiInternalServerErrorResponse({
-        description: '서버 에러입니다.',
-        type: BaseResponse,
-      }),
-    ],
+  return applyDecorators(
+    BaseSwaggerDecorator(
+      { summary: text },
+      [
+        {
+          statusCode: 200,
+          responseOptions: [
+            {
+              model: PageDto<GetPostsResponse>,
+              exampleTitle: '전체 게시글 조회 예시',
+              exampleDescription: '전체 게시글 조회 성공 시 값',
+            },
+            {
+              model: GetMyPostsResponse,
+              exampleTitle: '내 게시글 조회 예시',
+              exampleDescription: '내 게시글 조회 성공 시 값',
+            },
+            {
+              model: GetOtherPostsResponse,
+              exampleTitle: '다른 사용자 게시글 조회 예시',
+              exampleDescription: '다른 사용자 게시글 조회 성공 시 값',
+            },
+          ],
+          baseResponseDto: BaseResponse,
+        },
+      ],
+      [
+        ApiBadRequestResponse({ description: 'Bad Request' }),
+        ApiNotFoundResponse({
+          description: '해당 게시글이 존재하지 않습니다.',
+        }),
+        ApiInternalServerErrorResponse({
+          description: 'Internal Server Error',
+        }),
+      ],
+    ),
   );
 }
 
@@ -88,29 +69,16 @@ export function GetPostSwagger(text: string) {
           {
             model: GetPostResponse,
             exampleTitle: '성공',
-            exampleDescription: '게시글 조회 성공',
+            exampleDescription: '성공했을 때 값',
           },
         ],
         baseResponseDto: BaseResponse,
       },
     ],
     [
-      ApiBadRequestResponse({
-        description: '잘못된 요청입니다.',
-        type: BaseResponse,
-      }),
-      ApiUnauthorizedResponse({
-        description: '인증에 실패했습니다.',
-        type: BaseResponse,
-      }),
-      ApiNotFoundResponse({
-        description: '존재하지 않는 게시글입니다.',
-        type: BaseResponse,
-      }),
-      ApiInternalServerErrorResponse({
-        description: '서버 에러입니다.',
-        type: BaseResponse,
-      }),
+      ApiBadRequestResponse({ description: 'Bad Request' }),
+      ApiNotFoundResponse({ description: '해당 게시글이 존재하지 않습니다.' }),
+      ApiInternalServerErrorResponse({ description: 'Internal Server Error' }),
     ],
   );
 }
@@ -121,7 +89,7 @@ export function CreatePostsSwagger(text: string) {
     { summary: text },
     [
       {
-        statusCode: 201,
+        statusCode: 200,
         responseOptions: [
           {
             model: CreatePostDto,
@@ -133,26 +101,9 @@ export function CreatePostsSwagger(text: string) {
       },
     ],
     [
-      ApiBadRequestResponse({
-        description: '잘못된 요청입니다.',
-        type: BaseResponse,
-      }),
-      ApiUnauthorizedResponse({
-        description: '인증되지 않은 사용자입니다.',
-        type: BaseResponse,
-      }),
-      ApiForbiddenResponse({
-        description: '권한이 없습니다.',
-        type: BaseResponse,
-      }),
-      ApiUnprocessableEntityResponse({
-        description: '요청이 처리 불가능합니다.',
-        type: BaseResponse,
-      }),
-      ApiInternalServerErrorResponse({
-        description: '서버 오류입니다.',
-        type: BaseResponse,
-      }),
+      ApiBadRequestResponse({ description: 'Bad Request' }),
+      ApiNotFoundResponse({ description: '해당 유저가 존재하지 않습니다.' }),
+      ApiInternalServerErrorResponse({ description: 'Internal Server Error' }),
     ],
   );
 }
@@ -163,7 +114,7 @@ export function PatchPostSwagger(text: string) {
     { summary: text },
     [
       {
-        statusCode: 201,
+        statusCode: 200,
         responseOptions: [
           {
             model: PatchPostDto,
@@ -175,26 +126,9 @@ export function PatchPostSwagger(text: string) {
       },
     ],
     [
-      ApiBadRequestResponse({
-        description: '잘못된 요청입니다.',
-        type: BaseResponse,
-      }),
-      ApiUnauthorizedResponse({
-        description: '인증되지 않은 사용자입니다.',
-        type: BaseResponse,
-      }),
-      ApiForbiddenResponse({
-        description: '권한이 없습니다.',
-        type: BaseResponse,
-      }),
-      ApiUnprocessableEntityResponse({
-        description: '요청이 처리 불가능합니다.',
-        type: BaseResponse,
-      }),
-      ApiInternalServerErrorResponse({
-        description: '서버 오류입니다.',
-        type: BaseResponse,
-      }),
+      ApiBadRequestResponse({ description: 'Bad Request' }),
+      ApiNotFoundResponse({ description: '해당 게시글이 존재하지 않습니다.' }),
+      ApiInternalServerErrorResponse({ description: 'Internal Server Error' }),
     ],
   );
 }
@@ -205,26 +139,10 @@ export function DeletePostSwagger(text: string) {
     { summary: text },
     [],
     [
-      ApiBadRequestResponse({
-        description: '잘못된 요청입니다.',
-        type: BaseResponse,
-      }),
-      ApiUnauthorizedResponse({
-        description: '인증되지 않은 사용자입니다.',
-        type: BaseResponse,
-      }),
-      ApiForbiddenResponse({
-        description: '권한이 없습니다.',
-        type: BaseResponse,
-      }),
-      ApiNotFoundResponse({
-        description: '게시글을 찾을 수 없습니다.',
-        type: BaseResponse,
-      }),
-      ApiInternalServerErrorResponse({
-        description: '서버 오류입니다.',
-        type: BaseResponse,
-      }),
+      ApiOkResponse({ description: '성공', type: BaseResponse }),
+      ApiBadRequestResponse({ description: 'Bad Request' }),
+      ApiNotFoundResponse({ description: '해당 게시글이 존재하지 않습니다.' }),
+      ApiInternalServerErrorResponse({ description: 'Internal Server Error' }),
     ],
   );
 }
@@ -233,43 +151,12 @@ export function DeletePostSwagger(text: string) {
 export function PatchIsRepresentativeSwagger(text: string) {
   return BaseSwaggerDecorator(
     { summary: text },
+    [],
     [
-      {
-        statusCode: 200,
-        responseOptions: [
-          {
-            model: BaseResponse,
-            exampleTitle: '성공',
-            exampleDescription: '게시글을 대표 OOTD로 설정/해제했습니다.',
-            overwriteValue: {
-              isSuccess: true,
-              data: null,
-            },
-          },
-        ],
-      },
-    ],
-    [
-      ApiBadRequestResponse({
-        description: '잘못된 요청입니다.',
-        type: BaseResponse,
-      }),
-      ApiUnauthorizedResponse({
-        description: '인증되지 않은 사용자입니다.',
-        type: BaseResponse,
-      }),
-      ApiForbiddenResponse({
-        description: '권한이 없습니다.',
-        type: BaseResponse,
-      }),
-      ApiUnprocessableEntityResponse({
-        description: '요청이 처리 불가능합니다.',
-        type: BaseResponse,
-      }),
-      ApiInternalServerErrorResponse({
-        description: '서버 오류입니다.',
-        type: BaseResponse,
-      }),
+      ApiOkResponse({ description: '성공', type: BaseResponse }),
+      ApiBadRequestResponse({ description: 'Bad Request' }),
+      ApiNotFoundResponse({ description: '해당 게시글이 존재하지 않습니다.' }),
+      ApiInternalServerErrorResponse({ description: 'Internal Server Error' }),
     ],
   );
 }

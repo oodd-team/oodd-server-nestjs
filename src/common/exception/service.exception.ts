@@ -1,7 +1,6 @@
 import {
   NOT_FOUND_DATA,
   ErrorCode,
-  INVALID_INPUT_VALUE,
   UNAUTHORIZED,
   FORBIDDEN,
   INTERNAL_SERVER_ERROR,
@@ -12,9 +11,10 @@ export const DataNotFoundException = (message?: string): ServiceException => {
 };
 
 export const InvalidInputValueException = (
+  code: string,
   message?: string,
 ): ServiceException => {
-  return new ServiceException(INVALID_INPUT_VALUE, message);
+  return new ServiceException({ status: 400, message: message, code: code });
 };
 
 export const UnauthorizedException = (message?: string): ServiceException => {

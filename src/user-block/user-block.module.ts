@@ -11,5 +11,7 @@ import { User } from 'src/common/entities/user.entity';
   controllers: [UserBlockController],
   providers: [UserBlockService],
   exports: [UserBlockService],
+  providers: [UserBlockService],
+  exports: [UserBlockService],
 })
 export class UserBlockModule {}

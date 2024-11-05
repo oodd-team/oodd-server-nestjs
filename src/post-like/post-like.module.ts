@@ -11,6 +11,7 @@ import { PostModule } from 'src/post/post.module';
     PostModule, // PostService를 사용하기 위한 PostModule 가져오기
   ],
   controllers: [PostLikeController],
-  providers: [PostLikeService]
+  providers: [PostLikeService],
+  exports: [PostLikeService],
 })
 export class PostLikeModule {}

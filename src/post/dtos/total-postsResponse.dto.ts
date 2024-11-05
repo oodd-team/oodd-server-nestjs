@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+
 class PostImageDto {
   @ApiProperty({
     example: 'http://postimageurl.example',
@@ -29,7 +30,7 @@ class UserDto {
 
 class PostDto {
   @ApiProperty({
-    example: '게시글 내용',
+    example: '게시글 내용 content',
     description: '게시글의 내용입니다.',
   })
   content: string;
@@ -38,7 +39,7 @@ class PostDto {
     example: '2024-10-21T09:00:00.000Z',
     description: '게시글이 작성된 시간입니다.',
   })
-  createdAt: Date;
+  createdAt: string;
 
   @ApiProperty({
     type: [PostImageDto],

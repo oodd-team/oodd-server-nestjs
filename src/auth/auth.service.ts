@@ -25,7 +25,13 @@ export class AuthService {
     if (!userBySocial)
       return await this.userSerivce.createUserByKakaoOrNaver(user);
 
-    return await this.generateJwtToken(userBySocial);
+    return await this.generateJwtToken({
+      id: userBySocial.id,
+      email: userBySocial.email,
+      nickname: userBySocial.nickname,
+      kakaoId: userBySocial.kakaoId ? userBySocial.kakaoId : undefined,
+      naverId: userBySocial.naverId ? userBySocial.naverId : undefined,
+    });
   }
 
   async generateJwtToken(user: JwtPayload): Promise<string> {
@@ -36,7 +42,7 @@ export class AuthService {
     payload: JwtPayload,
   ): Promise<JwtPayload | undefined> {
     return await this.userSerivce.findByFields({
-      where: { id: payload.id },
+      where: { id: payload.id, status: 'activated' },
     });
   }
 }

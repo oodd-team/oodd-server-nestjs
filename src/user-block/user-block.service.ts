@@ -14,6 +14,17 @@ export class UserBlockService {
     private readonly userService: UserService,
   ) {}
 
+  async getBlockedUserIdsByRequesterId(
+    currentUserId: number,
+  ): Promise<number[]> {
+    const blockedUsers = await this.userBlockRepository.find({
+      where: { requester: { id: currentUserId }, status: 'activated' },
+      relations: ['target'],
+    });
+
+    return blockedUsers.map((block) => block.target.id);
+  }
+
   async createBlock(createUserBlockDto: CreateUserBlockDto): Promise<string> {
     const { fromUserId, toUserId, action } = createUserBlockDto;
   

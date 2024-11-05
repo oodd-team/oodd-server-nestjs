@@ -1,49 +1,99 @@
-import { Controller, Post, Get, Patch, Param, Body, Req } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Req,
+  Query,
+  UseGuards,
+  Delete,
+  Param,
+} from '@nestjs/common';
 import { PostCommentService } from './post-comment.service';
 import {
   CreatePostCommentSwagger,
   DeletePostCommentSwagger,
   GetPostCommentsSwagger,
 } from './post-comment.swagger';
-import { ApiTags } from '@nestjs/swagger';
 import { CreateCommentDto } from './dtos/create-comment.dto';
-import { PostComment } from 'src/common/entities/post-comment.entity';
 import { Request } from 'express';
 import { BaseResponse } from 'src/common/response/dto';
+import { PostService } from 'src/post/post.service';
+import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { PostComment } from 'src/common/entities/post-comment.entity';
+import { GetCommentsDto } from './dtos/get-comment.dto';
+import dayjs from 'dayjs';
 
+@ApiBearerAuth('Authorization')
 @Controller('post-comment')
+@UseGuards(AuthGuard)
 @ApiTags('[서비스] 게시글 댓글')
 export class PostCommentController {
-  constructor(private readonly postCommentService: PostCommentService) {}
+  constructor(
+    private readonly postCommentService: PostCommentService,
+    private readonly postService: PostService,
+  ) {}
 
   @Post()
   @CreatePostCommentSwagger('게시글 댓글 생성 API')
   async createPostComment(
-    @Param('postId') postId: number,
+    @Query('postId') postId: number,
     @Body() createCommentDto: CreateCommentDto,
     @Req() req: Request,
-  ): Promise<BaseResponse<PostComment>> {
-    //const userId = req.user.userId;
-    const userId = 1; //테스트
+  ): Promise<BaseResponse<any>> {
+    const currentUserId = req.user.id;
+
+    await this.postService.validatePost(postId);
 
     const postComment = await this.postCommentService.createPostComment(
       postId,
-      userId,
+      currentUserId,
       createCommentDto,
     );
 
     return new BaseResponse(true, '댓글 작성 성공', postComment);
   }
 
-  @Get()
+  @Get(':postId')
   @GetPostCommentsSwagger('게시글 댓글 리스트 조회 API')
-  getPostCommenst() {
-    // return this.userService.getHello();
+  async getPostComments(
+    @Query('postId') postId: number,
+    @Req() req: Request,
+  ): Promise<BaseResponse<GetCommentsDto>> {
+    const currentUserId = req.user.id;
+
+    const comments = await this.postCommentService.getPostComments(postId);
+
+    const commenteResponse: GetCommentsDto = {
+      comments: comments.map((comment) => ({
+        content: comment.content,
+        createdAt: dayjs(comment.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
+        user: {
+          nickname: comment.user.nickname,
+          profilePictureUrl: comment.user.profilePictureUrl,
+        },
+        isCommentWriter: comment.user.id == currentUserId,
+      })),
+      totalComments: comments.length,
+    };
+
+    return new BaseResponse(true, '댓글 목록 조회 성공', commenteResponse);
   }
 
-  @Patch()
+  @Delete(':commentId')
   @DeletePostCommentSwagger('게시글 댓글 삭제 API')
-  deletePostComment() {
-    // return this.userService.getHello();
+  async deletePostComment(
+    @Param('commentId')
+    commentId: number,
+    @Req() req: Request,
+  ): Promise<BaseResponse<PostComment>> {
+    const currentUserId = req.user.id;
+
+    await this.postCommentService.validateUser(commentId, currentUserId);
+
+    await this.postCommentService.deletePostComment(commentId);
+
+    return new BaseResponse(true, '댓글 삭제 성공');
   }
 }

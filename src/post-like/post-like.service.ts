@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import { PostLike } from 'src/common/entities/post-like.entity';
+import { QueryRunner } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { PostLike } from '../common/entities/post-like.entity';
 import { PostService } from '../post/post.service';
 import { PostLikeResponseDto } from './dtos/post-like.response';
 import { DataNotFoundException } from 'src/common/exception/service.exception';
@@ -14,6 +15,23 @@ export class PostLikeService {
     private readonly postLikeRepository: Repository<PostLike>,
     private readonly postService: PostService, 
   ) {}
+
+  async deletePostLikeByPostId(
+    postId: number,
+    queryRunner: QueryRunner,
+  ): Promise<void> {
+    const likesToRemove = await queryRunner.manager.find(PostLike, {
+      where: { post: { id: postId } },
+    });
+
+    await Promise.all(
+      likesToRemove.map(async (like) => {
+        like.status = 'deactivated';
+        like.softDelete();
+        return queryRunner.manager.save(like);
+      }),
+    );
+  }
 
   // 유저가 좋아요 누른 게시물들 조회
   async getUserLikes(userId: number): Promise<GetPostLikesResponseDto> {

@@ -1,6 +1,10 @@
-class ErrorCodeVo {
+import { ApiProperty } from '@nestjs/swagger';
+export class ErrorCodeVo {
+  @ApiProperty({ example: 404, description: 'HTTP 상태 코드' })
   readonly status: number;
+  @ApiProperty({ example: 'Entity Not Found', description: '오류 메시지' })
   readonly message: string;
+  @ApiProperty({ example: 'ENTITY_NOT_FOUND', description: '오류 메시지' })
   readonly code: string;
 
   constructor(status, message, code) {
