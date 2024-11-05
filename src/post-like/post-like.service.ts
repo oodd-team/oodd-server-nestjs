@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { PostLike } from 'src/common/entities/post-like.entity';
 import { QueryRunner } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -13,6 +13,7 @@ export class PostLikeService {
   constructor(
     @InjectRepository(PostLike)
     private readonly postLikeRepository: Repository<PostLike>,
+    @Inject(forwardRef(() => PostService)) 
     private readonly postService: PostService, 
   ) {}
 
