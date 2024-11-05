@@ -84,6 +84,7 @@ export class UserService {
     const user = await this.userRepository.findOne({
       where: { id: id, status: 'activated' },
     });
+
     try {
       user.privacyTermAcceptedAt = new Date();
       await this.userRepository.save(user);
