@@ -69,7 +69,7 @@ export class UserController {
   }
 
   @Post(':userId')
-  //@UseGuards(AuthGuard)
+  @UseGuards(AuthGuard)
   @PatchUserTermsSwagger('이용약관 동의 API')
   async patchUserTerms(
     @Req() req: Request,
@@ -77,7 +77,7 @@ export class UserController {
   ): Promise<BaseResponse<any>> {
     if (!(await this.userService.getUserById(userId)))
       throw DataNotFoundException('유저가 존재하지 않습니다.');
-    if (1 !== Number(userId)) {
+    if (req.user.id !== Number(userId)) {
       throw UnauthorizedException('권한이 없습니다.');
     }
 
