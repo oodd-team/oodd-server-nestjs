@@ -24,6 +24,7 @@ import {
   DataNotFoundException,
   UnauthorizedException,
 } from 'src/common/exception/service.exception';
+import { PatchUserResponse } from './dto/patch-user.response';
 
 @ApiBearerAuth('Authorization')
 @Controller('user')
@@ -50,7 +51,7 @@ export class UserController {
     @Req() req: Request,
     @Param('userId') userId: number,
     @Body() body: PatchUserRequest,
-  ): Promise<BaseResponse<any>> {
+  ): Promise<BaseResponse<PatchUserResponse>> {
     if (!(await this.userService.getUserById(userId)))
       throw DataNotFoundException('유저가 존재하지 않습니다.');
     if (req.user.id !== Number(userId)) {
@@ -59,7 +60,12 @@ export class UserController {
 
     const updatedUser = await this.userService.PatchUser(userId, body);
 
-    return new BaseResponse(true, '유저 정보 수정 성공', updatedUser);
+    return new BaseResponse<PatchUserResponse>(true, '유저 정보 수정 성공', {
+      userId: updatedUser.id,
+      nickname: updatedUser.nickname,
+      profilePictureUrl: updatedUser.profilePictureUrl,
+      bio: updatedUser.bio,
+    });
   }
 
   @Post(':userId')

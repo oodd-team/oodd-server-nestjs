@@ -59,12 +59,8 @@ export class UserService {
     id: number,
     patchUserRequest: PatchUserRequest,
   ): Promise<User> {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
     try {
-      const user = await queryRunner.manager.findOne(User, {
+      const user = await this.userRepository.findOne({
         where: { id: id, status: 'activated' },
       });
 
@@ -78,14 +74,9 @@ export class UserService {
         user.bio = patchUserRequest.bio;
       }
 
-      const updatedUser = await queryRunner.manager.save(User, user);
-      await queryRunner.commitTransaction();
-      return updatedUser;
+      return await this.userRepository.save(user);
     } catch (error) {
-      await queryRunner.rollbackTransaction();
       throw InternalServerException(error.message);
-    } finally {
-      await queryRunner.release();
     }
   }
 
