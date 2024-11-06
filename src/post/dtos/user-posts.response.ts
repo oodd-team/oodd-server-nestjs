@@ -2,6 +2,18 @@ import { ApiProperty, OmitType } from '@nestjs/swagger';
 
 class PostDto {
   @ApiProperty({
+    example: '19',
+    description: '조회한 작성자의 user ID 입니다.',
+  })
+  userId: number;
+
+  @ApiProperty({
+    example: '3',
+    description: '게시글의 번호입니다.',
+  })
+  postId: number;
+
+  @ApiProperty({
     example: true,
     description: '대표 게시글 여부를 나타냅니다.',
   })
@@ -48,7 +60,7 @@ export class GetMyPostsResponse {
     type: [PostDto],
     description: '조회된 사용자의 게시글 목록입니다.',
   })
-  posts: PostDto[];
+  post: PostDto[];
 
   @ApiProperty({
     example: 20,
@@ -79,7 +91,7 @@ export class GetOtherPostsResponse {
     type: [OtherUserPostDto],
     description: '다른 사용자의 게시글 목록입니다.',
   })
-  posts: OtherUserPostDto[];
+  post: OtherUserPostDto[];
 
   @ApiProperty({
     example: 30,
