@@ -1,4 +1,4 @@
-import { Entity, OneToMany, Column } from 'typeorm';
+import { Entity, OneToMany, Column, OneToOne } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { Post } from './post.entity';
 import { PostComment } from './post-comment.entity';
@@ -83,5 +83,6 @@ export class User extends BaseEntity {
   postReports!: PostReport[];
 
   // 대표 게시물 필드 추가
+  @OneToOne(() => Post, (post) => post.user)
   representativePost?: Post | null;
 }

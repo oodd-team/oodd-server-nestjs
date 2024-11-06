@@ -25,7 +25,7 @@ import { PostComment } from 'src/common/entities/post-comment.entity';
 import { GetCommentsDto } from './dtos/get-comment.dto';
 import dayjs from 'dayjs';
 
-@ApiBearerAuth()
+@ApiBearerAuth('Authorization')
 @Controller('post-comment')
 @UseGuards(AuthGuard)
 @ApiTags('[서비스] 게시글 댓글')

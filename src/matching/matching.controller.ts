@@ -21,13 +21,16 @@ import { UserService } from 'src/user/user.service';
 import { Request } from 'express';
 import {
   DataNotFoundException,
+  InternalServerException,
   UnauthorizedException,
 } from 'src/common/exception/service.exception';
 import { BaseResponse } from 'src/common/response/dto';
 import { PostMatchingResponse } from './dto/matching.response';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
+import { PatchMatchingRequestDto } from './dto/Patch-matching.request';
+import { GetMatchingsResponse } from './dto/get-matching.response';
 
-@ApiBearerAuth()
+@ApiBearerAuth('Authorization')
 @Controller('matching')
 @ApiTags('[서비스] 매칭')
 export class MatchingController {
@@ -58,9 +61,25 @@ export class MatchingController {
   }
 
   @Patch()
+  @UseGuards(AuthGuard)
   @PatchMatchingRequestStatusSwagger('매칭 요청 수락 및 거절 API')
-  patchMatchingRequestStatus() {
-    // return this.userService.getHello();
+  async patchMatchingRequestStatus(
+    @Req() req: Request,
+    @Body() body: PatchMatchingRequestDto,
+  ): Promise<BaseResponse<any>> {
+    if (req.user.id !== body.targetId) {
+      throw UnauthorizedException('권한이 없습니다.');
+    }
+
+    if (
+      (await this.matchingService.getMatchingById(body.matchingId))
+        .requestStatus !== 'pending'
+    ) {
+      throw InternalServerException('이미 처리된 요청입니다.');
+    }
+
+    await this.matchingService.patchMatchingRequestStatus(body);
+    return new BaseResponse(true, '매칭 상태 변경 성공');
   }
 
   @Patch()
@@ -70,9 +89,44 @@ export class MatchingController {
   }
 
   @Get()
+  @UseGuards(AuthGuard)
   @GetMatchingsSwagger('매칭 리스트 조회 API')
-  getMatchings() {
-    // return this.userService.getHello()
+  async getMatchings(
+    @Req() req: Request,
+  ): Promise<BaseResponse<GetMatchingsResponse>> {
+    const matchings = await this.matchingService.getMatchings(req.user.id);
+    const response: GetMatchingsResponse = {
+      isMatching: true,
+      matchingCount: matchings.length,
+      matching: matchings.map((matching) => {
+        const requesterPost =
+          matching.requester.posts.find((post) => post.isRepresentative) ||
+          matching.requester.posts.sort(
+            (a, b) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+          )[0];
+
+        return {
+          requester: {
+            requesterId: matching.requester.id,
+            nickname: matching.requester.nickname,
+            profilePictureUrl: matching.requester.profilePictureUrl,
+          },
+          requesterPost: {
+            postImages: requesterPost.postImages.map((image) => ({
+              url: image.url,
+              orderNum: image.orderNum,
+            })),
+            styleTags: requesterPost.postStyletags
+              ? requesterPost.postStyletags.map(
+                  (styleTag) => styleTag.styletag.tag,
+                )
+              : [],
+          },
+        };
+      }),
+    };
+    return new BaseResponse(true, 'SUCCESS', response);
   }
 
   @Get()

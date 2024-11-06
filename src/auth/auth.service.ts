@@ -42,7 +42,7 @@ export class AuthService {
     payload: JwtPayload,
   ): Promise<JwtPayload | undefined> {
     return await this.userSerivce.findByFields({
-      where: { id: payload.id },
+      where: { id: payload.id, status: 'activated' },
     });
   }
 }
