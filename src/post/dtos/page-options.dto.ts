@@ -10,8 +10,8 @@ export class PageOptionsDto {
   @Type(() => Number)
   @IsInt()
   @IsOptional()
-  @Min(1) // 페이지는 1 이상
-  page?: number;
+  @Min(1)
+  page?: number = 1;
 
   @ApiProperty({
     example: '10',
@@ -20,7 +20,7 @@ export class PageOptionsDto {
   @Type(() => Number)
   @IsInt()
   @IsOptional()
-  take?: number;
+  take?: number = 10;
 
   // 기본값 설정
   constructor() {
