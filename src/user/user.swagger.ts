@@ -1,5 +1,6 @@
 import {
   ApiBadRequestResponse,
+  ApiCreatedResponse,
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
   ApiOperation,
@@ -45,5 +46,14 @@ export function PatchUserSwagger(apiSummary: string) {
 
 // 이용약관 동의 API Swagger
 export function PatchUserTermsSwagger(apiSummary: string) {
-  return ApiOperation({ summary: apiSummary });
+  return BaseSwaggerDecorator(
+    { summary: apiSummary },
+    [],
+    [
+      ApiCreatedResponse({ description: '이용약관 동의 성공' }),
+      ApiBadRequestResponse({ description: 'Bad Request' }),
+      ApiNotFoundResponse({ description: '해당 유저가 존재하지 않습니다.' }),
+      ApiInternalServerErrorResponse({ description: 'Internal Server Error' }),
+    ],
+  );
 }
