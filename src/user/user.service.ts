@@ -64,15 +64,11 @@ export class UserService {
     });
 
     try {
-      if (patchUserRequest.nickname !== undefined) {
-        user.nickname = patchUserRequest.nickname;
-      }
-      if (patchUserRequest.profilePictureUrl !== undefined) {
-        user.profilePictureUrl = patchUserRequest.profilePictureUrl;
-      }
-      if (patchUserRequest.bio !== undefined) {
-        user.bio = patchUserRequest.bio;
-      }
+      Object.entries(patchUserRequest).forEach(([key, value]) => {
+        if (value !== undefined) {
+          user[key] = value;
+        }
+      });
 
       return await this.userRepository.save(user);
     } catch (error) {

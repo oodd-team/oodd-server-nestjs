@@ -61,6 +61,9 @@ export class UserController {
 
     return new BaseResponse<PatchUserResponse>(true, '유저 정보 수정 성공', {
       userId: updatedUser.id,
+      name: updatedUser.name,
+      phoneNumber: updatedUser.phoneNumber,
+      email: updatedUser.email,
       nickname: updatedUser.nickname,
       profilePictureUrl: updatedUser.profilePictureUrl,
       bio: updatedUser.bio,
