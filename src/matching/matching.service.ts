@@ -56,19 +56,18 @@ export class MatchingService {
   }
 
   async patchMatchingRequestStatus(
+    matching: Matching,
     body: PatchMatchingRequestDto,
   ): Promise<Matching> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
-    const matching = await this.getMatchingById(body.matchingId);
-
     try {
-      if (body.action === 'accept') {
+      if (body.requestStatus === 'accept') {
         matching.requestStatus = 'accepted';
         matching.acceptedAt = new Date();
-      } else if (body.action === 'reject') {
+      } else if (body.requestStatus === 'reject') {
         matching.requestStatus = 'rejected';
         matching.rejectedAt = new Date();
       }
@@ -88,6 +87,7 @@ export class MatchingService {
   async getMatchingById(matchingId: number): Promise<Matching> {
     const matching = await this.matchingRepository.findOne({
       where: { id: matchingId },
+      relations: ['target'],
     });
     if (!matching) {
       throw DataNotFoundException('해당 매칭 요청을 찾을 수 없습니다.');

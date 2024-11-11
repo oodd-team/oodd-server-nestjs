@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Patch,
   Post,
   Req,
@@ -28,6 +29,7 @@ import { BaseResponse } from 'src/common/response/dto';
 import { PostMatchingResponse } from './dto/matching.response';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { PatchMatchingRequestDto } from './dto/Patch-matching.request';
+import { PatchMatchingResponseDto } from './dto/Patch-matching.response';
 
 @ApiBearerAuth('Authorization')
 @Controller('matching')
@@ -59,26 +61,34 @@ export class MatchingController {
     });
   }
 
-  @Patch()
+  @Patch(':matchingId')
   @UseGuards(AuthGuard)
   @PatchMatchingRequestStatusSwagger('매칭 요청 수락 및 거절 API')
   async patchMatchingRequestStatus(
     @Req() req: Request,
+    @Param('matchingId') matchingId: number,
     @Body() body: PatchMatchingRequestDto,
-  ): Promise<BaseResponse<any>> {
-    if (req.user.id !== body.targetId) {
+  ): Promise<BaseResponse<PatchMatchingResponseDto>> {
+    const matching = await this.matchingService.getMatchingById(matchingId);
+    if (req.user.id !== matching.target.id) {
       throw UnauthorizedException('권한이 없습니다.');
     }
 
-    if (
-      (await this.matchingService.getMatchingById(body.matchingId))
-        .requestStatus !== 'pending'
-    ) {
+    if (matching.requestStatus !== 'pending') {
       throw InternalServerException('이미 처리된 요청입니다.');
     }
 
-    await this.matchingService.patchMatchingRequestStatus(body);
-    return new BaseResponse(true, '매칭 상태 변경 성공');
+    await this.matchingService.patchMatchingRequestStatus(matching, body);
+    return new BaseResponse<PatchMatchingResponseDto>(
+      true,
+      '매칭 상태 변경 성공',
+      {
+        matchingId: matching.id,
+        requesterId: matching.requester.id,
+        targetId: matching.target.id,
+        requestStatus: matching.requestStatus,
+      },
+    );
   }
 
   @Patch()
