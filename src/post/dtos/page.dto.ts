@@ -1,16 +1,16 @@
 import { IsArray } from 'class-validator';
 import { PageMetaDto } from './page-meta.dto';
 import { ApiProperty } from '@nestjs/swagger';
-import { GetPostsResponse } from './total-postsResponse.dto';
+import { GetAllPostsResponse } from './all-posts.response';
 import {
   GetMyPostsResponse,
   GetOtherPostsResponse,
-} from './user-postsResponse.dto';
+} from './user-posts.response';
 
 export class PageDto<T> {
   @ApiProperty({
     description: '실제 데이터',
-    type: [GetPostsResponse, GetMyPostsResponse, GetOtherPostsResponse],
+    type: [GetAllPostsResponse, GetMyPostsResponse, GetOtherPostsResponse],
   })
   @IsArray()
   readonly data: T[]; // 실제 데이터

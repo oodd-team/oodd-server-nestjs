@@ -13,7 +13,6 @@ import {
   CreateMatchingSwagger,
   DeleteMatchingSwagger,
   GetMatchingsSwagger,
-  GetMatchingSwagger,
   PatchMatchingRequestStatusSwagger,
 } from './matching.swagger';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -28,8 +27,9 @@ import {
 import { BaseResponse } from 'src/common/response/dto';
 import { PostMatchingResponse } from './dto/matching.response';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
-import { PatchMatchingRequestDto } from './dto/Patch-matching.request';
-import { PatchMatchingResponseDto } from './dto/Patch-matching.response';
+import { PatchMatchingRequest } from './dto/Patch-matching.request';
+import { GetMatchingsResponse } from './dto/get-matching.response';
+import { PatchMatchingResponse } from './dto/Patch-matching.response';
 
 @ApiBearerAuth('Authorization')
 @Controller('matching')
@@ -67,8 +67,8 @@ export class MatchingController {
   async patchMatchingRequestStatus(
     @Req() req: Request,
     @Param('matchingId') matchingId: number,
-    @Body() body: PatchMatchingRequestDto,
-  ): Promise<BaseResponse<PatchMatchingResponseDto>> {
+    @Body() body: PatchMatchingRequest,
+  ): Promise<BaseResponse<PatchMatchingResponse>> {
     const matching = await this.matchingService.getMatchingById(matchingId);
     if (req.user.id !== matching.target.id) {
       throw UnauthorizedException('권한이 없습니다.');
@@ -79,7 +79,7 @@ export class MatchingController {
     }
 
     await this.matchingService.patchMatchingRequestStatus(matching, body);
-    return new BaseResponse<PatchMatchingResponseDto>(
+    return new BaseResponse<PatchMatchingResponse>(
       true,
       '매칭 상태 변경 성공',
       {
@@ -98,14 +98,43 @@ export class MatchingController {
   }
 
   @Get()
+  @UseGuards(AuthGuard)
   @GetMatchingsSwagger('매칭 리스트 조회 API')
-  getMatchings() {
-    // return this.userService.getHello()
-  }
+  async getMatchings(
+    @Req() req: Request,
+  ): Promise<BaseResponse<GetMatchingsResponse>> {
+    const matchings = await this.matchingService.getMatchings(req.user.id);
+    const response: GetMatchingsResponse = {
+      isMatching: true,
+      matchingCount: matchings.length,
+      matching: matchings.map((matching) => {
+        const requesterPost =
+          matching.requester.posts.find((post) => post.isRepresentative) ||
+          matching.requester.posts.sort(
+            (a, b) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+          )[0];
 
-  @Get()
-  @GetMatchingSwagger('매칭 상세 조회 API')
-  getMatching() {
-    // return this.userService.getHello()
+        return {
+          requester: {
+            requesterId: matching.requester.id,
+            nickname: matching.requester.nickname,
+            profilePictureUrl: matching.requester.profilePictureUrl,
+          },
+          requesterPost: {
+            postImages: requesterPost.postImages.map((image) => ({
+              url: image.url,
+              orderNum: image.orderNum,
+            })),
+            styleTags: requesterPost.postStyletags
+              ? requesterPost.postStyletags.map(
+                  (styleTag) => styleTag.styletag.tag,
+                )
+              : [],
+          },
+        };
+      }),
+    };
+    return new BaseResponse(true, 'SUCCESS', response);
   }
 }

@@ -1,4 +1,4 @@
-import { Entity, OneToMany, Column } from 'typeorm';
+import { Entity, OneToMany, Column, OneToOne } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { Post } from './post.entity';
 import { PostComment } from './post-comment.entity';
@@ -50,6 +50,13 @@ export class User extends BaseEntity {
   @Column('datetime')
   joinedAt!: Date; // joinedAt는 datetime 타입
 
+  @ApiProperty({
+    description: '이용약관 동의 시각',
+    example: '2021-08-01 00:00:00',
+  })
+  @Column('datetime')
+  privacyTermAcceptedAt!: Date;
+
   //one to many 관계 설정
 
   @OneToMany(() => Post, (post) => post.user)
@@ -83,5 +90,6 @@ export class User extends BaseEntity {
   postReports!: PostReport[];
 
   // 대표 게시물 필드 추가
+  @OneToOne(() => Post, (post) => post.user)
   representativePost?: Post | null;
 }

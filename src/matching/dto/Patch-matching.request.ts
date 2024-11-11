@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsIn } from 'class-validator';
 
-export class PatchMatchingRequestDto {
+export class PatchMatchingRequest {
   @ApiProperty({
     example: 'accept',
     enum: ['accept', 'reject'],

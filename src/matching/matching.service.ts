@@ -10,7 +10,7 @@ import {
 import { ChatMessageService } from 'src/chat-message/chat-message.service';
 import { ChatRoom } from 'src/common/entities/chat-room.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PatchMatchingRequestDto } from './dto/Patch-matching.request';
+import { PatchMatchingRequest } from './dto/Patch-matching.request';
 
 @Injectable()
 export class MatchingService {
@@ -57,7 +57,7 @@ export class MatchingService {
 
   async patchMatchingRequestStatus(
     matching: Matching,
-    body: PatchMatchingRequestDto,
+    body: PatchMatchingRequest,
   ): Promise<Matching> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -82,6 +82,22 @@ export class MatchingService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async getMatchings(currentUserId: number): Promise<Matching[]> {
+    return await this.matchingRepository.find({
+      where: {
+        requestStatus: 'pending',
+        status: 'activated',
+        target: { id: currentUserId },
+      },
+      relations: [
+        'requester',
+        'requester.posts',
+        'requester.posts.postImages',
+        'requester.posts.postStyletags.styletag',
+      ],
+    });
   }
 
   async getMatchingById(matchingId: number): Promise<Matching> {

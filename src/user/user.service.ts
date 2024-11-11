@@ -5,6 +5,7 @@ import { SocialUser } from 'src/auth/dto/auth.dto';
 import { User } from 'src/common/entities/user.entity';
 import { InternalServerException } from 'src/common/exception/service.exception';
 import { DataSource, FindOneOptions, Repository } from 'typeorm';
+import { PatchUserRequest } from './dto/patch-user.request';
 
 @Injectable()
 export class UserService {
@@ -51,6 +52,45 @@ export class UserService {
       throw InternalServerException(error.message);
     } finally {
       await queryRunner.release();
+    }
+  }
+
+  async PatchUser(
+    id: number,
+    patchUserRequest: PatchUserRequest,
+  ): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id: id, status: 'activated' },
+    });
+
+    try {
+      if (patchUserRequest.nickname !== undefined) {
+        user.nickname = patchUserRequest.nickname;
+      }
+      if (patchUserRequest.profilePictureUrl !== undefined) {
+        user.profilePictureUrl = patchUserRequest.profilePictureUrl;
+      }
+      if (patchUserRequest.bio !== undefined) {
+        user.bio = patchUserRequest.bio;
+      }
+
+      return await this.userRepository.save(user);
+    } catch (error) {
+      throw InternalServerException(error.message);
+    }
+  }
+
+  async patchUserTerms(id: number): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id: id, status: 'activated' },
+    });
+
+    try {
+      user.privacyTermAcceptedAt = new Date();
+      await this.userRepository.save(user);
+      return user;
+    } catch (error) {
+      throw InternalServerException(error.message);
     }
   }
 }

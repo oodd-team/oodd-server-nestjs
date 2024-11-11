@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class PatchMatchingResponseDto {
+export class PatchMatchingResponse {
   @ApiProperty({ example: 1, description: '매칭 ID' })
   matchingId: number;
 
