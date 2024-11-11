@@ -129,9 +129,11 @@ export class MatchingController {
     return new BaseResponse(true, 'SUCCESS', response);
   }
 
+  /*
   @Get()
   @GetMatchingSwagger('매칭 상세 조회 API')
   getMatching() {
     // return this.userService.getHello()
   }
+    */
 }
