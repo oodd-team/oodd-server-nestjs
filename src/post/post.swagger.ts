@@ -8,11 +8,11 @@ import { BaseSwaggerDecorator } from 'nestjs-swagger-decorator';
 import { BaseResponse } from 'src/common/response/dto';
 import { CreatePostDto } from './dtos/create-post.dto';
 import { PatchPostDto } from './dtos/patch-Post.dto';
-import { GetPostsResponse } from './dtos/total-postsResponse.dto';
+import { GetAllPostsResponse } from './dtos/all-posts.response';
 import {
   GetMyPostsResponse,
   GetOtherPostsResponse,
-} from './dtos/user-postsResponse.dto';
+} from './dtos/user-posts.response';
 import { applyDecorators } from '@nestjs/common';
 import { GetPostResponse } from './dtos/get-post.dto';
 import { PageDto } from './dtos/page.dto';
@@ -27,7 +27,7 @@ export function GetPostsSwagger(text: string) {
           statusCode: 200,
           responseOptions: [
             {
-              model: PageDto<GetPostsResponse>,
+              model: PageDto<GetAllPostsResponse>,
               exampleTitle: '전체 게시글 조회 예시',
               exampleDescription: '전체 게시글 조회 성공 시 값',
             },

@@ -79,4 +79,18 @@ export class UserService {
       throw InternalServerException(error.message);
     }
   }
+
+  async patchUserTerms(id: number): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id: id, status: 'activated' },
+    });
+
+    try {
+      user.privacyTermAcceptedAt = new Date();
+      await this.userRepository.save(user);
+      return user;
+    } catch (error) {
+      throw InternalServerException(error.message);
+    }
+  }
 }
