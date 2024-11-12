@@ -22,9 +22,7 @@ export class UserReportController {
     @Req() req: Request
   ): Promise<BaseResponse<null>> {
     const fromUserId = req.user['id'];
-    //console.log("fromUserId is ~~~~~~~~~~~~~", fromUserId);
-    //console.log("createUserReportDto.fromUserId is ~~~~~~~~~~~~~", createUserReportDto.fromUserId);
-    
+
     // jwt 유저와 신고할 유저가 다른 경우
     if (fromUserId != createUserReportDto.fromUserId) {
       throw UnauthorizedException('신고 권한이 없습니다.');

@@ -29,9 +29,12 @@ export class UserReportService {
     }
 
     // 중복 신고 확인
-    const existingReport = await this.userReportRepository.findOne({
-      where: { fromUser: { id: fromUserId }, toUser: { id: toUserId } },
-    });
+    const existingReport = await this.userReportRepository
+      .createQueryBuilder('report')
+      .where('report.fromUser = :fromUserId', { fromUserId })
+      .andWhere('report.toUser = :toUserId', { toUserId })
+      .andWhere('report.reason = :reason', { reason })
+      .getOne();
 
     if (existingReport) {
       throw InvalidInputValueException('이미 해당 유저를 신고하였습니다.'); 
@@ -41,6 +44,9 @@ export class UserReportService {
       fromUser,
       toUser,
       reason,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      status: 'activated',
     });
 
     await this.userReportRepository.save(userReport);
