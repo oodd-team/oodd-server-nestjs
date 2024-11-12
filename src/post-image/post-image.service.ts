@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { PostImage } from 'src/common/entities/post-image.entity';
 import { Repository, QueryRunner } from 'typeorm';
 import { Post } from 'src/common/entities/post.entity';
-import { UploadImageDto } from 'src/post/dtos/create-post.dto';
+import { UploadImageDto } from 'src/post/dtos/create-post.request';
 import { InvalidInputValueException } from 'src/common/exception/service.exception';
 
 @Injectable()

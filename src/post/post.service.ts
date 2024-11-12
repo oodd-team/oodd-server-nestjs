@@ -11,7 +11,7 @@ import {
 import { Post } from '../common/entities/post.entity';
 import { UserService } from 'src/user/user.service';
 import { PostImageService } from 'src/post-image/post-image.service';
-import { CreatePostDto } from './dtos/create-post.dto';
+import { CreatePostRequest } from './dtos/create-post.request';
 import { PostStyletagService } from '../post-styletag/post-styletag.service';
 import {
   DataNotFoundException,
@@ -64,8 +64,7 @@ export class PostService {
     });
   }
 
-  //게시글 생성
-  async createPost(uploadPostDto: CreatePostDto, currentUserId: number) {
+  async createPost(uploadPostDto: CreatePostRequest, currentUserId: number) {
     const {
       content,
       postImages,
@@ -89,17 +88,14 @@ export class PostService {
         isRepresentative,
       });
 
-      // 게시글 저장
       const savedPost = await queryRunner.manager.save(post);
 
-      // 이미지 저장
       await this.postImageService.savePostImages(
         postImages,
         savedPost,
         queryRunner,
       );
 
-      // 스타일태그 저장
       if (postStyletags) {
         await this.postStyletagService.savePostStyletags(
           savedPost,
@@ -108,7 +104,6 @@ export class PostService {
         );
       }
 
-      // 옷 정보 저장
       if (postClothings) {
         await this.postClothingService.savePostClothings(
           savedPost,
@@ -119,10 +114,19 @@ export class PostService {
 
       await queryRunner.commitTransaction();
 
-      return savedPost;
+      return await this.postRepository.findOne({
+        where: { id: savedPost.id },
+        relations: [
+          'postImages',
+          'postStyletags',
+          'postClothings',
+          'user',
+          'postClothings.clothing',
+        ],
+      });
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw InternalServerException('게시글 저장에 실패했습니다.');
+      throw InternalServerException(error.message);
     } finally {
       await queryRunner.release();
     }

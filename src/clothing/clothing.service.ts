@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { QueryRunner, Repository } from 'typeorm';
 import { Clothing } from 'src/common/entities/clothing.entity';
-import { UploadClothingDto } from 'src/post/dtos/create-post.dto';
+import { UploadClothingDto } from 'src/post/dtos/create-post.request';
 import { DataNotFoundException } from 'src/common/exception/service.exception';
 import { PatchClothingDto } from 'src/post/dtos/patch-Post.dto';
 

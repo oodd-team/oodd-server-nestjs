@@ -9,7 +9,7 @@ import {
   IsNumber,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { UploadImageDto, UploadClothingDto } from './create-post.dto';
+import { UploadImageDto, UploadClothingDto } from './create-post.request';
 
 export class PatchClothingDto extends UploadClothingDto {
   @ApiProperty({

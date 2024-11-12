@@ -6,7 +6,6 @@ import {
 } from '@nestjs/swagger';
 import { BaseSwaggerDecorator } from 'nestjs-swagger-decorator';
 import { BaseResponse } from 'src/common/response/dto';
-import { CreatePostDto } from './dtos/create-post.dto';
 import { PatchPostDto } from './dtos/patch-Post.dto';
 import { GetAllPostsResponse } from './dtos/all-posts.response';
 import {
@@ -16,6 +15,7 @@ import {
 import { applyDecorators } from '@nestjs/common';
 import { GetPostResponse } from './dtos/get-post.dto';
 import { PageDto } from './dtos/page.dto';
+import { CreatePostResponse } from './dtos/create-post.response';
 
 // 게시글 리스트 조회하기 API Swagger
 export function GetPostsSwagger(text: string) {
@@ -89,10 +89,10 @@ export function CreatePostsSwagger(text: string) {
     { summary: text },
     [
       {
-        statusCode: 200,
+        statusCode: 201,
         responseOptions: [
           {
-            model: CreatePostDto,
+            model: CreatePostResponse,
             exampleTitle: '성공',
             exampleDescription: '성공했을 때 값',
           },

@@ -25,7 +25,7 @@ import {
   PatchPostSwagger,
 } from './post.swagger';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { CreatePostDto } from './dtos/create-post.dto';
+import { CreatePostRequest } from './dtos/create-post.request';
 import { BaseResponse } from 'src/common/response/dto';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { Request } from 'express';
@@ -37,14 +37,14 @@ import dayjs from 'dayjs';
 import { PageMetaDto } from './dtos/page-meta.dto';
 import { DataNotFoundException } from 'src/common/exception/service.exception';
 import { Post as PostEntity } from 'src/common/entities/post.entity';
+import { CreatePostResponse } from './dtos/create-post.response';
 
 @Controller('post')
 @ApiBearerAuth('Authorization')
-@UseGuards(AuthGuard)
+//@UseGuards(AuthGuard)
 @ApiTags('[서비스] 게시글')
 export class PostController {
   constructor(private readonly postService: PostService) {}
-
   @Get()
   @GetPostsSwagger('게시글 리스트 조회 API')
   @ApiQuery({
@@ -220,17 +220,34 @@ export class PostController {
   @Post()
   @CreatePostsSwagger('게시글 생성 API')
   async createPost(
-    @Body() createPostDto: CreatePostDto,
+    @Body() createPostDto: CreatePostRequest,
     @Req() req: Request,
-  ): Promise<BaseResponse<any>> {
-    const currentUserId = req.user.id;
+  ): Promise<BaseResponse<CreatePostResponse>> {
+    const post = await this.postService.createPost(createPostDto, 1);
+    const postResponse: CreatePostResponse = {
+      postId: post.id,
+      userId: post.user.id,
+      createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
+      content: post.content,
+      isRepresentative: post.isRepresentative,
+      postImages: post.postImages.map((image) => ({
+        imageurl: image.url,
+        orderNum: image.orderNum,
+      })),
+      postClothings: post.postClothings.map((postClothing) => ({
+        imageUrl: postClothing.clothing.imageUrl,
+        brandName: postClothing.clothing.brandName,
+        modelName: postClothing.clothing.modelName,
+        modelNumber: postClothing.clothing.modelNumber,
+        url: postClothing.clothing.url,
+      })),
+    };
 
-    const post = await this.postService.createPost(
-      createPostDto,
-      currentUserId,
+    return new BaseResponse<CreatePostResponse>(
+      true,
+      '게시글 작성 성공',
+      postResponse,
     );
-
-    return new BaseResponse(true, '게시글 작성 성공', post);
   }
 
   @Patch(':postId')
