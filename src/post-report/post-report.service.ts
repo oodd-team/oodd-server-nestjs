@@ -25,6 +25,7 @@ export class PostReportService {
         where: {
             reporter : { id: reportDto.requesterId },
             post : { id: reportDto.postId },
+            reason: reportDto.reason,
           },
     });
 
