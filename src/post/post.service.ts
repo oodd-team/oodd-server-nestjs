@@ -74,7 +74,7 @@ export class PostService {
     } = uploadPostDto;
 
     const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
-
+    await queryRunner.connect();
     await queryRunner.startTransaction();
 
     const user = await this.userService.findByFields({
@@ -87,7 +87,6 @@ export class PostService {
         content,
         isRepresentative,
       });
-
       const savedPost = await queryRunner.manager.save(post);
 
       await this.postImageService.savePostImages(
