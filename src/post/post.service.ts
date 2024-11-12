@@ -87,7 +87,6 @@ export class PostService {
         content,
         isRepresentative,
       });
-
       const savedPost = await queryRunner.manager.save(post);
 
       await this.postImageService.savePostImages(
