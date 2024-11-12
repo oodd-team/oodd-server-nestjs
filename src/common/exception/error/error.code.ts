@@ -35,10 +35,14 @@ export const UNAUTHORIZED = new ErrorCodeVo(
   'UNAUTHORIZED',
 );
 
-export const FORBIDDEN = new ErrorCodeVo(403, 'Forbidden', 'FORBIDDEN');
+export const FORBIDDEN = new ErrorCodeVo(
+  403, 'Forbidden', 
+  'FORBIDDEN'
+);
 
 export const INTERNAL_SERVER_ERROR = new ErrorCodeVo(
   500,
   'Internal Server Error',
   'INTERNAL_SERVER_ERROR',
 );
+

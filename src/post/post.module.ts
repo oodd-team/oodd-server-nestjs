@@ -23,7 +23,7 @@ import { PostCommentModule } from 'src/post-comment/post-comment.module';
     UserBlockModule,
     PostClothingModule,
     DayjsModule,
-    PostLikeModule,
+    forwardRef(() => PostLikeModule), 
     forwardRef(() => PostCommentModule),
   ],
   controllers: [PostController],

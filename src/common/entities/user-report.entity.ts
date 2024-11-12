@@ -5,11 +5,11 @@ import { User } from './user.entity';
 @Entity('UserReport')
 export class UserReport extends BaseEntity {
   @ManyToOne(() => User)
-  @JoinColumn({ name: 'fromUserId' })
+  @JoinColumn({ name: 'requesterId' })
   fromUser!: User;
 
   @ManyToOne(() => User)
-  @JoinColumn({ name: 'toUserId' })
+  @JoinColumn({ name: 'targetId' })
   toUser!: User;
 
   @Column({ type: 'varchar', length: 500 })
