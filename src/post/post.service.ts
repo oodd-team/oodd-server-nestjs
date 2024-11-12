@@ -74,7 +74,7 @@ export class PostService {
     } = uploadPostDto;
 
     const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
-
+    await queryRunner.connect();
     await queryRunner.startTransaction();
 
     const user = await this.userService.findByFields({
@@ -132,12 +132,11 @@ export class PostService {
     }
   }
 
-  // 게시글 수정
   async patchPost(postId: number, patchPostDto: PatchPostDto) {
     const { content, postImages, postStyletags, postClothings } = patchPostDto;
 
     const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
-
+    await queryRunner.connect();
     await queryRunner.startTransaction();
 
     const post = await this.postRepository.findOne({
@@ -150,21 +149,18 @@ export class PostService {
       }
       const updatedPost = await queryRunner.manager.save(post);
 
-      // postImages 업데이트
       await this.postImageService.updatePostImages(
         postImages,
         updatedPost,
         queryRunner,
       );
 
-      // styletag 업데이트
       await this.postStyletagService.updatePostStyletags(
         updatedPost,
         postStyletags,
         queryRunner,
       );
 
-      // clothing 업데이트
       await this.postClothingService.updatePostClothings(
         updatedPost,
         postClothings,
@@ -172,14 +168,10 @@ export class PostService {
       );
 
       await queryRunner.commitTransaction();
-
       return updatedPost;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      if (error instanceof ServiceException) {
-        throw error;
-      }
-      throw InternalServerException('게시글 수정에 실패했습니다.');
+      throw InternalServerException(error.message);
     } finally {
       await queryRunner.release();
     }
@@ -315,8 +307,8 @@ export class PostService {
 
     return { posts, total };
   }
-  // 게시글 검증 메서드
-  async validatePost(postId: number, userId?: number): Promise<void> {
+
+  async getPostById(postId: number): Promise<Post> {
     const post = await this.postRepository.findOne({
       where: { id: postId, status: 'activated' },
       relations: ['user'],
@@ -325,10 +317,7 @@ export class PostService {
     if (!post) {
       throw DataNotFoundException('게시글을 찾을 수 없습니다.');
     }
-
-    if (userId && post.user.id !== userId) {
-      throw ForbiddenException('이 게시글에 대한 권한이 없습니다.');
-    }
+    return post;
   }
 
   // 총 댓글 수

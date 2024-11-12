@@ -35,7 +35,10 @@ import { PageOptionsDto } from './dtos/page-options.dto';
 import { PageDto } from './dtos/page.dto';
 import dayjs from 'dayjs';
 import { PageMetaDto } from './dtos/page-meta.dto';
-import { DataNotFoundException } from 'src/common/exception/service.exception';
+import {
+  DataNotFoundException,
+  UnauthorizedException,
+} from 'src/common/exception/service.exception';
 import { Post as PostEntity } from 'src/common/entities/post.entity';
 import { CreatePostResponse } from './dtos/create-post.response';
 
@@ -179,8 +182,6 @@ export class PostController {
   ): Promise<BaseResponse<GetPostResponse>> {
     const currentUserId = req.user.id;
 
-    await this.postService.validatePost(postId);
-
     const post = await this.postService.getPost(postId);
 
     const postResponse: GetPostResponse = {
@@ -257,12 +258,11 @@ export class PostController {
     @Body() patchPostDto: PatchPostDto,
     @Req() req: Request,
   ): Promise<BaseResponse<any>> {
-    const currentUserId = req.user.id;
-
-    await this.postService.validatePost(postId, currentUserId);
-
+    const post = await this.postService.getPostById(postId);
+    if (req.user.id !== post.user.id) {
+      throw UnauthorizedException('권한이 없습니다.');
+    }
     const updatedPost = await this.postService.patchPost(postId, patchPostDto);
-
     return new BaseResponse(true, '게시글 수정 성공', updatedPost);
   }
 
@@ -273,8 +273,6 @@ export class PostController {
     @Req() req: Request,
   ): Promise<BaseResponse<any>> {
     const currentUserId = req.user.id;
-
-    await this.postService.validatePost(postId, currentUserId);
 
     await this.postService.deletePost(postId, currentUserId);
 
@@ -288,8 +286,6 @@ export class PostController {
     @Req() req: Request,
   ): Promise<BaseResponse<any>> {
     const currentUserId = req.user.id;
-
-    await this.postService.validatePost(postId, currentUserId);
 
     const updatedPost = await this.postService.patchIsRepresentative(
       postId,
