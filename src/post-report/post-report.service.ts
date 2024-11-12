@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PostReport } from '../common/entities/post-report.entity';
 import { PostReportDto } from './dtos/post-report.dto';
-import { DataNotFoundException } from 'src/common/exception/service.exception';
+import { DataNotFoundException, InvalidInputValueException } from 'src/common/exception/service.exception';
 import { PostService } from '../post/post.service';
 
 @Injectable()
@@ -29,7 +29,7 @@ export class PostReportService {
     });
 
     if (existingReport) {
-      throw new Error('이미 해당 게시글에 대해 신고하였습니다.');
+      throw InvalidInputValueException('이미 해당 게시글을 신고하였습니다.');
     }
 
     const postReport = this.postReportRepository.create({
