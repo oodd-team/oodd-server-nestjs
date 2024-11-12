@@ -1,16 +1,57 @@
-import { IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUrl,
+  MaxLength,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class PatchUserRequest {
   @IsOptional()
   @IsString()
-  @MaxLength(10, { message: '닉네임은 최대 10자까지 입력할 수 있습니다.' })
+  @MaxLength(100, { message: '이름은 최대 100자까지 입력할 수 있습니다.' })
+  @IsNotEmpty({ message: '이름을 비울 수 없습니다.' })
   @ApiProperty({
-    description: '수정할 닉네임',
-    example: '새닉네임',
+    description: '수정할 이름',
+    example: '새 이름',
     required: false,
   })
-  nickname?: string | null;
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(15, { message: '전화번호는 최대 15자까지 입력할 수 있습니다.' })
+  @IsNotEmpty({ message: '전화번호를 비울 수 없습니다.' })
+  @ApiProperty({
+    description: '수정할 전화번호',
+    example: '010-9876-5432',
+    required: false,
+  })
+  phoneNumber?: string;
+
+  @IsOptional()
+  @IsEmail()
+  @MaxLength(100, { message: '이메일은 최대 100자까지 입력할 수 있습니다.' })
+  @IsNotEmpty({ message: '이메일을 비울 수 없습니다.' })
+  @ApiProperty({
+    description: '수정할 이메일',
+    example: 'xxndksd@naver.com',
+    required: false,
+  })
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(10, { message: '닉네임은 최대 10자까지 입력할 수 있습니다.' })
+  @IsNotEmpty({ message: '닉네임을 비울 수 없습니다.' })
+  @ApiProperty({
+    description: '수정할 닉네임',
+    example: '새 닉네임',
+    required: false,
+  })
+  nickname?: string;
 
   @IsOptional()
   @IsUrl({}, { message: '유효한 URL 형식이어야 합니다.' })
@@ -19,7 +60,7 @@ export class PatchUserRequest {
     example: 'https://example.com/profile.jpg',
     required: false,
   })
-  profilePictureUrl?: string | null;
+  profilePictureUrl?: string;
 
   @IsOptional()
   @IsString()
@@ -29,5 +70,5 @@ export class PatchUserRequest {
     example: '소개글~~~^^',
     required: false,
   })
-  bio?: string | null;
+  bio?: string;
 }
