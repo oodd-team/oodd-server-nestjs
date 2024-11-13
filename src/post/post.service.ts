@@ -15,11 +15,9 @@ import { CreatePostRequest } from './dtos/create-post.request';
 import { PostStyletagService } from '../post-styletag/post-styletag.service';
 import {
   DataNotFoundException,
-  ForbiddenException,
   InternalServerException,
-  ServiceException,
 } from 'src/common/exception/service.exception';
-import { PatchPostDto } from './dtos/patch-Post.dto';
+import { PatchPostRequest } from './dtos/patch-post.request';
 import { UserBlockService } from 'src/user-block/user-block.service';
 import { PostClothingService } from 'src/post-clothing/post-clothing.service';
 import { PostLikeService } from 'src/post-like/post-like.service';
@@ -131,16 +129,12 @@ export class PostService {
     }
   }
 
-  async patchPost(postId: number, patchPostDto: PatchPostDto) {
+  async patchPost(post: Post, patchPostDto: PatchPostRequest) {
     const { content, postImages, postStyletags, postClothings } = patchPostDto;
 
     const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-
-    const post = await this.postRepository.findOne({
-      where: { id: postId, status: 'activated' },
-    });
 
     try {
       if (content !== undefined) {
@@ -148,7 +142,7 @@ export class PostService {
       }
       const updatedPost = await queryRunner.manager.save(post);
 
-      await this.postImageService.updatePostImages(
+      const updatedPostImages = await this.postImageService.updatePostImages(
         postImages,
         updatedPost,
         queryRunner,
@@ -160,14 +154,19 @@ export class PostService {
         queryRunner,
       );
 
-      await this.postClothingService.updatePostClothings(
-        updatedPost,
-        postClothings,
-        queryRunner,
-      );
+      const updatedPostClothings =
+        await this.postClothingService.updatePostClothings(
+          updatedPost,
+          postClothings,
+          queryRunner,
+        );
 
       await queryRunner.commitTransaction();
-      return updatedPost;
+      return {
+        updatedPost,
+        updatedPostImages,
+        updatedPostClothings,
+      };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw InternalServerException(error.message);

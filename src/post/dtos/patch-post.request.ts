@@ -21,9 +21,9 @@ export class PatchClothingDto extends UploadClothingDto {
   id?: number;
 }
 
-export class PatchPostDto {
+export class PatchPostRequest {
   @ApiProperty({
-    example: '게시물 내용',
+    example: '수정한 게시물 내용',
     required: false,
     description: '게시물의 내용입니다. 최대 100자까지 입력할 수 있습니다.',
   })
@@ -46,7 +46,7 @@ export class PatchPostDto {
   @ApiProperty({
     required: false,
     type: [String],
-    example: [],
+    example: ['classic'],
     description: '스타일 태그 목록입니다.',
   })
   @IsOptional()

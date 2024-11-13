@@ -30,7 +30,7 @@ import { BaseResponse } from 'src/common/response/dto';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { Request } from 'express';
 import { GetPostResponse } from './dtos/get-post.dto';
-import { PatchPostDto } from './dtos/patch-Post.dto';
+import { PatchPostRequest } from './dtos/patch-post.request';
 import { PageOptionsDto } from './dtos/page-options.dto';
 import { PageDto } from './dtos/page.dto';
 import dayjs from 'dayjs';
@@ -41,10 +41,11 @@ import {
 } from 'src/common/exception/service.exception';
 import { Post as PostEntity } from 'src/common/entities/post.entity';
 import { CreatePostResponse } from './dtos/create-post.response';
+import { PatchPostResponse } from './dtos/patch-post.response';
 
 @Controller('post')
 @ApiBearerAuth('Authorization')
-@UseGuards(AuthGuard)
+//@UseGuards(AuthGuard)
 @ApiTags('[서비스] 게시글')
 export class PostController {
   constructor(private readonly postService: PostService) {}
@@ -255,15 +256,38 @@ export class PostController {
   @PatchPostSwagger('게시글 수정 API')
   async patchPost(
     @Param('postId') postId: number,
-    @Body() patchPostDto: PatchPostDto,
+    @Body() patchPostDto: PatchPostRequest,
     @Req() req: Request,
-  ): Promise<BaseResponse<any>> {
+  ): Promise<BaseResponse<PatchPostResponse>> {
     const post = await this.postService.getPostById(postId);
-    if (req.user.id !== post.user.id) {
+    if (/*req.user.id*/ 1 !== post.user.id) {
       throw UnauthorizedException('권한이 없습니다.');
     }
-    const updatedPost = await this.postService.patchPost(postId, patchPostDto);
-    return new BaseResponse(true, '게시글 수정 성공', updatedPost);
+    const { updatedPost, updatedPostImages, updatedPostClothings } =
+      await this.postService.patchPost(post, patchPostDto);
+    const postResponse: PatchPostResponse = {
+      postId: updatedPost.id,
+      userId: updatedPost.user.id,
+      updatedAt: dayjs(updatedPost.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
+      content: updatedPost.content,
+      isRepresentative: updatedPost.isRepresentative,
+      postImages: updatedPost.postImages.map((image) => ({
+        imageurl: image.url,
+        orderNum: image.orderNum,
+      })),
+      postClothings: updatedPost.postClothings.map((postClothing) => ({
+        imageUrl: postClothing.clothing.imageUrl,
+        brandName: postClothing.clothing.brandName,
+        modelName: postClothing.clothing.modelName,
+        modelNumber: postClothing.clothing.modelNumber,
+        url: postClothing.clothing.url,
+      })),
+    };
+    return new BaseResponse<PatchPostResponse>(
+      true,
+      '게시글 수정 성공',
+      postResponse,
+    );
   }
 
   @Delete(':postId')

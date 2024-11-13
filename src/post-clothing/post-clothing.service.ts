@@ -5,7 +5,7 @@ import { Clothing } from 'src/common/entities/clothing.entity';
 import { PostClothing } from 'src/common/entities/post-clothing.entity';
 import { Post } from 'src/common/entities/post.entity';
 import { UploadClothingDto } from 'src/post/dtos/create-post.request';
-import { PatchClothingDto } from 'src/post/dtos/patch-Post.dto';
+import { PatchClothingDto } from 'src/post/dtos/patch-post.request';
 import { QueryRunner, Repository } from 'typeorm';
 
 @Injectable()
