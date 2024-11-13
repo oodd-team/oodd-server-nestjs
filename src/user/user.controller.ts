@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -14,7 +15,7 @@ import {
   GetUserSwagger,
   PatchUserSwagger,
   PatchUserTermsSwagger,
-  SignOutSwagger,
+  WithdrawSwagger,
 } from './user.swagger';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { PatchUserRequest } from './dto/patch-user.request';
@@ -38,10 +39,22 @@ export class UserController {
     // return this.userService.getHello();
   }
 
-  @Patch()
-  @SignOutSwagger('로그아웃 API')
-  signOut() {
-    // return this.userService.getHello();
+  @Patch(':userId/withdraw')
+  @UseGuards(AuthGuard)  
+  @WithdrawSwagger('회원탈퇴 API')
+  async withdrawUser(
+    @Param('userId') userId: number,
+    @Req() req: Request,
+  ): Promise<BaseResponse<null>> {
+    //console.log("req.user['id'] is ~~~~~~~~~~~~~~~~~",typeof(req.user['id']) );
+    //console.log("Number(userId) is ~~~~~~~~~~~~~~~~~", typeof(Number(userId)));
+    if (req.user['id'] != Number(userId)) {
+      throw UnauthorizedException('권한이 없습니다.');
+    }
+
+    await this.userService.softDeleteUser(userId);
+
+    return new BaseResponse<null>(true, 'USER_WITHDRAWED_SUCCESS', null);    
   }
 
   @Patch(':userId')
