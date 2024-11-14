@@ -37,7 +37,7 @@ import dayjs from 'dayjs';
 import { PageMetaDto } from './dtos/page-meta.dto';
 import { DataNotFoundException } from 'src/common/exception/service.exception';
 import { Post as PostEntity } from 'src/common/entities/post.entity';
-import { CreatePostResponse } from './dtos/post.response';
+import { PostResponse } from './dtos/post.response';
 
 @Controller('post')
 @ApiBearerAuth('Authorization')
@@ -222,9 +222,9 @@ export class PostController {
   async createPost(
     @Body() createPostDto: CreatePostRequest,
     @Req() req: Request,
-  ): Promise<BaseResponse<CreatePostResponse>> {
+  ): Promise<BaseResponse<PostResponse>> {
     const post = await this.postService.createPost(createPostDto, req.user.id);
-    const postResponse: CreatePostResponse = {
+    const postResponse: PostResponse = {
       postId: post.id,
       userId: post.user.id,
       createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
@@ -243,7 +243,7 @@ export class PostController {
       })),
     };
 
-    return new BaseResponse<CreatePostResponse>(
+    return new BaseResponse<PostResponse>(
       true,
       '게시글 작성 성공',
       postResponse,
