@@ -37,7 +37,7 @@ import dayjs from 'dayjs';
 import { PageMetaDto } from './dtos/page-meta.dto';
 import { DataNotFoundException } from 'src/common/exception/service.exception';
 import { Post as PostEntity } from 'src/common/entities/post.entity';
-import { CreatePostResponse } from './dtos/create-post.response';
+import { CreatePostResponse } from './dtos/post.response';
 
 @Controller('post')
 @ApiBearerAuth('Authorization')

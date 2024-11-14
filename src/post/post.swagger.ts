@@ -15,7 +15,7 @@ import {
 import { applyDecorators } from '@nestjs/common';
 import { GetPostResponse } from './dtos/get-post.dto';
 import { PageDto } from './dtos/page.dto';
-import { CreatePostResponse } from './dtos/create-post.response';
+import { CreatePostResponse } from './dtos/post.response';
 
 // 게시글 리스트 조회하기 API Swagger
 export function GetPostsSwagger(text: string) {
