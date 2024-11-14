@@ -1,44 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
+import { UploadClothingDto, UploadImageDto } from './create-post.request';
 
-export class UploadImageDto {
-  @ApiProperty({
-    example: 'http://example.com/image.jpg',
-    description: '업로드된 이미지의 URL입니다.',
-  })
-  imageurl: string;
-
-  @ApiProperty({ example: 1, description: '이미지의 순서 번호입니다.' })
-  orderNum: number;
-}
-
-export class UploadClothingDto {
-  @ApiProperty({
-    example: 'http://example.com/clothing.jpg',
-    description: '업로드된 옷 정보 URL입니다.',
-  })
-  imageUrl: string;
-
-  @ApiProperty({
-    example: '브랜드명',
-    description: '옷 브랜드명입니다.',
-  })
-  brandName: string;
-
-  @ApiProperty({ example: '모델명', description: '옷 상품명입니다.' })
-  modelName: string;
-
-  @ApiProperty({ example: '모델 넘버', description: '옷 모델 넘버입니다.' })
-  modelNumber: string;
-
-  @ApiProperty({
-    example: 'http://example.com/product',
-    description: '옷 상품 링크입니다.',
-  })
-  url: string;
-}
-
-export class CreatePostResponse {
+export class PostResponse {
   @ApiProperty({
     example: '게시물 번호',
     description: '게시물 번호입니다.',
@@ -90,4 +54,9 @@ export class CreatePostResponse {
     description: '대표 게시물 여부입니다.',
   })
   isRepresentative: boolean;
+}
+
+export class PatchPostResponse extends PostResponse {
+  @ApiProperty({ example: '2024-10-11T09:00:00.000Z', description: '수정 시각' })
+  updatedAt: string;
 }

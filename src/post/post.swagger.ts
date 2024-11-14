@@ -15,7 +15,7 @@ import {
 import { applyDecorators } from '@nestjs/common';
 import { GetPostResponse } from './dtos/get-post.dto';
 import { PageDto } from './dtos/page.dto';
-import { CreatePostResponse } from './dtos/create-post.response';
+import { PostResponse } from './dtos/post.response';
 
 // 게시글 리스트 조회하기 API Swagger
 export function GetPostsSwagger(text: string) {
@@ -92,7 +92,7 @@ export function CreatePostsSwagger(text: string) {
         statusCode: 201,
         responseOptions: [
           {
-            model: CreatePostResponse,
+            model: PostResponse,
             exampleTitle: '성공',
             exampleDescription: '성공했을 때 값',
           },
