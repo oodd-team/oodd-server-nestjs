@@ -13,7 +13,7 @@ import {
   GetOtherPostsResponse,
 } from './dtos/user-posts.response';
 import { applyDecorators } from '@nestjs/common';
-import { GetPostResponse } from './dtos/get-post.dto';
+import { PostDetailResponse } from './dtos/post.response';
 import { PageDto } from './dtos/page.dto';
 import { PostResponse } from './dtos/post.response';
 
@@ -67,7 +67,7 @@ export function GetPostSwagger(text: string) {
         statusCode: 200,
         responseOptions: [
           {
-            model: GetPostResponse,
+            model: PostDetailResponse,
             exampleTitle: '성공',
             exampleDescription: '성공했을 때 값',
           },
