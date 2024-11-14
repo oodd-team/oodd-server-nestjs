@@ -11,7 +11,7 @@ import {
 import { Post } from '../common/entities/post.entity';
 import { UserService } from 'src/user/user.service';
 import { PostImageService } from 'src/post-image/post-image.service';
-import { CreatePostRequest } from './dtos/create-post.request';
+import { CreatePostRequest } from './dtos/post.request';
 import { PostStyletagService } from '../post-styletag/post-styletag.service';
 import {
   DataNotFoundException,

@@ -1,6 +1,45 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { UploadClothingDto, UploadImageDto } from './create-post.request';
+
+class PostImageDto {
+  @ApiProperty({
+    example: 'http://example.com/image.jpg',
+    description: '게시물 이미지 URL',
+  })
+  url: string;
+
+  @ApiProperty({
+    example: 1,
+    description: '이미지의 순서 번호',
+  })
+  orderNum: number;
+}
+
+class PostClothingDto {
+  @ApiProperty({
+    example: 'http://example.com/clothing.jpg',
+    description: '옷 이미지 URL입니다.',
+  })
+  imageUrl: string;
+
+  @ApiProperty({
+    example: '브랜드 이름',
+    description: '옷 브랜드 이름입니다.',
+  })
+  brandName: string;
+
+  @ApiProperty({ example: '모델 이름', description: '옷 상품명입니다.' })
+  modelName: string;
+
+  @ApiProperty({ example: '모델 넘버', description: '옷 모델 넘버입니다.' })
+  modelNumber: string;
+
+  @ApiProperty({
+    example: 'http://example.com/product',
+    description: '옷 상품 링크입니다.',
+  })
+  url: string;
+}
 
 export class PostResponse {
   @ApiProperty({
@@ -28,11 +67,10 @@ export class PostResponse {
   content: string;
 
   @ApiProperty({
-    type: [UploadImageDto],
+    type: [PostImageDto],
     description: '게시물에 포함된 이미지 목록입니다.',
   })
-  @Type(() => UploadImageDto)
-  postImages?: UploadImageDto[];
+  postImages?: PostImageDto[];
 
   @ApiProperty({
     type: [String],
@@ -43,11 +81,11 @@ export class PostResponse {
   postStyletags?: string[];
 
   @ApiProperty({
-    type: [UploadClothingDto],
+    type: [PostClothingDto],
     description: '게시물에 포함된 옷 정보 리스트입니다.',
   })
-  @Type(() => UploadClothingDto)
-  postClothings?: UploadClothingDto[];
+  @Type(() => PostClothingDto)
+  postClothings?: PostClothingDto[];
 
   @ApiProperty({
     example: false,

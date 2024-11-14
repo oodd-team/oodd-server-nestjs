@@ -57,7 +57,7 @@ export class UploadClothingDto {
   url: string;
 }
 
-export class CreatePostRequest {
+export class PostRequest {
   @ApiProperty({
     example: '게시물 내용',
     description: '게시물 내용입니다. 최대 100자까지 입력할 수 있습니다.',
@@ -89,6 +89,15 @@ export class CreatePostRequest {
   postStyletags?: string[];
 
   @ApiProperty({
+    example: false,
+    description: '대표 게시물 여부입니다.',
+  })
+  @IsBoolean()
+  isRepresentative: boolean;
+}
+
+export class CreatePostRequest extends PostRequest {
+  @ApiProperty({
     required: false,
     type: [UploadClothingDto],
     description: '게시물에 포함될 옷 정보 리스트입니다.',
@@ -98,11 +107,4 @@ export class CreatePostRequest {
   @ValidateNested({ each: true })
   @Type(() => UploadClothingDto)
   postClothings?: UploadClothingDto[];
-
-  @ApiProperty({
-    example: false,
-    description: '대표 게시물 여부입니다.',
-  })
-  @IsBoolean()
-  isRepresentative: boolean;
 }
