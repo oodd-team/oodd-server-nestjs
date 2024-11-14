@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { UploadClothingDto, UploadImageDto } from './create-post.request';
 
-export class CreatePostResponse {
+export class PostResponse {
   @ApiProperty({
     example: '게시물 번호',
     description: '게시물 번호입니다.',
