@@ -6,7 +6,7 @@ import {
 } from '@nestjs/swagger';
 import { BaseSwaggerDecorator } from 'nestjs-swagger-decorator';
 import { BaseResponse } from 'src/common/response/dto';
-import { PatchPostResponse } from './dtos/patch-post.response';
+import { PatchPostResponse } from './dtos/post.response';
 import { GetAllPostsResponse } from './dtos/all-posts.response';
 import {
   GetMyPostsResponse,

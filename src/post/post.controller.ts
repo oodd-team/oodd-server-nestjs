@@ -25,12 +25,12 @@ import {
   PatchPostSwagger,
 } from './post.swagger';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { CreatePostRequest } from './dtos/create-post.request';
+import { PostRequest } from './dtos/post.request';
 import { BaseResponse } from 'src/common/response/dto';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { Request } from 'express';
 import { GetPostResponse } from './dtos/get-post.dto';
-import { PatchPostRequest } from './dtos/patch-post.request';
+import { PatchPostRequest } from './dtos/post.request';
 import { PageOptionsDto } from './dtos/page-options.dto';
 import { PageDto } from './dtos/page.dto';
 import dayjs from 'dayjs';
@@ -221,7 +221,7 @@ export class PostController {
   @Post()
   @CreatePostsSwagger('게시글 생성 API')
   async createPost(
-    @Body() createPostDto: CreatePostRequest,
+    @Body() createPostDto: PostRequest,
     @Req() req: Request,
   ): Promise<BaseResponse<PostResponse>> {
     const post = await this.postService.createPost(createPostDto, req.user.id);
@@ -232,7 +232,7 @@ export class PostController {
       content: post.content,
       isRepresentative: post.isRepresentative,
       postImages: post.postImages.map((image) => ({
-        imageurl: image.url,
+        url: image.url,
         orderNum: image.orderNum,
       })),
       postClothings: post.postClothings.map((postClothing) => ({
@@ -274,7 +274,7 @@ export class PostController {
       content: updatedPost.content,
       isRepresentative: updatedPost.isRepresentative,
       postImages: updatedPost.postImages.map((image) => ({
-        imageurl: image.url,
+        url: image.url,
         orderNum: image.orderNum,
       })),
       postClothings: updatedPost.postClothings.map((postClothing) => ({

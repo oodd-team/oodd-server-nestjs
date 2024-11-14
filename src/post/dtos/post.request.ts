@@ -57,14 +57,25 @@ export class UploadClothingDto {
   url: string;
 }
 
-export class CreatePostRequest {
+export class PatchClothingDto extends UploadClothingDto {
+  @ApiProperty({
+    example: 1,
+    description:
+      '수정할 clothing id를 입력하면 기존 clothing 수정, id를 입력하지 않으면 clothing 추가',
+  })
+  @IsNumber()
+  @IsOptional()
+  id?: number;
+}
+
+export class PostRequest {
   @ApiProperty({
     example: '게시물 내용',
     description: '게시물 내용입니다. 최대 100자까지 입력할 수 있습니다.',
   })
   @IsString()
   @MaxLength(100)
-  content: string;
+  content?: string;
 
   @ApiProperty({
     type: [UploadImageDto],
@@ -74,7 +85,7 @@ export class CreatePostRequest {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => UploadImageDto)
-  postImages?: UploadImageDto[];
+  postImages: UploadImageDto[];
 
   @ApiProperty({
     required: false,
@@ -89,6 +100,15 @@ export class CreatePostRequest {
   postStyletags?: string[];
 
   @ApiProperty({
+    example: false,
+    description: '대표 게시물 여부입니다.',
+  })
+  @IsBoolean()
+  isRepresentative: boolean;
+}
+
+export class CreatePostRequest extends PostRequest {
+  @ApiProperty({
     required: false,
     type: [UploadClothingDto],
     description: '게시물에 포함될 옷 정보 리스트입니다.',
@@ -98,11 +118,17 @@ export class CreatePostRequest {
   @ValidateNested({ each: true })
   @Type(() => UploadClothingDto)
   postClothings?: UploadClothingDto[];
+}
 
+export class PatchPostRequest extends PostRequest {
   @ApiProperty({
-    example: false,
-    description: '대표 게시물 여부입니다.',
+    required: false,
+    type: [PatchClothingDto],
+    description: '게시물에 포함될 옷 정보 리스트입니다.',
   })
-  @IsBoolean()
-  isRepresentative: boolean;
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => PatchClothingDto)
+  postClothings?: PatchClothingDto[];
 }

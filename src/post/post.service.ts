@@ -11,13 +11,13 @@ import {
 import { Post } from '../common/entities/post.entity';
 import { UserService } from 'src/user/user.service';
 import { PostImageService } from 'src/post-image/post-image.service';
-import { CreatePostRequest } from './dtos/create-post.request';
+import { CreatePostRequest } from './dtos/post.request';
 import { PostStyletagService } from '../post-styletag/post-styletag.service';
 import {
   DataNotFoundException,
   InternalServerException,
 } from 'src/common/exception/service.exception';
-import { PatchPostRequest } from './dtos/patch-post.request';
+import { PatchPostRequest } from './dtos/post.request';
 import { UserBlockService } from 'src/user-block/user-block.service';
 import { PostClothingService } from 'src/post-clothing/post-clothing.service';
 import { PostLikeService } from 'src/post-like/post-like.service';
