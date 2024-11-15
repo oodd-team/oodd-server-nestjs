@@ -265,7 +265,7 @@ export class PostController {
       postId: updatedPost.id,
       userId: updatedPost.user.id,
       createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
-      updatedAt: dayjs(updatedPost.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
+      updatedAt: dayjs(updatedPost.updatedAt).format('YYYY-MM-DDTHH:mm:ssZ'),
       content: updatedPost.content,
       isRepresentative: updatedPost.isRepresentative,
       postImages: updatedPost.postImages
