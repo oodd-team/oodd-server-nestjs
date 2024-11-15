@@ -57,7 +57,7 @@ export class UploadClothingDto {
   url: string;
 }
 
-export class PostRequest {
+class PostRequest {
   @ApiProperty({
     example: '게시물 내용',
     description: '게시물 내용입니다. 최대 100자까지 입력할 수 있습니다.',

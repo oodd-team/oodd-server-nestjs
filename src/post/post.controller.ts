@@ -25,7 +25,7 @@ import {
   PatchPostSwagger,
 } from './post.swagger';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { PostRequest } from './dtos/post.request';
+import { CreatePostRequest } from './dtos/post.request';
 import { BaseResponse } from 'src/common/response/dto';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { Request } from 'express';
@@ -41,7 +41,7 @@ import { PostResponse } from './dtos/post.response';
 
 @Controller('post')
 @ApiBearerAuth('Authorization')
-@UseGuards(AuthGuard)
+//@UseGuards(AuthGuard)
 @ApiTags('[서비스] 게시글')
 export class PostController {
   constructor(private readonly postService: PostService) {}
@@ -220,10 +220,10 @@ export class PostController {
   @Post()
   @CreatePostsSwagger('게시글 생성 API')
   async createPost(
-    @Body() createPostDto: PostRequest,
+    @Body() createPostDto: CreatePostRequest,
     @Req() req: Request,
   ): Promise<BaseResponse<PostResponse>> {
-    const post = await this.postService.createPost(createPostDto, req.user.id);
+    const post = await this.postService.createPost(createPostDto, 1);
     const postResponse: PostResponse = {
       postId: post.id,
       userId: post.user.id,
