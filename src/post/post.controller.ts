@@ -25,7 +25,7 @@ import {
   PatchPostSwagger,
 } from './post.swagger';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { PostRequest } from './dtos/post.request';
+import { CreatePostRequest } from './dtos/post.request';
 import { BaseResponse } from 'src/common/response/dto';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { Request } from 'express';
@@ -40,7 +40,7 @@ import {
   UnauthorizedException,
 } from 'src/common/exception/service.exception';
 import { Post as PostEntity } from 'src/common/entities/post.entity';
-import { PatchPostResponse, PostResponse } from './dtos/post.response';
+import { PostResponse } from './dtos/post.response';
 
 @Controller('post')
 @ApiBearerAuth('Authorization')
@@ -221,14 +221,13 @@ export class PostController {
   @Post()
   @CreatePostsSwagger('게시글 생성 API')
   async createPost(
-    @Body() createPostDto: PostRequest,
+    @Body() createPostDto: CreatePostRequest,
     @Req() req: Request,
   ): Promise<BaseResponse<PostResponse>> {
     const post = await this.postService.createPost(createPostDto, req.user.id);
     const postResponse: PostResponse = {
       postId: post.id,
       userId: post.user.id,
-      createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
       content: post.content,
       isRepresentative: post.isRepresentative,
       postImages: post.postImages.map((image) => ({
@@ -257,17 +256,15 @@ export class PostController {
     @Param('postId') postId: number,
     @Body() patchPostDto: PatchPostRequest,
     @Req() req: Request,
-  ): Promise<BaseResponse<PatchPostResponse>> {
+  ): Promise<BaseResponse<PostResponse>> {
     const post = await this.postService.getPostById(postId);
     if (req.user.id !== post.user.id) {
       throw UnauthorizedException('권한이 없습니다.');
     }
     const updatedPost = await this.postService.patchPost(post, patchPostDto);
-    const postResponse: PatchPostResponse = {
+    const postResponse: PostResponse = {
       postId: updatedPost.id,
       userId: updatedPost.user.id,
-      createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
-      updatedAt: dayjs(updatedPost.updatedAt).format('YYYY-MM-DDTHH:mm:ssZ'),
       content: updatedPost.content,
       isRepresentative: updatedPost.isRepresentative,
       postImages: updatedPost.postImages
@@ -286,7 +283,7 @@ export class PostController {
           url: postClothing.clothing.url,
         })),
     };
-    return new BaseResponse<PatchPostResponse>(
+    return new BaseResponse<PostResponse>(
       true,
       '게시글 수정 성공',
       postResponse,
