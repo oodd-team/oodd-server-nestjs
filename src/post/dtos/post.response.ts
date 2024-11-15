@@ -55,12 +55,6 @@ export class PostResponse {
   userId: number;
 
   @ApiProperty({
-    example: '2024-10-11T09:00:00.000Z',
-    description: '작성 시각',
-  })
-  createdAt: string;
-
-  @ApiProperty({
     example: '게시물 내용',
     description: '게시물 내용입니다. 최대 100자까지 입력할 수 있습니다.',
   })

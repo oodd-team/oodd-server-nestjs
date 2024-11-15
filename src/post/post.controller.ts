@@ -227,7 +227,6 @@ export class PostController {
     const postResponse: PostResponse = {
       postId: post.id,
       userId: post.user.id,
-      createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
       content: post.content,
       isRepresentative: post.isRepresentative,
       postImages: post.postImages.map((image) => ({
