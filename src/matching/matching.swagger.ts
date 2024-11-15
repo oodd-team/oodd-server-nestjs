@@ -1,15 +1,14 @@
 import {
-  ApiAcceptedResponse,
   ApiBadRequestResponse,
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
-  ApiOkResponse,
   ApiOperation,
 } from '@nestjs/swagger';
 import { BaseSwaggerDecorator } from 'nestjs-swagger-decorator';
 import { PostMatchingResponse } from './dto/matching.response';
 import { BaseResponse } from 'src/common/response/dto';
 import { GetMatchingsResponse } from './dto/get-matching.response';
+import { PatchMatchingResponse } from './dto/Patch-matching.response';
 
 // 매칭 생성 API Swagger
 export function CreateMatchingSwagger(apiSummary: string) {
@@ -40,9 +39,20 @@ export function CreateMatchingSwagger(apiSummary: string) {
 export function PatchMatchingRequestStatusSwagger(apiSummary: string) {
   return BaseSwaggerDecorator(
     { summary: apiSummary },
-    [],
     [
-      ApiOkResponse({ description: '성공', type: BaseResponse }),
+      {
+        statusCode: 200,
+        responseOptions: [
+          {
+            model: PatchMatchingResponse,
+            exampleTitle: '성공',
+            exampleDescription: '성공했을 때 값',
+          },
+        ],
+        baseResponseDto: BaseResponse,
+      },
+    ],
+    [
       ApiBadRequestResponse({ description: 'Bad Request' }),
       ApiNotFoundResponse({ description: '해당 유저가 존재하지 않습니다.' }),
       ApiInternalServerErrorResponse({ description: 'Internal Server Error' }),
