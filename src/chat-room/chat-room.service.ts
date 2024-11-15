@@ -18,37 +18,23 @@ export class ChatRoomService {
       .leftJoinAndSelect('chatRoom.fromUser', 'fromUser')
       .leftJoinAndSelect('chatRoom.toUser', 'toUser')
       .leftJoinAndSelect('chatRoom.chatMessages', 'chatMessages')
-      .loadRelationIdAndMap('chatRoom.latestMessage', 'chatMessages')
       .where('chatRoom.fromUserId = :userId OR chatRoom.toUserId = :userId', {
         userId,
       })
       .andWhere('chatRoom.status = :status', { status: 'activated' })
-      .orderBy('chatMessages.createdAt', 'DESC') // 최신 메시지 우선 정렬
+      .orderBy('chatMessages.createdAt', 'DESC')
       .getMany();
 
-    return chatRooms.map((chatRoom) => {
-      // 상대방 정보 설정
-      const otherUser =
-        chatRoom.fromUser.id === userId ? chatRoom.toUser : chatRoom.fromUser;
-
-      // 최신 메시지 설정
-      const latestMessage = chatRoom.chatMessages[0];
-
+    // 각 채팅방에서 최신 메시지를 선택
+    const chatRoomsWithLatestMessages = chatRooms.map((room) => {
+      const latestMessage =
+        room.chatMessages.length > 0 ? room.chatMessages[0] : null; // 가장 최근 메시지 선택
       return {
-        chatRoomId: chatRoom.id,
-        otherUser: {
-          id: otherUser.id,
-          nickname: otherUser.nickname,
-          profileUrl: otherUser.profilePictureUrl,
-        },
-        latestMessage: latestMessage
-          ? {
-              content: latestMessage.content,
-              createdAt: latestMessage.createdAt,
-            }
-          : null,
+        ...room,
+        latestMessage, // 최신 메시지 포함
       };
     });
+    return chatRoomsWithLatestMessages;
   }
 
   async createChatRoom(
