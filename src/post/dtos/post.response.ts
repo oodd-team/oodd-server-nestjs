@@ -118,6 +118,12 @@ export class PatchPostResponse extends PostResponse {
 
 export class PostDetailResponse extends PostResponse {
   @ApiProperty({
+    example: '2024-10-11T09:00:00.000Z',
+    description: '수정 시각',
+  })
+  updatedAt: string;
+
+  @ApiProperty({
     type: UserDto,
     description: '게시물 작성자 정보',
   })

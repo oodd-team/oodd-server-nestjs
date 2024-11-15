@@ -44,7 +44,7 @@ import { PatchPostResponse, PostResponse } from './dtos/post.response';
 
 @Controller('post')
 @ApiBearerAuth('Authorization')
-@UseGuards(AuthGuard)
+//@UseGuards(AuthGuard)
 @ApiTags('[서비스] 게시글')
 export class PostController {
   constructor(private readonly postService: PostService) {}
@@ -186,6 +186,7 @@ export class PostController {
       postId: post.id,
       userId: post.user.id,
       createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
+      updatedAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
       content: post.content,
       postImages: post.postImages
         .filter((image) => image.status === 'activated')
@@ -204,7 +205,7 @@ export class PostController {
         })),
       likeCount: post.postLikes.length,
       commentCount: post.postComments.length,
-      isPostLike: this.postService.checkIsPostLiked(post, req.user.id),
+      isPostLike: this.postService.checkIsPostLiked(post, 1),
       isRepresentative: post.isRepresentative,
       user: {
         nickname: post.user.nickname,
