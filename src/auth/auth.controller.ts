@@ -1,9 +1,9 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { KakaoLoginSwagger, NaverLoginSwagger } from './auth.swagger';
 import { ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { KakaoAuthGuard } from './guards/kakao.auth.guard';
 import { BaseResponse } from 'src/common/response/dto';
 import { LoginResponse } from './dto/auth.response';
@@ -21,33 +21,37 @@ export class AuthController {
   @Get('/login/kakao')
   @KakaoLoginSwagger('kakao 로그인 API')
   @UseGuards(KakaoAuthGuard)
-  async kakaoAuth() {}
+  async kakaoAuth(@Query('redirectUrl') redirectUrl: string) {}
 
   @ApiExcludeEndpoint()
   @Get('/kakao/callback')
   @UseGuards(KakaoAuthGuard)
   async kakaoAuthCallback(
     @Req() req: Request,
-  ): Promise<BaseResponse<LoginResponse>> {
+    @Res() res: Response,
+  ): Promise<void> {
     const { socialUser } = req;
+    const url = socialUser.redirectUrl;
     const jwtToken = await this.authService.socialLogin(socialUser, 'kakao');
-    return new BaseResponse<LoginResponse>(true, 'SUCCESS', { jwt: jwtToken });
+    return res.redirect(url + '?token=' + jwtToken);
   }
 
   @Get('/login/naver')
   @NaverLoginSwagger('naver 로그인 API')
   @UseGuards(NaverAuthGuard)
-  async naverLogin() {}
+  async naverLogin(@Query('redirectUrl') redirectUrl: string) {}
 
   @ApiExcludeEndpoint()
   @Get('/naver/callback')
   @UseGuards(NaverAuthGuard)
   async naverLoginCallback(
     @Req() req: Request,
-  ): Promise<BaseResponse<LoginResponse>> {
+    @Res() res: Response,
+  ): Promise<void> {
     const { socialUser } = req;
+    const url = socialUser.redirectUrl;
     const jwtToken = await this.authService.socialLogin(socialUser, 'naver');
-    return new BaseResponse<LoginResponse>(true, 'SUCCESS', { jwt: jwtToken });
+    return res.redirect(url + '?token=' + jwtToken);
   }
 
   @UseGuards(AuthGuard)
