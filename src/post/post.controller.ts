@@ -44,7 +44,7 @@ import { PatchPostResponse, PostResponse } from './dtos/post.response';
 
 @Controller('post')
 @ApiBearerAuth('Authorization')
-//@UseGuards(AuthGuard)
+@UseGuards(AuthGuard)
 @ApiTags('[서비스] 게시글')
 export class PostController {
   constructor(private readonly postService: PostService) {}
@@ -259,13 +259,10 @@ export class PostController {
     @Req() req: Request,
   ): Promise<BaseResponse<PatchPostResponse>> {
     const post = await this.postService.getPostById(postId);
-    if (/*req.user.id*/ 1 !== post.user.id) {
+    if (req.user.id !== post.user.id) {
       throw UnauthorizedException('권한이 없습니다.');
     }
-    const { updatedPost } = await this.postService.patchPost(
-      post,
-      patchPostDto,
-    );
+    const updatedPost = await this.postService.patchPost(post, patchPostDto);
     const postResponse: PatchPostResponse = {
       postId: updatedPost.id,
       userId: updatedPost.user.id,
@@ -273,17 +270,21 @@ export class PostController {
       updatedAt: dayjs(updatedPost.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
       content: updatedPost.content,
       isRepresentative: updatedPost.isRepresentative,
-      postImages: updatedPost.postImages.map((image) => ({
-        url: image.url,
-        orderNum: image.orderNum,
-      })),
-      postClothings: updatedPost.postClothings.map((postClothing) => ({
-        imageUrl: postClothing.clothing.imageUrl,
-        brandName: postClothing.clothing.brandName,
-        modelName: postClothing.clothing.modelName,
-        modelNumber: postClothing.clothing.modelNumber,
-        url: postClothing.clothing.url,
-      })),
+      postImages: updatedPost.postImages
+        .filter((image) => image.status === 'activated')
+        .map((image) => ({
+          url: image.url,
+          orderNum: image.orderNum,
+        })),
+      postClothings: updatedPost.postClothings
+        .filter((postClothing) => postClothing.status === 'activated')
+        .map((postClothing) => ({
+          imageUrl: postClothing.clothing.imageUrl,
+          brandName: postClothing.clothing.brandName,
+          modelName: postClothing.clothing.modelName,
+          modelNumber: postClothing.clothing.modelNumber,
+          url: postClothing.clothing.url,
+        })),
     };
     return new BaseResponse<PatchPostResponse>(
       true,

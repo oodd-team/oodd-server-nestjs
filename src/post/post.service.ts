@@ -142,7 +142,7 @@ export class PostService {
       }
       const updatedPost = await queryRunner.manager.save(post);
 
-      const updatedPostImages = await this.postImageService.updatePostImages(
+      await this.postImageService.updatePostImages(
         postImages,
         updatedPost,
         queryRunner,
@@ -154,19 +154,23 @@ export class PostService {
         queryRunner,
       );
 
-      const updatedPostClothings =
-        await this.postClothingService.updatePostClothings(
-          updatedPost,
-          postClothings,
-          queryRunner,
-        );
+      await this.postClothingService.updatePostClothings(
+        updatedPost,
+        postClothings,
+        queryRunner,
+      );
 
       await queryRunner.commitTransaction();
-      return {
-        updatedPost,
-        updatedPostImages,
-        updatedPostClothings,
-      };
+      return await this.postRepository.findOne({
+        where: { id: updatedPost.id },
+        relations: [
+          'postImages',
+          'postStyletags',
+          'postClothings',
+          'user',
+          'postClothings.clothing',
+        ],
+      });
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw InternalServerException(error.message);
