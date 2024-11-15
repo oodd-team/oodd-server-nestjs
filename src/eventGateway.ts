@@ -10,7 +10,7 @@ import { ChatRoomService } from './chat-room/chat-room.service';
 import { ChatMessageService } from './chat-message/chat-message.service';
 
 //클라이언트의 패킷들이 게이트웨이를 통해서 들어오게 됩니다.
-@WebSocketGateway({ namespace: '/socket/chatting', cors: '*' })
+@WebSocketGateway({ namespace: '/socket/chatting' })
 export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   // 소켓 서버를 정의합니다.
   @WebSocketServer()
