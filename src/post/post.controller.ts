@@ -41,7 +41,7 @@ import { PostResponse } from './dtos/post.response';
 
 @Controller('post')
 @ApiBearerAuth('Authorization')
-//@UseGuards(AuthGuard)
+@UseGuards(AuthGuard)
 @ApiTags('[서비스] 게시글')
 export class PostController {
   constructor(private readonly postService: PostService) {}
@@ -223,7 +223,7 @@ export class PostController {
     @Body() createPostDto: CreatePostRequest,
     @Req() req: Request,
   ): Promise<BaseResponse<PostResponse>> {
-    const post = await this.postService.createPost(createPostDto, 1);
+    const post = await this.postService.createPost(createPostDto, req.user.id);
     const postResponse: PostResponse = {
       postId: post.id,
       userId: post.user.id,
