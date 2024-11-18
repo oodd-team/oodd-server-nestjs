@@ -189,6 +189,11 @@ export class PostController {
           url: image.url,
           orderNum: image.orderNum,
         })),
+      postStyletags: post.postStyletags
+        .filter((postStyletag) => postStyletag.status === 'activated')
+        .map((postStyletag) => ({
+          tag: postStyletag.styletag.tag,
+        })),
       postClothings: post.postClothings
         .filter((postClothing) => postClothing.status === 'activated')
         .map((postClothing) => ({

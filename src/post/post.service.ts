@@ -116,6 +116,7 @@ export class PostService {
         relations: [
           'postImages',
           'postStyletags',
+          'postStyletags.styletag',
           'postClothings',
           'user',
           'postClothings.clothing',
@@ -166,6 +167,7 @@ export class PostService {
         relations: [
           'postImages',
           'postStyletags',
+          'postStyletags.styletag',
           'postClothings',
           'user',
           'postClothings.clothing',
@@ -238,6 +240,8 @@ export class PostService {
         'postComments',
         'postClothings',
         'postClothings.clothing',
+        'postStyletags.styletag',
+        'postStyletags',
       ],
     });
 

@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
+import { PostStyletag } from 'src/common/entities/post-styletag.entity';
 
 class PostImageDto {
   @ApiProperty({
@@ -39,6 +40,16 @@ class PostClothingDto {
     description: '옷 상품 링크입니다.',
   })
   url: string;
+}
+
+class PostStyletagDto {
+  @ApiProperty({
+    type: [PostStyletag],
+    example: ['classic'],
+    description:
+      '게시글에 포함된 스타일 태그입니다. 스타일 태그에 저장된 태그만 입력 가능합니다.',
+  })
+  tag?: string;
 }
 
 class UserDto {
@@ -81,12 +92,11 @@ export class PostResponse {
   postImages?: PostImageDto[];
 
   @ApiProperty({
-    type: [String],
-    example: ['classic'],
-    description:
-      '게시글에 포함된 스타일 태그 목록입니다. 스타일 태그에 저장된 태그만 입력 가능합니다.',
+    type: [PostStyletagDto],
+    example: ['classic', 'basic'],
+    description: '게시글에 포함된 스타일 태그 목록입니다.',
   })
-  postStyletags?: string[];
+  postStyletags?: PostStyletagDto[];
 
   @ApiProperty({
     type: [PostClothingDto],
