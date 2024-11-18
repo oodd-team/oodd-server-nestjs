@@ -134,7 +134,7 @@ export class PostService {
   }
 
   async patchPost(post: Post, patchPostDto: PatchPostRequest) {
-    const { content, postImages, postStyletags, postClothings } = patchPostDto;
+    const { content, postImages, postStyletag, postClothings } = patchPostDto;
 
     const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -152,9 +152,9 @@ export class PostService {
         queryRunner,
       );
 
-      await this.postStyletagService.updatePostStyletags(
+      await this.postStyletagService.updatePostStyletag(
         updatedPost,
-        postStyletags,
+        postStyletag,
         queryRunner,
       );
 
