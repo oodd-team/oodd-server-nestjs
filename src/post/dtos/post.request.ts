@@ -59,12 +59,14 @@ export class UploadClothingDto {
 
 class PostRequest {
   @ApiProperty({
+    required: false,
     example: '게시물 내용',
     description: '게시물 내용입니다. 최대 100자까지 입력할 수 있습니다.',
   })
+  @IsOptional()
   @IsString()
   @MaxLength(100)
-  content: string;
+  content?: string;
 
   @ApiProperty({
     type: [UploadImageDto],
@@ -78,15 +80,14 @@ class PostRequest {
 
   @ApiProperty({
     required: false,
-    type: [String],
-    example: ['classic'],
+    example: 'classic',
     description:
-      '게시글에 포함될 스타일 태그 목록입니다. 스타일 태그에 저장된 태그만 입력 가능합니다.',
+      '게시글에 포함될 스타일 태그입니다. 스타일 태그에 저장된 태그만 입력 가능합니다.',
   })
   @IsOptional()
-  @IsArray()
-  @MaxLength(20, { each: true })
-  postStyletags?: string[];
+  @IsString()
+  @MaxLength(20)
+  postStyletag?: string;
 
   @ApiProperty({
     example: false,

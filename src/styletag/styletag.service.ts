@@ -9,13 +9,12 @@ export class StyletagService {
     private readonly styletagRepository: Repository<Styletag>,
   ) {}
 
-  async findStyleTags(tags: string[]): Promise<Styletag[]> {
-    // 입력된 태그들과 일치하는 스타일태그 조회
-    const styleTags = await this.styletagRepository
+  async findStyleTag(tag: string): Promise<Styletag | null> {
+    const styleTag = await this.styletagRepository
       .createQueryBuilder('styletag')
-      .where('styletag.tag IN (:...tags)', { tags })
-      .getMany();
+      .where('styletag.tag = :...tag', { tag })
+      .getOne();
 
-    return styleTags;
+    return styleTag;
   }
 }

@@ -69,7 +69,7 @@ export class PostService {
       content,
       postImages,
       isRepresentative,
-      postStyletags,
+      postStyletag,
       postClothings,
     } = uploadPostDto;
 
@@ -82,6 +82,10 @@ export class PostService {
     });
 
     try {
+      if (isRepresentative) {
+        await this.deactivateRepresentativePost(queryRunner, currentUserId);
+      }
+
       const post = this.postRepository.create({
         user,
         content,
@@ -95,10 +99,10 @@ export class PostService {
         queryRunner,
       );
 
-      if (postStyletags) {
-        await this.postStyletagService.savePostStyletags(
+      if (postStyletag) {
+        await this.postStyletagService.savePostStyletag(
           savedPost,
-          postStyletags,
+          postStyletag,
           queryRunner,
         );
       }
@@ -328,6 +332,22 @@ export class PostService {
     if (userId && post.user.id !== userId) {
       throw ForbiddenException('이 게시글에 대한 권한이 없습니다.');
     }
+  }
+
+  private async deactivateRepresentativePost(
+    queryRunner: QueryRunner,
+    userId: number,
+  ): Promise<void> {
+    // 기존 대표 게시글이 있는 경우 해제
+    await queryRunner.manager.update(
+      Post,
+      {
+        user: { id: userId },
+        isRepresentative: true,
+        status: 'activated',
+      },
+      { isRepresentative: false },
+    );
   }
 
   // 총 댓글 수

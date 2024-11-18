@@ -18,44 +18,25 @@ export class PostStyletagService {
     private readonly styletagService: StyletagService,
   ) {}
 
-  async savePostStyletags(
+  async savePostStyletag(
     post: Post,
-    tags: string[],
+    tag: string,
     queryRunner: QueryRunner,
   ): Promise<void> {
-    if (!tags || tags.length === 0) {
-      return;
-    }
+    const styleTag = await this.styletagService.findStyleTag(tag);
 
-    // Styletag 조회
-    const styleTags = await this.styletagService.findStyleTags(tags);
-
-    if (styleTags.length === 0) {
+    if (!styleTag) {
       throw DataNotFoundException('일치하는 스타일 태그가 없습니다.');
     }
 
-    for (const tag of styleTags) {
-      // 중복 검사
-      const existingPostStyletag = await this.postStyletagRepository.findOne({
-        where: { post, styletag: tag },
-      });
-
-      if (existingPostStyletag) {
-        throw InvalidInputValueException(`중복된 스타일 태그: ${tag.tag}`);
-      }
-    }
-
-    for (const tag of styleTags) {
+    try {
       const postStyletag = this.postStyletagRepository.create({
         post,
-        styletag: tag,
+        styletag: styleTag,
       });
-
-      try {
-        await queryRunner.manager.save(postStyletag);
-      } catch (error) {
-        throw InternalServerException('postStyletag 저장에 실패했습니다.');
-      }
+      await queryRunner.manager.save(postStyletag);
+    } catch (error) {
+      throw InternalServerException(error.message);
     }
   }
 
