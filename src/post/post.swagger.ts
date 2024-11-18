@@ -6,7 +6,6 @@ import {
 } from '@nestjs/swagger';
 import { BaseSwaggerDecorator } from 'nestjs-swagger-decorator';
 import { BaseResponse } from 'src/common/response/dto';
-import { PatchPostDto } from './dtos/patch-Post.dto';
 import { GetAllPostsResponse } from './dtos/all-posts.response';
 import {
   GetMyPostsResponse,
@@ -117,7 +116,7 @@ export function PatchPostSwagger(text: string) {
         statusCode: 200,
         responseOptions: [
           {
-            model: PatchPostDto,
+            model: PostResponse,
             exampleTitle: '성공',
             exampleDescription: '성공했을 때 값',
           },

@@ -44,8 +44,6 @@ export class PostCommentController {
   ): Promise<BaseResponse<any>> {
     const currentUserId = req.user.id;
 
-    await this.postService.validatePost(postId);
-
     const postComment = await this.postCommentService.createPostComment(
       postId,
       currentUserId,

@@ -15,11 +15,9 @@ import { CreatePostRequest } from './dtos/post.request';
 import { PostStyletagService } from '../post-styletag/post-styletag.service';
 import {
   DataNotFoundException,
-  ForbiddenException,
   InternalServerException,
-  ServiceException,
 } from 'src/common/exception/service.exception';
-import { PatchPostDto } from './dtos/patch-Post.dto';
+import { PatchPostRequest } from './dtos/post.request';
 import { UserBlockService } from 'src/user-block/user-block.service';
 import { PostClothingService } from 'src/post-clothing/post-clothing.service';
 import { PostLikeService } from 'src/post-like/post-like.service';
@@ -135,17 +133,12 @@ export class PostService {
     }
   }
 
-  // 게시글 수정
-  async patchPost(postId: number, patchPostDto: PatchPostDto) {
+  async patchPost(post: Post, patchPostDto: PatchPostRequest) {
     const { content, postImages, postStyletags, postClothings } = patchPostDto;
 
     const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
-
+    await queryRunner.connect();
     await queryRunner.startTransaction();
-
-    const post = await this.postRepository.findOne({
-      where: { id: postId, status: 'activated' },
-    });
 
     try {
       if (content !== undefined) {
@@ -153,21 +146,18 @@ export class PostService {
       }
       const updatedPost = await queryRunner.manager.save(post);
 
-      // postImages 업데이트
       await this.postImageService.updatePostImages(
         postImages,
         updatedPost,
         queryRunner,
       );
 
-      // styletag 업데이트
       await this.postStyletagService.updatePostStyletags(
         updatedPost,
         postStyletags,
         queryRunner,
       );
 
-      // clothing 업데이트
       await this.postClothingService.updatePostClothings(
         updatedPost,
         postClothings,
@@ -175,14 +165,19 @@ export class PostService {
       );
 
       await queryRunner.commitTransaction();
-
-      return updatedPost;
+      return await this.postRepository.findOne({
+        where: { id: updatedPost.id },
+        relations: [
+          'postImages',
+          'postStyletags',
+          'postClothings',
+          'user',
+          'postClothings.clothing',
+        ],
+      });
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      if (error instanceof ServiceException) {
-        throw error;
-      }
-      throw InternalServerException('게시글 수정에 실패했습니다.');
+      throw InternalServerException(error.message);
     } finally {
       await queryRunner.release();
     }
@@ -318,8 +313,8 @@ export class PostService {
 
     return { posts, total };
   }
-  // 게시글 검증 메서드
-  async validatePost(postId: number, userId?: number): Promise<void> {
+
+  async getPostById(postId: number): Promise<Post> {
     const post = await this.postRepository.findOne({
       where: { id: postId, status: 'activated' },
       relations: ['user'],
@@ -328,10 +323,7 @@ export class PostService {
     if (!post) {
       throw DataNotFoundException('게시글을 찾을 수 없습니다.');
     }
-
-    if (userId && post.user.id !== userId) {
-      throw ForbiddenException('이 게시글에 대한 권한이 없습니다.');
-    }
+    return post;
   }
 
   private async deactivateRepresentativePost(

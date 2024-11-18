@@ -57,7 +57,18 @@ export class UploadClothingDto {
   url: string;
 }
 
-class PostRequest {
+export class PatchClothingDto extends UploadClothingDto {
+  @ApiProperty({
+    example: 1,
+    description:
+      '수정할 clothing id를 입력하면 기존 clothing 수정, id를 입력하지 않으면 clothing 추가',
+  })
+  @IsNumber()
+  @IsOptional()
+  id?: number;
+}
+
+export class PostRequest {
   @ApiProperty({
     required: false,
     example: '게시물 내용',
@@ -76,7 +87,7 @@ class PostRequest {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => UploadImageDto)
-  postImages?: UploadImageDto[];
+  postImages: UploadImageDto[];
 
   @ApiProperty({
     required: false,
@@ -108,4 +119,17 @@ export class CreatePostRequest extends PostRequest {
   @ValidateNested({ each: true })
   @Type(() => UploadClothingDto)
   postClothings?: UploadClothingDto[];
+}
+
+export class PatchPostRequest extends PostRequest {
+  @ApiProperty({
+    required: false,
+    type: [PatchClothingDto],
+    description: '게시물에 포함될 옷 정보 리스트입니다.',
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => PatchClothingDto)
+  postClothings?: PatchClothingDto[];
 }
