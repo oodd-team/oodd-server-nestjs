@@ -20,22 +20,35 @@ export class PostLikeController {
 
   @Get()
   @GetPostLikesSwagger('게시글 좋아요 리스트 조회 API')
-  async getPostLikes(@Req() req: Request): Promise<BaseResponse<GetPostLikesResponseDto>> {
+  async getPostLikes(
+    @Req() req: Request,
+  ): Promise<BaseResponse<GetPostLikesResponseDto>> {
     const userId = req.user.id;
     const likesData = await this.postLikeService.getUserLikes(userId);
 
-    return new BaseResponse<GetPostLikesResponseDto>(true, 'SUCCESS', likesData);
+    return new BaseResponse<GetPostLikesResponseDto>(
+      true,
+      'SUCCESS',
+      likesData,
+    );
   }
 
-  @Post(":postId")
-  @CreatePostLikeSwagger('게시글 좋아요 생성 및 삭제 API') 
+  @Post(':postId')
+  @CreatePostLikeSwagger('게시글 좋아요 생성 및 삭제 API')
   async togglePostLike(
     @Param('postId') postId: number,
-    @Req() req: Request
+    @Req() req: Request,
   ): Promise<BaseResponse<PostLikeResponseDto>> {
     const userId = req.user.id;
-    const postLikeResponse = await this.postLikeService.toggleLike(postId, userId);
+    const postLikeResponse = await this.postLikeService.toggleLike(
+      postId,
+      userId,
+    );
 
-    return new BaseResponse<PostLikeResponseDto>(true, 'SUCCESS', postLikeResponse);
+    return new BaseResponse<PostLikeResponseDto>(
+      true,
+      'SUCCESS',
+      postLikeResponse,
+    );
   }
 }

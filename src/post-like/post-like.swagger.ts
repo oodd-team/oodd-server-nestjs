@@ -1,10 +1,46 @@
-import { ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiInternalServerErrorResponse,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { BaseResponse } from 'src/common/response/dto';
 import { PostLikeResponseDto } from './dtos/post-like.response';
+import { BaseSwaggerDecorator } from 'nestjs-swagger-decorator';
+import { GetPostLikesResponseDto } from './dtos/get-post-like.response.dto';
 
 // 게시글 좋아요 리스트 조회 API Swagger
 export function GetPostLikesSwagger(apiSummary: string) {
-  return ApiOperation({ summary: apiSummary });
+  return BaseSwaggerDecorator(
+    { summary: apiSummary },
+    [],
+    [
+      ApiCreatedResponse({
+        description: '댓글 리스트 조회 성공',
+        type: BaseResponse<GetPostLikesResponseDto>,
+      }),
+      ApiBadRequestResponse({
+        description: '잘못된 요청입니다.',
+        type: BaseResponse,
+      }),
+      ApiUnauthorizedResponse({
+        description: '인증되지 않은 사용자입니다.',
+        type: BaseResponse,
+      }),
+      ApiForbiddenResponse({
+        description: '권한이 없습니다.',
+        type: BaseResponse,
+      }),
+      ApiInternalServerErrorResponse({
+        description: '서버 오류입니다.',
+        type: BaseResponse,
+      }),
+    ],
+  );
 }
 
 // 게시글 좋아요 생성 및 삭제 API Swagger
