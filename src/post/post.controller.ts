@@ -31,10 +31,10 @@ import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { Request } from 'express';
 import { GetPostResponse } from './dtos/get-post.dto';
 import { PatchPostDto } from './dtos/patch-Post.dto';
-import { PageOptionsDto } from './dtos/page-options.dto';
-import { PageDto } from './dtos/page.dto';
+import { PageOptionsDto } from '../common/response/page-options.dto';
+import { PageDto } from '../common/response/page.dto';
 import dayjs from 'dayjs';
-import { PageMetaDto } from './dtos/page-meta.dto';
+import { PageMetaDto } from '../common/response/page-meta.dto';
 import { DataNotFoundException } from 'src/common/exception/service.exception';
 import { Post as PostEntity } from 'src/common/entities/post.entity';
 
