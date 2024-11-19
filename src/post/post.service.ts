@@ -240,6 +240,7 @@ export class PostService {
         'postComments',
         'postClothings',
         'postClothings.clothing',
+        'postStyletags',
       ],
     });
 

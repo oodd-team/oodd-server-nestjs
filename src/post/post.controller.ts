@@ -202,8 +202,15 @@ export class PostController {
             modelNumber: postClothing.clothing.modelNumber,
             url: postClothing.clothing.url,
           })),
+        postStyletags: post.postStyletags
+          .filter((post) => post.status === 'activated')
+          .map((postStyletag) => ({
+            styletagId: postStyletag.styletag.id,
+            tag: postStyletag.styletag.tag,
+          })),
         likeCount: post.postLikes.length,
         commentCount: post.postComments.length,
+        isRepresentative: post.isRepresentative,
         isPostLike: this.postService.checkIsPostLiked(post, currentUserId),
         user: {
           userId: post.user.id,
