@@ -24,7 +24,7 @@ import { UserBlockService } from 'src/user-block/user-block.service';
 import { PostClothingService } from 'src/post-clothing/post-clothing.service';
 import { PostLikeService } from 'src/post-like/post-like.service';
 import { PostCommentService } from 'src/post-comment/post-comment.service';
-import { PageOptionsDto } from './dtos/page-options.dto';
+import { PageOptionsDto } from '../common/response/page-options.dto';
 
 @Injectable()
 export class PostService {
