@@ -116,6 +116,7 @@ export class MatchingController {
           )[0];
 
         return {
+          matchingId: matching.id,
           requester: {
             requesterId: matching.requester.id,
             nickname: matching.requester.nickname,
