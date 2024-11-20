@@ -1,13 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  DataSource,
-  FindOneOptions,
-  In,
-  Not,
-  QueryRunner,
-  Repository,
-} from 'typeorm';
+import { DataSource, FindOneOptions, QueryRunner, Repository } from 'typeorm';
 import { Post } from '../common/entities/post.entity';
 import { UserService } from 'src/user/user.service';
 import { PostImageService } from 'src/post-image/post-image.service';
@@ -25,6 +18,12 @@ import { PostClothingService } from 'src/post-clothing/post-clothing.service';
 import { PostLikeService } from 'src/post-like/post-like.service';
 import { PostCommentService } from 'src/post-comment/post-comment.service';
 import { PageOptionsDto } from '../common/response/page-options.dto';
+import dayjs from 'dayjs';
+import { GetAllPostsResponse } from './dtos/all-posts.response';
+import {
+  GetMyPostsResponse,
+  GetOtherPostsResponse,
+} from './dtos/user-posts.response';
 
 @Injectable()
 export class PostService {
@@ -54,23 +53,160 @@ export class PostService {
   async getAllPosts(
     pageOptionsDto: PageOptionsDto,
     currentUserId: number,
-  ): Promise<{ posts: Post[]; total: number }> {
+  ): Promise<{ posts: GetAllPostsResponse; total: number }> {
     const blockedUserIds =
       await this.userBlockService.getBlockedUserIdsByRequesterId(currentUserId);
-    return this.findPostsWithPagination(pageOptionsDto, {
-      status: 'activated',
-      user: { id: Not(In(blockedUserIds)) },
-    });
+
+    const queryBuilder = this.dataSource
+      .getRepository(Post)
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.user', 'user')
+      .leftJoinAndSelect(
+        'post.postImages',
+        'postImage',
+        'postImage.status = :status',
+        { status: 'activated' },
+      )
+      .leftJoinAndSelect('post.postLikes', 'postLike')
+      .leftJoinAndSelect('post.postComments', 'postComment')
+      .where('post.status = :status', { status: 'activated' })
+      .andWhere('post.user.id NOT IN (:...blockedUserIds)', { blockedUserIds });
+
+    const total = await queryBuilder.getCount();
+
+    const posts = await queryBuilder
+      .select([
+        'post.id',
+        'post.content',
+        'post.createdAt',
+        'user.id',
+        'user.nickname',
+        'user.profilePictureUrl',
+        'postImage.url',
+        'postImage.orderNum',
+        'postLike.user.id',
+        'postComment.user.id',
+      ])
+      .orderBy('post.createdAt', 'DESC')
+      .take(pageOptionsDto.take)
+      .skip((pageOptionsDto.page - 1) * pageOptionsDto.take)
+      .getMany();
+
+    return { posts: this.formatAllPosts(posts, currentUserId), total };
   }
 
   async getUserPosts(
     pageOptionsDto: PageOptionsDto,
     userId: number,
-  ): Promise<{ posts: Post[]; total: number }> {
-    return this.findPostsWithPagination(pageOptionsDto, {
-      user: { id: userId },
-      status: 'activated',
-    });
+    currentUserId: number,
+  ): Promise<{
+    posts: GetMyPostsResponse | GetOtherPostsResponse;
+    total: number;
+  }> {
+    const queryBuilder = this.dataSource
+      .getRepository(Post)
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.user', 'user')
+      .leftJoinAndSelect(
+        'post.postImages',
+        'postImage',
+        'postImage.status = :status',
+        { status: 'activated' },
+      )
+      .leftJoinAndSelect('post.postLikes', 'postLike')
+      .leftJoinAndSelect('post.postComments', 'postComment')
+      .where('post.status = :status', { status: 'activated' })
+      .andWhere('post.user.id = :userId', { userId });
+
+    const total = await queryBuilder.getCount();
+
+    const posts = await queryBuilder
+      .select([
+        'post.id',
+        'post.isRepresentative',
+        'post.createdAt',
+        'user.id',
+        'postImage.url',
+        'postImage.orderNum',
+        'postLike.user.id',
+        'postComment.user.id',
+      ])
+      .orderBy('post.createdAt', 'DESC')
+      .take(pageOptionsDto.take)
+      .skip((pageOptionsDto.page - 1) * pageOptionsDto.take)
+      .getMany();
+
+    return {
+      posts:
+        userId === currentUserId
+          ? this.formatMyPosts(posts, currentUserId)
+          : this.formatOtherPosts(posts, currentUserId),
+      total,
+    };
+  }
+
+  private formatAllPosts(
+    posts: Post[],
+    currentUserId: number,
+  ): GetAllPostsResponse {
+    return {
+      post: posts.map((post) => ({
+        postId: post.id,
+        content: post.content,
+        createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
+        postImages: post.postImages.map((image) => ({
+          url: image.url,
+          orderNum: image.orderNum,
+        })),
+        isPostLike: this.checkIsPostLiked(post, currentUserId),
+        user: {
+          userId: post.user.id,
+          nickname: post.user.nickname,
+          profilePictureUrl: post.user.profilePictureUrl,
+        },
+      })),
+    };
+  }
+
+  private formatMyPosts(
+    posts: Post[],
+    currentUserId: number,
+  ): GetMyPostsResponse {
+    return {
+      post: posts.map((post) => ({
+        userId: post.user.id,
+        postId: post.id,
+        createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
+        imageUrl: post.postImages.find((image) => image.orderNum === 1)?.url,
+        isRepresentative: post.isRepresentative,
+        isPostLike: this.checkIsPostLiked(post, currentUserId),
+        isPostComment: this.checkIsPostCommented(post, currentUserId),
+        likeCount: post.postLikes.length,
+        commentCount: post.postComments.length,
+      })),
+      totalComments: this.calculateTotalComments(posts),
+      totalPosts: posts.length,
+      totalLikes: this.calculateTotalLikes(posts),
+    };
+  }
+
+  private formatOtherPosts(
+    posts: Post[],
+    currentUserId: number,
+  ): GetOtherPostsResponse {
+    return {
+      post: posts.map((post) => ({
+        userId: post.user.id,
+        postId: post.id,
+        createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
+        imageUrl: post.postImages.find((image) => image.orderNum === 1)?.url,
+        isRepresentative: post.isRepresentative,
+        isPostLike: this.checkIsPostLiked(post, currentUserId),
+        likeCount: post.postLikes.length,
+      })),
+      totalPosts: posts.length,
+      totalLikes: this.calculateTotalLikes(posts),
+    };
   }
 
   //게시글 생성
