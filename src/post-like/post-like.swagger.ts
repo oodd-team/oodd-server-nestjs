@@ -11,8 +11,7 @@ import {
 import { BaseResponse } from 'src/common/response/dto';
 import { PostLikeResponseDto } from './dtos/post-like.response';
 import { BaseSwaggerDecorator } from 'nestjs-swagger-decorator';
-import { PostLikeDto } from './dtos/get-post-like.response.dto';
-import { PageDto } from 'src/common/response/page.dto';
+import { GetPostLikesResponseDto } from './dtos/get-post-like.response.dto';
 
 // 게시글 좋아요 리스트 조회 API Swagger
 export function GetPostLikesSwagger(apiSummary: string) {
@@ -22,7 +21,7 @@ export function GetPostLikesSwagger(apiSummary: string) {
     [
       ApiCreatedResponse({
         description: '댓글 리스트 조회 성공',
-        type: BaseResponse<PageDto<PostLikeDto>>,
+        type: BaseResponse<GetPostLikesResponseDto>,
       }),
       ApiBadRequestResponse({
         description: '잘못된 요청입니다.',
