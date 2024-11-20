@@ -42,6 +42,15 @@ export class PostService {
     private readonly dataSource: DataSource,
   ) {}
 
+  async getPostById(postId: number): Promise<Post> {
+    return this.postRepository.findOne({
+      where: {
+        id: postId,
+        status: 'activated',
+      },
+    });
+  }
+
   async getAllPosts(
     pageOptionsDto: PageOptionsDto,
     currentUserId: number,

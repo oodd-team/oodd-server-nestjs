@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   Param,
   Patch,
@@ -40,7 +39,7 @@ export class UserController {
   }
 
   @Patch(':userId/withdraw')
-  @UseGuards(AuthGuard)  
+  @UseGuards(AuthGuard)
   @WithdrawSwagger('회원탈퇴 API')
   async withdrawUser(
     @Param('userId') userId: number,
@@ -54,7 +53,7 @@ export class UserController {
 
     await this.userService.softDeleteUser(userId);
 
-    return new BaseResponse<null>(true, 'USER_WITHDRAWED_SUCCESS', null);    
+    return new BaseResponse<null>(true, 'USER_WITHDRAWED_SUCCESS', null);
   }
 
   @Patch(':userId')

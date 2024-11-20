@@ -1,14 +1,18 @@
 import { Controller, Get, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
-import { KakaoLoginSwagger, NaverLoginSwagger } from './auth.swagger';
-import { ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
+import {
+  GetJwtInfoSwagger,
+  KakaoLoginSwagger,
+  NaverLoginSwagger,
+} from './auth.swagger';
+import { ApiBearerAuth, ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { Request, Response } from 'express';
 import { KakaoAuthGuard } from './guards/kakao.auth.guard';
-import { BaseResponse } from 'src/common/response/dto';
-import { LoginResponse } from './dto/auth.response';
 import { NaverAuthGuard } from './guards/naver.auth.guard';
 import { AuthGuard } from './guards/jwt.auth.guard';
+import { UserDto } from './dto/auth.response';
+import { BaseResponse } from '../common/response/dto';
 
 @Controller('auth')
 @ApiTags('[서비스] Auth 관련')
@@ -21,6 +25,7 @@ export class AuthController {
   @Get('/login/kakao')
   @KakaoLoginSwagger('kakao 로그인 API')
   @UseGuards(KakaoAuthGuard)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async kakaoAuth(@Query('redirectUrl') redirectUrl: string) {}
 
   @ApiExcludeEndpoint()
@@ -39,6 +44,7 @@ export class AuthController {
   @Get('/login/naver')
   @NaverLoginSwagger('naver 로그인 API')
   @UseGuards(NaverAuthGuard)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async naverLogin(@Query('redirectUrl') redirectUrl: string) {}
 
   @ApiExcludeEndpoint()
@@ -55,9 +61,17 @@ export class AuthController {
   }
 
   @UseGuards(AuthGuard)
-  @Get('/test')
-  async test(@Req() req: Request) {
-    console.log(req.user);
-    return req.user;
+  @ApiBearerAuth('Authorization')
+  @GetJwtInfoSwagger('JWT 토큰 정보 조회 API')
+  @Get('/me')
+  async test(@Req() req: Request): Promise<BaseResponse<UserDto>> {
+    const user = await this.userService.getUserById(req.user?.id);
+    return new BaseResponse<UserDto>(true, 'SUCCESS', {
+      id: user.id,
+      email: user.email,
+      nickname: user.nickname,
+      profilePictureUrl: user.profilePictureUrl,
+      name: user.name,
+    });
   }
 }
