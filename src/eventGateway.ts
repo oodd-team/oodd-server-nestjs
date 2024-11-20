@@ -108,4 +108,19 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleJoinChatRoom(client: Socket, payload: { chatRoomId: number }) {
     client.join(String(payload.chatRoomId));
   }
+
+  @SubscribeMessage('leaveChatRoom')
+  async deleteChatRoom(
+    client: Socket,
+    payload: { chatRoomId: number; userId: number },
+  ) {
+    const { chatRoomId, userId } = payload;
+
+    try {
+      await this.chatRoomService.deleteChatRoom(chatRoomId, userId);
+      client.leave(String(chatRoomId));
+    } catch (error) {
+      client.emit('error', '채팅방 나가기 처리 중 오류가 발생했습니다.');
+    }
+  }
 }
