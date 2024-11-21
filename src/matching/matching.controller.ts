@@ -89,12 +89,12 @@ export class MatchingController {
   }
 
   @Get()
-  //@UseGuards(AuthGuard)
+  @UseGuards(AuthGuard)
   @GetMatchingsSwagger('매칭 리스트 조회 API')
   async getMatchings(
     @Req() req: Request,
   ): Promise<BaseResponse<GetMatchingsResponse>> {
-    const response = await this.matchingService.getMatchings(19);
+    const response = await this.matchingService.getMatchings(req.user.id);
     return new BaseResponse(true, 'SUCCESS', response);
   }
 
