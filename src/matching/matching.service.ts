@@ -109,7 +109,7 @@ export class MatchingService {
       isMatching: true,
       matchingCount: matchings.length,
       matching: matchings.map((matching) => {
-        const requesterPost = matching.requester.posts[0]; // 첫 번째 게시물이 조건에 맞는 게시물
+        const requesterPost = matching.requester.posts[0];
 
         return {
           matchingId: matching.id,
