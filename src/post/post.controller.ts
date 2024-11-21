@@ -37,7 +37,7 @@ import { DataNotFoundException } from 'src/common/exception/service.exception';
 
 @Controller('post')
 @ApiBearerAuth('Authorization')
-//@UseGuards(AuthGuard)
+@UseGuards(AuthGuard)
 @ApiTags('[서비스] 게시글')
 export class PostController {
   constructor(private readonly postService: PostService) {}
@@ -67,10 +67,11 @@ export class PostController {
     @Query() pageOptionsDto?: PageOptionsDto,
     @Query('userId') userId?: number,
   ): Promise<
-    BaseResponse<{
-      posts: GetAllPostsResponse | GetMyPostsResponse | GetOtherPostsResponse;
-      meta: PageMetaDto;
-    }>
+    BaseResponse<
+      (GetAllPostsResponse | GetMyPostsResponse | GetOtherPostsResponse) & {
+        meta: PageMetaDto;
+      }
+    >
   > {
     const pageOptions = pageOptionsDto
       ? {
@@ -87,11 +88,14 @@ export class PostController {
       ({ posts, total } = await this.postService.getUserPosts(
         pageOptions,
         userId,
-        1,
+        req.user.id,
       ));
     } else {
       // 전체 게시글 조회
-      ({ posts, total } = await this.postService.getAllPosts(pageOptions, 1));
+      ({ posts, total } = await this.postService.getAllPosts(
+        pageOptions,
+        req.user.id,
+      ));
     }
 
     const pageMetaDto = new PageMetaDto({ pageOptionsDto: pageOptions, total });
@@ -101,7 +105,7 @@ export class PostController {
     }
 
     return new BaseResponse(true, '게시글 리스트 조회 성공', {
-      posts,
+      ...posts,
       meta: pageMetaDto,
     });
   }

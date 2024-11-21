@@ -174,8 +174,8 @@ export class PostService {
   ): GetMyPostsResponse {
     return {
       post: posts.map((post) => ({
-        userId: post.user.id,
         postId: post.id,
+        userId: post.user.id,
         createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
         imageUrl: post.postImages.find((image) => image.orderNum === 1)?.url,
         isRepresentative: post.isRepresentative,
@@ -196,8 +196,8 @@ export class PostService {
   ): GetOtherPostsResponse {
     return {
       post: posts.map((post) => ({
-        userId: post.user.id,
         postId: post.id,
+        userId: post.user.id,
         createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
         imageUrl: post.postImages.find((image) => image.orderNum === 1)?.url,
         isRepresentative: post.isRepresentative,
