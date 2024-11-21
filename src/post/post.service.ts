@@ -24,7 +24,6 @@ import {
   GetMyPostsResponse,
   GetOtherPostsResponse,
 } from './dtos/user-posts.response';
-import { PageMetaDto } from 'src/common/response/page-meta.dto';
 
 @Injectable()
 export class PostService {
@@ -69,13 +68,15 @@ export class PostService {
         { status: 'activated' },
       )
       .leftJoinAndSelect('post.postLikes', 'postLike')
-      .leftJoinAndSelect('post.postComments', 'postComment')
       .where('post.status = :status', { status: 'activated' })
-      .andWhere('post.user.id NOT IN (:...blockedUserIds)', { blockedUserIds });
+      .andWhere(
+        blockedUserIds.length > 0
+          ? 'post.user.id NOT IN (:...blockedUserIds)'
+          : '1=1',
+        { blockedUserIds },
+      );
 
-    const total = await queryBuilder.getCount();
-
-    const posts = await queryBuilder
+    const [posts, total] = await queryBuilder
       .select([
         'post.id',
         'post.content',
@@ -90,7 +91,7 @@ export class PostService {
       .orderBy('post.createdAt', 'DESC')
       .take(pageOptionsDto.take)
       .skip((pageOptionsDto.page - 1) * pageOptionsDto.take)
-      .getMany();
+      .getManyAndCount();
 
     return { posts: this.formatAllPosts(posts, currentUserId), total };
   }
@@ -118,9 +119,7 @@ export class PostService {
       .where('post.status = :status', { status: 'activated' })
       .andWhere('post.user.id = :userId', { userId });
 
-    const total = await queryBuilder.getCount();
-
-    const posts = await queryBuilder
+    const [posts, total] = await queryBuilder
       .select([
         'post.id',
         'post.isRepresentative',
@@ -133,7 +132,7 @@ export class PostService {
       .orderBy('post.createdAt', 'DESC')
       .take(pageOptionsDto.take)
       .skip((pageOptionsDto.page - 1) * pageOptionsDto.take)
-      .getMany();
+      .getManyAndCount();
 
     return {
       posts:
@@ -436,26 +435,6 @@ export class PostService {
     }
   }
 
-  private async findPostsWithPagination(
-    pageOptionsDto: PageOptionsDto,
-    whereCondition: object,
-  ): Promise<{ posts: Post[]; total: number }> {
-    const [posts, total] = await this.postRepository.findAndCount({
-      where: whereCondition,
-      relations: [
-        'postImages',
-        'postComments',
-        'postLikes',
-        'user',
-        'postLikes.user',
-        'postComments.user',
-      ],
-      take: pageOptionsDto.take,
-      skip: (pageOptionsDto.page - 1) * pageOptionsDto.take,
-    });
-
-    return { posts, total };
-  }
   // 게시글 검증 메서드
   async validatePost(postId: number, userId?: number): Promise<void> {
     const post = await this.postRepository.findOne({
