@@ -106,7 +106,7 @@ export class MatchingService {
       .getMany();
 
     const response: GetMatchingsResponse = {
-      isMatching: true,
+      isMatching: matchings.length > 0,
       matchingCount: matchings.length,
       matching: matchings.map((matching) => {
         const requesterPost = matching.requester.posts[0];
