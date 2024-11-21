@@ -1,4 +1,5 @@
 import {
+  IsDateString,
   IsEmail,
   IsNotEmpty,
   IsOptional,
@@ -30,6 +31,15 @@ export class PatchUserRequest {
     required: false,
   })
   phoneNumber?: string;
+
+  @IsOptional()
+  @IsDateString({}, { message: '유효한 날짜 형식이어야 합니다.' })
+  @ApiProperty({
+    description: '수정할 생년월일',
+    example: '2002-02-08',
+    required: false,
+  })
+  birthDate?: string;
 
   @IsOptional()
   @IsEmail()
