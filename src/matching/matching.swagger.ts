@@ -1,5 +1,4 @@
 import {
-  ApiAcceptedResponse,
   ApiBadRequestResponse,
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
@@ -9,6 +8,7 @@ import { BaseSwaggerDecorator } from 'nestjs-swagger-decorator';
 import { PostMatchingResponse } from './dto/matching.response';
 import { BaseResponse } from 'src/common/response/dto';
 import { GetMatchingsResponse } from './dto/get-matching.response';
+import { PatchMatchingResponse } from './dto/Patch-matching.response';
 
 // 매칭 생성 API Swagger
 export function CreateMatchingSwagger(apiSummary: string) {
@@ -44,7 +44,7 @@ export function PatchMatchingRequestStatusSwagger(apiSummary: string) {
         statusCode: 200,
         responseOptions: [
           {
-            model: BaseResponse,
+            model: PatchMatchingResponse,
             exampleTitle: '성공',
             exampleDescription: '성공했을 때 값',
           },

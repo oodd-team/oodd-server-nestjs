@@ -3,8 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { AuthService } from 'src/auth/auth.service';
 import { SocialUser } from 'src/auth/dto/auth.dto';
 import { User } from 'src/common/entities/user.entity';
-import { InternalServerException } from 'src/common/exception/service.exception';
+import { DataNotFoundException, InternalServerException } from 'src/common/exception/service.exception';
 import { DataSource, FindOneOptions, Repository } from 'typeorm';
+import { PatchUserRequest } from './dto/patch-user.request';
 
 @Injectable()
 export class UserService {
@@ -52,5 +53,59 @@ export class UserService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async PatchUser(
+    id: number,
+    patchUserRequest: PatchUserRequest,
+  ): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id: id, status: 'activated' },
+    });
+
+    try {
+      Object.entries(patchUserRequest).forEach(([key, value]) => {
+        if (value !== undefined) {
+          user[key] = value;
+        }
+      });
+
+      return await this.userRepository.save(user);
+    } catch (error) {
+      throw InternalServerException(error.message);
+    }
+  }
+
+  async patchUserTerms(id: number): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id: id, status: 'activated' },
+    });
+
+    try {
+      user.privacyTermAcceptedAt = new Date();
+      await this.userRepository.save(user);
+      return user;
+    } catch (error) {
+      throw InternalServerException(error.message);
+    }
+  }
+
+  async softDeleteUser(id: number): Promise<void> {
+    const user = await this.userRepository.findOne({
+      where: { id: id, status: 'activated' },
+    });
+    if (!user) {
+      throw DataNotFoundException('유저를 찾을 수 없습니다.');
+    }
+
+    user.deletedAt = new Date();
+    user.status = 'deactivated';
+
+    try {
+      await this.userRepository.save(user);
+    } catch (error) {
+      throw InternalServerException('회원 탈퇴에 실패했습니다.');
+    }
+
   }
 }

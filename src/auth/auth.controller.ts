@@ -1,14 +1,18 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
-import { KakaoLoginSwagger, NaverLoginSwagger } from './auth.swagger';
-import { ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
+import {
+  GetJwtInfoSwagger,
+  KakaoLoginSwagger,
+  NaverLoginSwagger,
+} from './auth.swagger';
+import { ApiBearerAuth, ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { KakaoAuthGuard } from './guards/kakao.auth.guard';
-import { BaseResponse } from 'src/common/response/dto';
-import { LoginResponse } from './dto/auth.response';
 import { NaverAuthGuard } from './guards/naver.auth.guard';
 import { AuthGuard } from './guards/jwt.auth.guard';
+import { UserDto } from './dto/auth.response';
+import { BaseResponse } from '../common/response/dto';
 
 @Controller('auth')
 @ApiTags('[서비스] Auth 관련')
@@ -21,39 +25,53 @@ export class AuthController {
   @Get('/login/kakao')
   @KakaoLoginSwagger('kakao 로그인 API')
   @UseGuards(KakaoAuthGuard)
-  async kakaoAuth() {}
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async kakaoAuth(@Query('redirectUrl') redirectUrl: string) {}
 
   @ApiExcludeEndpoint()
   @Get('/kakao/callback')
   @UseGuards(KakaoAuthGuard)
   async kakaoAuthCallback(
     @Req() req: Request,
-  ): Promise<BaseResponse<LoginResponse>> {
+    @Res() res: Response,
+  ): Promise<void> {
     const { socialUser } = req;
+    const url = socialUser.redirectUrl;
     const jwtToken = await this.authService.socialLogin(socialUser, 'kakao');
-    return new BaseResponse<LoginResponse>(true, 'SUCCESS', { jwt: jwtToken });
+    return res.redirect(url + '?token=' + jwtToken);
   }
 
   @Get('/login/naver')
   @NaverLoginSwagger('naver 로그인 API')
   @UseGuards(NaverAuthGuard)
-  async naverLogin() {}
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async naverLogin(@Query('redirectUrl') redirectUrl: string) {}
 
   @ApiExcludeEndpoint()
   @Get('/naver/callback')
   @UseGuards(NaverAuthGuard)
   async naverLoginCallback(
     @Req() req: Request,
-  ): Promise<BaseResponse<LoginResponse>> {
+    @Res() res: Response,
+  ): Promise<void> {
     const { socialUser } = req;
+    const url = socialUser.redirectUrl;
     const jwtToken = await this.authService.socialLogin(socialUser, 'naver');
-    return new BaseResponse<LoginResponse>(true, 'SUCCESS', { jwt: jwtToken });
+    return res.redirect(url + '?token=' + jwtToken);
   }
 
   @UseGuards(AuthGuard)
-  @Get('/test')
-  async test(@Req() req: Request) {
-    console.log(req.user);
-    return req.user;
+  @ApiBearerAuth('Authorization')
+  @GetJwtInfoSwagger('JWT 토큰 정보 조회 API')
+  @Get('/me')
+  async test(@Req() req: Request): Promise<BaseResponse<UserDto>> {
+    const user = await this.userService.getUserById(req.user?.id);
+    return new BaseResponse<UserDto>(true, 'SUCCESS', {
+      id: user.id,
+      email: user.email,
+      nickname: user.nickname,
+      profilePictureUrl: user.profilePictureUrl,
+      name: user.name,
+    });
   }
 }

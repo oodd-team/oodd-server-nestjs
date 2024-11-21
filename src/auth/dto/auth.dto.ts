@@ -5,6 +5,7 @@ export interface SocialUser {
   name?: string;
   nickname?: string;
   profilePictureUrl?: string;
+  redirectUrl?: string;
 }
 
 export interface JwtPayload {

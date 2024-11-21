@@ -50,6 +50,13 @@ export class User extends BaseEntity {
   @Column('datetime')
   joinedAt!: Date; // joinedAt는 datetime 타입
 
+  @ApiProperty({
+    description: '이용약관 동의 시각',
+    example: '2021-08-01 00:00:00',
+  })
+  @Column('datetime')
+  privacyTermAcceptedAt!: Date;
+
   //one to many 관계 설정
 
   @OneToMany(() => Post, (post) => post.user)
