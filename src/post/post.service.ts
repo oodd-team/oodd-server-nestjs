@@ -24,6 +24,7 @@ import {
   GetMyPostsResponse,
   GetOtherPostsResponse,
 } from './dtos/user-posts.response';
+import { PageMetaDto } from 'src/common/response/page-meta.dto';
 
 @Injectable()
 export class PostService {
@@ -85,7 +86,6 @@ export class PostService {
         'postImage.url',
         'postImage.orderNum',
         'postLike.user.id',
-        'postComment.user.id',
       ])
       .orderBy('post.createdAt', 'DESC')
       .take(pageOptionsDto.take)
@@ -110,8 +110,8 @@ export class PostService {
       .leftJoinAndSelect(
         'post.postImages',
         'postImage',
-        'postImage.status = :status',
-        { status: 'activated' },
+        'postImage.status = :status AND postImage.orderNum = :orderNum',
+        { status: 'activated', orderNum: 1 },
       )
       .leftJoinAndSelect('post.postLikes', 'postLike')
       .leftJoinAndSelect('post.postComments', 'postComment')
@@ -127,7 +127,6 @@ export class PostService {
         'post.createdAt',
         'user.id',
         'postImage.url',
-        'postImage.orderNum',
         'postLike.user.id',
         'postComment.user.id',
       ])
@@ -177,7 +176,7 @@ export class PostService {
         postId: post.id,
         userId: post.user.id,
         createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
-        imageUrl: post.postImages.find((image) => image.orderNum === 1)?.url,
+        imageUrl: post.postImages[0]?.url,
         isRepresentative: post.isRepresentative,
         isPostLike: this.checkIsPostLiked(post, currentUserId),
         isPostComment: this.checkIsPostCommented(post, currentUserId),
@@ -199,7 +198,7 @@ export class PostService {
         postId: post.id,
         userId: post.user.id,
         createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
-        imageUrl: post.postImages.find((image) => image.orderNum === 1)?.url,
+        imageUrl: post.postImages[0]?.url,
         isRepresentative: post.isRepresentative,
         isPostLike: this.checkIsPostLiked(post, currentUserId),
         likeCount: post.postLikes.length,
