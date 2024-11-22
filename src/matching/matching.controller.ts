@@ -30,6 +30,7 @@ import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { PatchMatchingRequest } from './dto/Patch-matching.request';
 import { GetMatchingsResponse } from './dto/get-matching.response';
 import { PatchMatchingResponse } from './dto/Patch-matching.response';
+import { PostService } from 'src/post/post.service';
 
 @ApiBearerAuth('Authorization')
 @Controller('matching')
@@ -38,6 +39,7 @@ export class MatchingController {
   constructor(
     private readonly matchingService: MatchingService,
     private readonly userService: UserService,
+    private readonly postService: PostService,
   ) {}
 
   @Post()
@@ -52,6 +54,17 @@ export class MatchingController {
 
     if (!(await this.userService.getUserById(body.targetId)))
       throw DataNotFoundException('대상 유저가 존재하지 않습니다.');
+
+    if (
+      !(await this.postService.findByFields({
+        where: {
+          user: { id: body.requesterId },
+          status: 'activated',
+        },
+      }))
+    ) {
+      throw DataNotFoundException('신청 유저의 게시물이 존재하지 않습니다.');
+    }
 
     const chatRoom = await this.matchingService.createMatching(body);
     return new BaseResponse<PostMatchingResponse>(true, 'SUCCESS', {
