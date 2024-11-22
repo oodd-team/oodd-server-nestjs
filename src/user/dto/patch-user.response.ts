@@ -20,6 +20,12 @@ export class PatchUserResponse {
   phoneNumber: string;
 
   @ApiProperty({
+    description: '수정 후 생년월일',
+    example: '2000-11-22',
+  })
+  birthDate: Date;
+
+  @ApiProperty({
     description: '수정 후 이메일',
     example: 'xxndksd@naver.com',
   })

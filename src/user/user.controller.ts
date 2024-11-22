@@ -76,6 +76,7 @@ export class UserController {
       userId: updatedUser.id,
       name: updatedUser.name,
       phoneNumber: updatedUser.phoneNumber,
+      birthDate: updatedUser.birthDate,
       email: updatedUser.email,
       nickname: updatedUser.nickname,
       profilePictureUrl: updatedUser.profilePictureUrl,
