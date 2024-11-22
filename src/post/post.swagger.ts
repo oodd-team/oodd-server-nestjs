@@ -15,7 +15,8 @@ import {
 } from './dtos/user-posts.response';
 import { applyDecorators } from '@nestjs/common';
 import { GetPostResponse } from './dtos/get-post.dto';
-import { PageDto } from '../common/response/page.dto';
+import { PageMetaDto } from 'src/common/response/page-meta.dto';
+import { PageDto } from 'src/common/response/page.dto';
 
 // 게시글 리스트 조회하기 API Swagger
 export function GetPostsSwagger(text: string) {
@@ -27,7 +28,7 @@ export function GetPostsSwagger(text: string) {
           statusCode: 200,
           responseOptions: [
             {
-              model: PageDto<GetAllPostsResponse>,
+              model: GetAllPostsResponse,
               exampleTitle: '전체 게시글 조회 예시',
               exampleDescription: '전체 게시글 조회 성공 시 값',
             },
