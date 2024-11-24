@@ -169,7 +169,11 @@ export class PostController {
     if (req.user.id !== post.user.id) {
       throw UnauthorizedException('권한이 없습니다.');
     }
-    const updatedPost = await this.postService.patchPost(post, patchPostDto);
+    const updatedPost = await this.postService.patchPost(
+      post,
+      patchPostDto,
+      req.user.id,
+    );
     const postResponse: PostResponse = {
       postId: updatedPost.id,
       userId: updatedPost.user.id,

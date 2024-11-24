@@ -270,8 +270,18 @@ export class PostService {
     }
   }
 
-  async patchPost(post: Post, patchPostDto: PatchPostRequest) {
-    const { content, postImages, postStyletags, postClothings } = patchPostDto;
+  async patchPost(
+    post: Post,
+    patchPostDto: PatchPostRequest,
+    currentUserId: number,
+  ) {
+    const {
+      content,
+      isRepresentative,
+      postImages,
+      postStyletags,
+      postClothings,
+    } = patchPostDto;
 
     const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -280,6 +290,11 @@ export class PostService {
     try {
       if (content !== undefined) {
         post.content = content;
+      }
+
+      if (isRepresentative) {
+        await this.deactivateRepresentativePost(queryRunner, currentUserId);
+        post.isRepresentative = true;
       }
       const updatedPost = await queryRunner.manager.save(post);
 
