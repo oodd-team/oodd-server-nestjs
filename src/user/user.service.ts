@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { AuthService } from 'src/auth/auth.service';
 import { SocialUser } from 'src/auth/dto/auth.dto';
 import { User } from 'src/common/entities/user.entity';
-import { InternalServerException } from 'src/common/exception/service.exception';
+import { DataNotFoundException, InternalServerException } from 'src/common/exception/service.exception';
 import { DataSource, FindOneOptions, Repository } from 'typeorm';
 import { PatchUserRequest } from './dto/patch-user.request';
 
@@ -64,15 +64,11 @@ export class UserService {
     });
 
     try {
-      if (patchUserRequest.nickname !== undefined) {
-        user.nickname = patchUserRequest.nickname;
-      }
-      if (patchUserRequest.profilePictureUrl !== undefined) {
-        user.profilePictureUrl = patchUserRequest.profilePictureUrl;
-      }
-      if (patchUserRequest.bio !== undefined) {
-        user.bio = patchUserRequest.bio;
-      }
+      Object.entries(patchUserRequest).forEach(([key, value]) => {
+        if (value !== undefined) {
+          user[key] = value;
+        }
+      });
 
       return await this.userRepository.save(user);
     } catch (error) {
@@ -92,5 +88,24 @@ export class UserService {
     } catch (error) {
       throw InternalServerException(error.message);
     }
+  }
+
+  async softDeleteUser(id: number): Promise<void> {
+    const user = await this.userRepository.findOne({
+      where: { id: id, status: 'activated' },
+    });
+    if (!user) {
+      throw DataNotFoundException('유저를 찾을 수 없습니다.');
+    }
+
+    user.deletedAt = new Date();
+    user.status = 'deactivated';
+
+    try {
+      await this.userRepository.save(user);
+    } catch (error) {
+      throw InternalServerException('회원 탈퇴에 실패했습니다.');
+    }
+
   }
 }

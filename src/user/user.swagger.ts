@@ -15,8 +15,30 @@ export function GetUserSwagger(apiSummary: string) {
 }
 
 // 회원탈퇴 API Swagger
-export function SignOutSwagger(apiSummary: string) {
-  return ApiOperation({ summary: apiSummary });
+export function WithdrawSwagger(apiSummary: string) {
+  return BaseSwaggerDecorator(
+    { summary: apiSummary },
+    [
+      {
+        statusCode: 200,
+        responseOptions: [
+          {
+            model: BaseResponse,
+            exampleTitle: '성공',
+            exampleDescription: '회원탈퇴 성공',
+          },
+        ],
+        baseResponseDto: BaseResponse,
+      },
+    ],
+    [
+      ApiBadRequestResponse({ description: 'Bad Request' }),
+      ApiNotFoundResponse({ description: '해당 유저가 존재하지 않습니다.' }),
+      ApiInternalServerErrorResponse({
+        description: 'Internal Server Error',
+      }),
+    ],
+  );
 }
 
 // 유저 수정 API Swagger

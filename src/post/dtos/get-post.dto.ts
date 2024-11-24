@@ -1,6 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { PostStyletag } from 'src/common/entities/post-styletag.entity';
 
 class PostImageDto {
   @ApiProperty({
@@ -42,77 +40,70 @@ class PostClothingDto {
   url: string;
 }
 
-export class PostResponse {
+class PostStyletagDto {
   @ApiProperty({
-    example: '게시물 번호',
-    description: '게시물 번호입니다.',
+    example: 1,
+    description: '스타일 태그 id',
   })
-  postId: number;
+  styletagId: number;
 
   @ApiProperty({
-    example: '작성자 번호',
-    description: 'userId',
+    example: '스타일 태그',
+    description: '스타일 태그 내용',
   })
-  userId: number;
-
-  @ApiProperty({
-    example: '게시물 내용',
-    description: '게시물 내용입니다. 최대 100자까지 입력할 수 있습니다.',
-  })
-  content: string;
-
-  @ApiProperty({
-    type: [PostImageDto],
-    description: '게시물에 포함된 이미지 목록입니다.',
-  })
-  postImages?: PostImageDto[];
-
-  @ApiProperty({
-    type: [String],
-    example: ['classic', 'basic'],
-    description:
-      '게시글에 포함된 스타일 태그 목록입니다. 스타일 태그에 저장된 태그만 입력 가능합니다.',
-  })
-  postStyletags?: string[];
-
-  @ApiProperty({
-    type: [PostClothingDto],
-    description: '게시물에 포함된 옷 정보 리스트입니다.',
-  })
-  @Type(() => PostClothingDto)
-  postClothings?: PostClothingDto[];
-
-  @ApiProperty({
-    example: false,
-    description: '대표 게시물 여부입니다.',
-  })
-  isRepresentative: boolean;
+  tag: string;
 }
 
-export class PostDetailResponse extends PostResponse {
+class UserDto {
   @ApiProperty({
-    example: '2024-10-11T09:00:00.000Z',
-    description: '생성 시각',
+    example: '1',
+    description: '사용자 id',
   })
-  createdAt: string;
-
-  @ApiProperty({
-    example: '2024-10-11T09:00:00.000Z',
-    description: '수정 시각',
-  })
-  updatedAt: string;
+  userId: number;
 
   @ApiProperty({
     example: 'nickname',
     description: '사용자의 닉네임',
   })
-  userNickname: string;
+  nickname: string;
 
   @ApiProperty({
     example: 'http://example.com/image.jpg',
     description: '사용자의 프로필 사진 URL',
   })
-  userProfilePictureUrl: string;
+  profilePictureUrl: string;
+}
+
+class PostDetailDto {
+  @ApiProperty({
+    example: '게시물 내용',
+    description: '게시물의 내용',
+  })
+  content: string;
+
+  @ApiProperty({
+    example: '2024-10-11T09:00:00.000Z',
+    description: '게시물이 생성된 날짜 및 시간',
+  })
+  createdAt: Date;
+
+  @ApiProperty({
+    type: [PostImageDto],
+    description: '게시물에 포함된 이미지 목록',
+  })
+  postImages: PostImageDto[];
+
+  @ApiProperty({
+    type: [PostClothingDto],
+    description: '게시물에 포함된 옷 정보 목록',
+  })
+  postClothings: PostClothingDto[];
+
+  @ApiProperty({
+    type: UserDto,
+    description: '게시물 작성자 정보',
+  })
+  user: UserDto;
 
   @ApiProperty({
     example: 10,
@@ -131,4 +122,30 @@ export class PostDetailResponse extends PostResponse {
     description: '현재 사용자가 게시물에 좋아요를 눌렀는지 여부',
   })
   isPostLike: boolean;
+
+  @ApiProperty({
+    example: false,
+    description: '현재 사용자가 게시물 작성자인지 여부',
+  })
+  isPostWriter: boolean;
+
+  @ApiProperty({
+    example: true,
+    description: '대표 게시물 여부',
+  })
+  isRepresentative: boolean;
+
+  @ApiProperty({
+    type: [PostStyletagDto],
+    description: '게시글에 포함된 스타일 태그 목록입니다.',
+  })
+  postStyletags: PostStyletagDto[];
+}
+
+export class GetPostResponse {
+  @ApiProperty({
+    type: PostDetailDto,
+    description: '게시물 상세 정보',
+  })
+  post: PostDetailDto;
 }
