@@ -359,34 +359,24 @@ export class PostService {
 
     await queryRunner.startTransaction();
 
-    // 게시글 조회
     const post = await this.postRepository.findOne({
       where: { id: postId, user: { id: userId }, status: 'activated' },
     });
 
     try {
-      // 게시글 삭제
       post.status = 'deactivated';
+      post.isRepresentative = false;
       post.softDelete();
-
       await queryRunner.manager.save(post);
 
-      // 연결된 PostImage 삭제
       await this.postImageService.deleteImagesByPostId(postId, queryRunner);
-
-      // 연결된 PostLike 삭제
       await this.postLikeService.deletePostLikeByPostId(postId, queryRunner);
-
-      // 연결된 PostComment 삭제
       await this.postCommentService.deleteCommentsByPostId(postId, queryRunner);
-
-      // 연결된 PostClothing 삭제
       await this.postClothingService.deletePostClothingByPostId(
         postId,
         queryRunner,
       );
 
-      // 연결된 PostStyleTag 삭제
       await this.postStyletagService.deletePostStyletagsByPostId(
         postId,
         queryRunner,
@@ -395,7 +385,7 @@ export class PostService {
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw InternalServerException('게시글 삭제에 실패했습니다.');
+      throw InternalServerException(error.message);
     } finally {
       await queryRunner.release();
     }

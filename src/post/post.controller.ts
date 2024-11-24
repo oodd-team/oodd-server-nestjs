@@ -205,9 +205,7 @@ export class PostController {
     @Param('postId') postId: number,
     @Req() req: Request,
   ): Promise<BaseResponse<any>> {
-    const currentUserId = req.user.id;
-
-    await this.postService.deletePost(postId, currentUserId);
+    await this.postService.deletePost(postId, req.user.id);
 
     return new BaseResponse(true, '게시글이 삭제되었습니다.');
   }
