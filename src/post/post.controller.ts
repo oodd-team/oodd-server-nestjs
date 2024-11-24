@@ -218,9 +218,7 @@ export class PostController {
     @Param('postId') postId: number,
     @Req() req: Request,
   ): Promise<BaseResponse<any>> {
-    const currentUserId = req.user.id;
-
-    await this.postService.patchIsRepresentative(postId, currentUserId);
+    await this.postService.patchIsRepresentative(postId, req.user.id);
 
     return new BaseResponse(true, '대표 게시글 설정/해제 성공');
   }

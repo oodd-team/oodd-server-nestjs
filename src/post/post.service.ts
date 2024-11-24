@@ -491,11 +491,8 @@ export class PostService {
       if (!post.isRepresentative) {
         // 기존 대표 게시글이 있다면, 그 게시글의 isRepresentative를 false로 변경
         await this.deactivateRepresentativePost(queryRunner, currentUserId);
-
-        // 현재 게시글을 대표로 설정
         post.isRepresentative = true;
       } else {
-        // 대표 설정 해제
         post.isRepresentative = false;
       }
 
