@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
+import { PostStyletag } from 'src/common/entities/post-styletag.entity';
 
 class PostImageDto {
   @ApiProperty({
@@ -68,7 +69,7 @@ export class PostResponse {
 
   @ApiProperty({
     type: [String],
-    example: ['classic'],
+    example: ['classic', 'basic'],
     description:
       '게시글에 포함된 스타일 태그 목록입니다. 스타일 태그에 저장된 태그만 입력 가능합니다.',
   })

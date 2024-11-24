@@ -230,6 +230,7 @@ export class PostController {
       userId: post.user.id,
       content: post.content,
       isRepresentative: post.isRepresentative,
+      postStyletags: post.postStyletags?.map((tag) => tag.styletag.tag),
       postImages: post.postImages.map((image) => ({
         url: image.url,
         orderNum: image.orderNum,

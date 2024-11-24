@@ -98,7 +98,7 @@ export class PostService {
       );
 
       if (postStyletag) {
-        await this.postStyletagService.savePostStyletag(
+        await this.postStyletagService.savePostStyletags(
           savedPost,
           postStyletag,
           queryRunner,
@@ -120,6 +120,7 @@ export class PostService {
         relations: [
           'postImages',
           'postStyletags',
+          'postStyletags.styletag',
           'postClothings',
           'user',
           'postClothings.clothing',

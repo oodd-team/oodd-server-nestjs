@@ -9,12 +9,12 @@ export class StyletagService {
     private readonly styletagRepository: Repository<Styletag>,
   ) {}
 
-  async findStyleTag(tag: string): Promise<Styletag | null> {
-    const styleTag = await this.styletagRepository
+  async findStyleTags(tags: string[]): Promise<Styletag[]> {
+    const styleTags = await this.styletagRepository
       .createQueryBuilder('styletag')
-      .where('styletag.tag = :...tag', { tag })
-      .getOne();
+      .where('styletag.tag IN (:...tags)', { tags })
+      .getMany();
 
-    return styleTag;
+    return styleTags;
   }
 }
