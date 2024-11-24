@@ -215,21 +215,18 @@ export class PostController {
       userId: updatedPost.user.id,
       content: updatedPost.content,
       isRepresentative: updatedPost.isRepresentative,
-      postImages: updatedPost.postImages
-        .filter((image) => image.status === 'activated')
-        .map((image) => ({
-          url: image.url,
-          orderNum: image.orderNum,
-        })),
-      postClothings: updatedPost.postClothings
-        .filter((postClothing) => postClothing.status === 'activated')
-        .map((postClothing) => ({
-          imageUrl: postClothing.clothing.imageUrl,
-          brandName: postClothing.clothing.brandName,
-          modelName: postClothing.clothing.modelName,
-          modelNumber: postClothing.clothing.modelNumber,
-          url: postClothing.clothing.url,
-        })),
+      postStyletags: post.postStyletags?.map((tag) => tag.styletag.tag),
+      postImages: updatedPost.postImages.map((image) => ({
+        url: image.url,
+        orderNum: image.orderNum,
+      })),
+      postClothings: updatedPost.postClothings.map((postClothing) => ({
+        imageUrl: postClothing.clothing.imageUrl,
+        brandName: postClothing.clothing.brandName,
+        modelName: postClothing.clothing.modelName,
+        modelNumber: postClothing.clothing.modelNumber,
+        url: postClothing.clothing.url,
+      })),
     };
     return new BaseResponse<PostResponse>(
       true,
