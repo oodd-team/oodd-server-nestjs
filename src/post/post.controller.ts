@@ -220,11 +220,8 @@ export class PostController {
   ): Promise<BaseResponse<any>> {
     const currentUserId = req.user.id;
 
-    const updatedPost = await this.postService.patchIsRepresentative(
-      postId,
-      currentUserId,
-    );
+    await this.postService.patchIsRepresentative(postId, currentUserId);
 
-    return new BaseResponse(true, '대표 게시글 설정/해제 성공', updatedPost);
+    return new BaseResponse(true, '대표 게시글 설정/해제 성공');
   }
 }
