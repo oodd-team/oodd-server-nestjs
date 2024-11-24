@@ -31,16 +31,14 @@ import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { Request } from 'express';
 import { GetPostResponse } from './dtos/get-post.dto';
 import { PatchPostRequest } from './dtos/post.request';
-import { PageOptionsDto } from './dtos/page-options.dto';
-import { PageDto } from './dtos/page.dto';
-import dayjs from 'dayjs';
-import { PageMetaDto } from './dtos/page-meta.dto';
+
 import {
   DataNotFoundException,
   UnauthorizedException,
 } from 'src/common/exception/service.exception';
-import { Post as PostEntity } from 'src/common/entities/post.entity';
 import { PostResponse } from './dtos/post.response';
+import { PageOptionsDto } from 'src/common/response/page-options.dto';
+import { PageMetaDto } from 'src/common/response/page-meta.dto';
 
 @Controller('post')
 @ApiBearerAuth('Authorization')
@@ -54,7 +52,7 @@ export class PostController {
     name: 'userId',
     required: false,
     description:
-      'User ID가 제공되면 사용자 게시글 조회, 제공되지 않으면 전체 게시글이 조회됩니다.',
+      'User ID가 제공되면 사용자 게시글 조회, 제공되지 않으면 전체 게시글이 조회됩니다. User ID가 현재 사용자면 내 게시물 조회, 다른 사용자면 다른 사용자 게시물 조회입니다.',
     type: Number,
   })
   @ApiQuery({
@@ -74,7 +72,9 @@ export class PostController {
     @Query('userId') userId?: number,
   ): Promise<
     BaseResponse<
-      PageDto<GetAllPostsResponse | GetMyPostsResponse | GetOtherPostsResponse>
+      (GetAllPostsResponse | GetMyPostsResponse | GetOtherPostsResponse) & {
+        meta: PageMetaDto;
+      }
     >
   > {
     const pageOptions = pageOptionsDto
@@ -84,94 +84,34 @@ export class PostController {
         }
       : new PageOptionsDto();
 
-    const { posts, total } = userId
-      ? await this.postService.getUserPosts(pageOptions, userId)
-      : await this.postService.getAllPosts(pageOptions, req.user.id);
+    let posts: GetAllPostsResponse | GetMyPostsResponse | GetOtherPostsResponse;
+    let total: number;
 
-    const pageMetaDto = new PageMetaDto({
-      pageOptionsDto: pageOptions,
-      total,
-    });
+    if (userId) {
+      // 사용자 게시글 조회
+      ({ posts, total } = await this.postService.getUserPosts(
+        pageOptions,
+        userId,
+        req.user.id,
+      ));
+    } else {
+      // 전체 게시글 조회
+      ({ posts, total } = await this.postService.getAllPosts(
+        pageOptions,
+        req.user.id,
+      ));
+    }
+
+    const pageMetaDto = new PageMetaDto({ pageOptionsDto: pageOptions, total });
 
     if (pageMetaDto.last_page < pageMetaDto.page) {
       throw DataNotFoundException('해당 페이지는 존재하지 않습니다');
     }
-    const postsResponse = userId
-      ? this.createUserPostsResponse(posts, req.user.id, userId)
-      : this.createAllPostsResponse(posts, req.user.id);
 
-    return new BaseResponse(
-      true,
-      '게시글 리스트 조회 성공',
-      new PageDto([postsResponse], pageMetaDto),
-    );
-  }
-
-  private createUserPostsResponse(
-    posts: PostEntity[],
-    currentUserId: number,
-    userId: number,
-  ): GetMyPostsResponse | GetOtherPostsResponse {
-    if (userId == currentUserId) {
-      return {
-        post: posts.map((post) => ({
-          userId: post.user.id,
-          postId: post.id,
-          createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
-          imageUrl: post.postImages.find(
-            (image) => image.orderNum == 1 && image.status === 'activated',
-          )?.url,
-          isRepresentative: post.isRepresentative,
-          likeCount: post.postLikes.length,
-          commentCount: post.postComments.length,
-          isPostLike: this.postService.checkIsPostLiked(post, currentUserId),
-          isPostComment: this.postService.checkIsPostCommented(
-            post,
-            currentUserId,
-          ),
-        })),
-        totalComments: this.postService.calculateTotalComments(posts),
-        totalPosts: posts.length,
-        totalLikes: this.postService.calculateTotalLikes(posts),
-      };
-    } else {
-      return {
-        post: posts.map((post) => ({
-          userId: post.user.id,
-          postId: post.id,
-          createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
-          imageUrl: post.postImages.find(
-            (image) => image.orderNum == 1 && image.status === 'activated',
-          )?.url,
-          isRepresentative: post.isRepresentative,
-          likeCount: post.postLikes.length,
-          isPostLike: this.postService.checkIsPostLiked(post, currentUserId),
-        })),
-        totalPosts: posts.length,
-        totalLikes: this.postService.calculateTotalLikes(posts),
-      };
-    }
-  }
-  private createAllPostsResponse(posts: PostEntity[], currentUserId: number) {
-    return {
-      post: posts.map((post) => ({
-        postId: post.id,
-        content: post.content,
-        createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
-        postImages: post.postImages
-          .filter((image) => image.status === 'activated')
-          .map((image) => ({
-            url: image.url,
-            orderNum: image.orderNum,
-          })),
-        isPostLike: this.postService.checkIsPostLiked(post, currentUserId),
-        user: {
-          userId: post.user.id,
-          nickname: post.user.nickname,
-          profilePictureUrl: post.user.profilePictureUrl,
-        },
-      })),
-    };
+    return new BaseResponse(true, '게시글 리스트 조회 성공', {
+      ...posts,
+      meta: pageMetaDto,
+    });
   }
 
   @Get(':postId')
@@ -203,8 +143,15 @@ export class PostController {
             modelNumber: postClothing.clothing.modelNumber,
             url: postClothing.clothing.url,
           })),
+        postStyletags: post.postStyletags
+          .filter((post) => post.status === 'activated')
+          .map((postStyletag) => ({
+            styletagId: postStyletag.styletag.id,
+            tag: postStyletag.styletag.tag,
+          })),
         likeCount: post.postLikes.length,
         commentCount: post.postComments.length,
+        isRepresentative: post.isRepresentative,
         isPostLike: this.postService.checkIsPostLiked(post, currentUserId),
         user: {
           userId: post.user.id,

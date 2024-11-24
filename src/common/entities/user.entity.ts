@@ -36,6 +36,13 @@ export class User extends BaseEntity {
   phoneNumber!: string | null;
 
   @ApiProperty({
+    description: '생년월일',
+    example: '2002-02-08',
+  })
+  @Column({ type: 'date', nullable: true })
+  birthDate!: Date;
+
+  @ApiProperty({
     description: '프로필 사진 URL',
     example: 'https://naver.com/profile.jpg',
   })

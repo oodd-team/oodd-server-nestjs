@@ -40,6 +40,20 @@ class PostClothingDto {
   url: string;
 }
 
+class PostStyletagDto {
+  @ApiProperty({
+    example: 1,
+    description: '스타일 태그 id',
+  })
+  styletagId: number;
+
+  @ApiProperty({
+    example: '스타일 태그',
+    description: '스타일 태그 내용',
+  })
+  tag: string;
+}
+
 class UserDto {
   @ApiProperty({
     example: '1',
@@ -114,6 +128,18 @@ class PostDetailDto {
     description: '현재 사용자가 게시물 작성자인지 여부',
   })
   isPostWriter: boolean;
+
+  @ApiProperty({
+    example: true,
+    description: '대표 게시물 여부',
+  })
+  isRepresentative: boolean;
+
+  @ApiProperty({
+    type: [PostStyletagDto],
+    description: '게시글에 포함된 스타일 태그 목록입니다.',
+  })
+  postStyletags: PostStyletagDto[];
 }
 
 export class GetPostResponse {

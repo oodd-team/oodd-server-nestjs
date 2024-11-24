@@ -99,7 +99,7 @@ export class PostRequest {
   @IsOptional()
   @IsArray()
   @MaxLength(20, { each: true })
-  postStyletag?: string[];
+  postStyletags?: string[];
 
   @ApiProperty({
     example: false,

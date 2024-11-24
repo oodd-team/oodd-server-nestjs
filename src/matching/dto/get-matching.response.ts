@@ -41,6 +41,9 @@ class RequesterPostResponse {
 }
 
 class MatchingResponse {
+  @ApiProperty({ example: 1, description: '매칭 ID' })
+  matchingId: number;
+
   @ApiProperty({
     description: '매칭 요청자 정보',
     type: RequesterResponse,
