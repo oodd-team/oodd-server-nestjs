@@ -490,20 +490,9 @@ export class PostService {
       // 대표 게시글 지정
       if (!post.isRepresentative) {
         // 기존 대표 게시글이 있다면, 그 게시글의 isRepresentative를 false로 변경
-        await queryRunner.manager.update(
-          Post,
-          {
-            user: { id: currentUserId },
-            isRepresentative: true,
-            status: 'activated',
-          },
-          { isRepresentative: false },
-        );
-
-        // 현재 게시글을 대표로 설정
+        await this.deactivateRepresentativePost(queryRunner, currentUserId);
         post.isRepresentative = true;
       } else {
-        // 대표 설정 해제
         post.isRepresentative = false;
       }
 
@@ -512,7 +501,7 @@ export class PostService {
       return updatedPost;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw InternalServerException('게시글 수정에 실패했습니다.');
+      throw InternalServerException(error.message);
     } finally {
       await queryRunner.release();
     }
