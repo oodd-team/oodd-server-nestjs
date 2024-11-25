@@ -97,10 +97,12 @@ export class PostController {
         req.user.id,
       ));
     }
-
     const pageMetaDto = new PageMetaDto({ pageOptionsDto: pageOptions, total });
 
-    if (pageMetaDto.last_page < pageMetaDto.page) {
+    if (
+      pageMetaDto.last_page >= 1 &&
+      pageMetaDto.last_page < pageMetaDto.page
+    ) {
       throw DataNotFoundException('해당 페이지는 존재하지 않습니다');
     }
 
