@@ -29,7 +29,7 @@ import { CreatePostRequest } from './dtos/post.request';
 import { BaseResponse } from 'src/common/response/dto';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { Request } from 'express';
-import { GetPostResponse } from './dtos/get-post.dto';
+import { PostDetailResponse } from './dtos/post.response';
 import { PatchPostRequest } from './dtos/post.request';
 
 import {
@@ -121,50 +121,10 @@ export class PostController {
   async getPost(
     @Param('postId') postId: number,
     @Req() req: Request,
-  ): Promise<BaseResponse<GetPostResponse>> {
-    const currentUserId = req.user.id;
+  ): Promise<BaseResponse<PostDetailResponse>> {
+    const post = await this.postService.getPost(postId, req.user.id);
 
-    const post = await this.postService.getPost(postId);
-
-    const postResponse: GetPostResponse = {
-      post: {
-        content: post.content,
-        createdAt: post.createdAt,
-        postImages: post.postImages
-          .filter((image) => image.status === 'activated')
-          .map((image) => ({
-            url: image.url,
-            orderNum: image.orderNum,
-          })),
-        postClothings: post.postClothings
-          .filter((postClothing) => postClothing.status === 'activated')
-          .map((postClothing) => ({
-            imageUrl: postClothing.clothing.imageUrl,
-            brandName: postClothing.clothing.brandName,
-            modelName: postClothing.clothing.modelName,
-            modelNumber: postClothing.clothing.modelNumber,
-            url: postClothing.clothing.url,
-          })),
-        postStyletags: post.postStyletags
-          .filter((post) => post.status === 'activated')
-          .map((postStyletag) => ({
-            styletagId: postStyletag.styletag.id,
-            tag: postStyletag.styletag.tag,
-          })),
-        likeCount: post.postLikes.length,
-        commentCount: post.postComments.length,
-        isRepresentative: post.isRepresentative,
-        isPostLike: this.postService.checkIsPostLiked(post, currentUserId),
-        user: {
-          userId: post.user.id,
-          nickname: post.user.nickname,
-          profilePictureUrl: post.user.profilePictureUrl,
-        },
-        isPostWriter: post.user.id === currentUserId,
-      },
-    };
-
-    return new BaseResponse(true, '게시글 조회 성공', postResponse);
+    return new BaseResponse(true, '게시글 조회 성공', post);
   }
 
   @Post()

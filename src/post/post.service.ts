@@ -22,6 +22,7 @@ import {
   GetMyPostsResponse,
   GetOtherPostsResponse,
 } from './dtos/user-posts.response';
+import { PostDetailResponse } from './dtos/post.response';
 
 @Injectable()
 export class PostService {
@@ -255,6 +256,7 @@ export class PostService {
           'postImages',
           'postStyletags',
           'postStyletags.styletag',
+          'postStyletags.styletag',
           'postClothings',
           'user',
           'postClothings.clothing',
@@ -400,21 +402,75 @@ export class PostService {
   }
 
   // 게시글 상세 조회
-  async getPost(postId: number): Promise<Post> {
-    const post = await this.postRepository.findOne({
-      where: { id: postId, status: 'activated' },
-      relations: [
-        'postImages',
-        'user',
-        'postLikes',
-        'postComments',
-        'postClothings',
-        'postClothings.clothing',
-        'postStyletags',
-      ],
-    });
+  async getPost(
+    postId: number,
+    currentUserId: number,
+  ): Promise<PostDetailResponse> {
+    const post = await this.postRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect(
+        'post.postImages',
+        'postImage',
+        'postImage.status = :imageStatus',
+        { imageStatus: 'activated' },
+      )
+      .leftJoinAndSelect('post.user', 'user')
+      .leftJoinAndSelect('post.postLikes', 'postLike')
+      .leftJoinAndSelect('post.postComments', 'postComment')
+      .leftJoinAndSelect(
+        'post.postClothings',
+        'postClothing',
+        'postClothing.status = :clothingStatus',
+        { clothingStatus: 'activated' },
+      )
+      .leftJoinAndSelect('postClothing.clothing', 'clothing')
+      .leftJoinAndSelect(
+        'post.postStyletags',
+        'postStyletag',
+        'postStyletag.status = :styletagStatus',
+        { styletagStatus: 'activated' },
+      )
+      .leftJoinAndSelect('postStyletag.styletag', 'styletag')
+      .where('post.id = :postId', { postId })
+      .andWhere('post.status = :postStatus', { postStatus: 'activated' })
+      .getOne();
 
-    return post;
+    if (!post) {
+      throw DataNotFoundException('해당 게시글을 찾을 수 없습니다.');
+    }
+
+    return this.returnPostDetail(post, currentUserId);
+  }
+
+  private returnPostDetail(
+    post: Post,
+    currentUserId: number,
+  ): PostDetailResponse {
+    return {
+      postId: post.id,
+      userId: post.user.id,
+      content: post.content,
+      isRepresentative: post.isRepresentative,
+      postStyletags: post.postStyletags?.map((tag) => tag.styletag.tag),
+      postImages: post.postImages.map((image) => ({
+        url: image.url,
+        orderNum: image.orderNum,
+      })),
+      postClothings: post.postClothings.map((postClothing) => ({
+        imageUrl: postClothing.clothing.imageUrl,
+        brandName: postClothing.clothing.brandName,
+        modelName: postClothing.clothing.modelName,
+        modelNumber: postClothing.clothing.modelNumber,
+        url: postClothing.clothing.url,
+      })),
+      likeCount: post.postLikes.length,
+      commentCount: post.postComments.length,
+      isPostLike: this.checkIsPostLiked(post, currentUserId),
+      userNickname: post.user.nickname,
+      userProfilePictureUrl: post.user.profilePictureUrl,
+      createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
+      updatedAt: dayjs(post.updatedAt).format('YYYY-MM-DDTHH:mm:ssZ'),
+    };
   }
 
   // 대표 게시글 설정
