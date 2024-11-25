@@ -6,7 +6,10 @@ import { UserService } from 'src/user/user.service';
 import { PostImageService } from 'src/post-image/post-image.service';
 import { CreatePostRequest } from './dtos/post.request';
 import { PostStyletagService } from '../post-styletag/post-styletag.service';
-import { InternalServerException } from 'src/common/exception/service.exception';
+import {
+  DataNotFoundException,
+  InternalServerException,
+} from 'src/common/exception/service.exception';
 import { PatchPostRequest } from './dtos/post.request';
 import { UserBlockService } from 'src/user-block/user-block.service';
 import { PostClothingService } from 'src/post-clothing/post-clothing.service';
@@ -265,8 +268,18 @@ export class PostService {
     }
   }
 
-  async patchPost(post: Post, patchPostDto: PatchPostRequest) {
-    const { content, postImages, postStyletags, postClothings } = patchPostDto;
+  async patchPost(
+    post: Post,
+    patchPostDto: PatchPostRequest,
+    currentUserId: number,
+  ) {
+    const {
+      content,
+      isRepresentative,
+      postImages,
+      postStyletags,
+      postClothings,
+    } = patchPostDto;
 
     const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -275,6 +288,11 @@ export class PostService {
     try {
       if (content !== undefined) {
         post.content = content;
+      }
+
+      if (isRepresentative) {
+        await this.deactivateRepresentativePost(queryRunner, currentUserId);
+        post.isRepresentative = true;
       }
       const updatedPost = await queryRunner.manager.save(post);
 
@@ -296,17 +314,35 @@ export class PostService {
         queryRunner,
       );
 
+      const resultPost = await queryRunner.manager
+        .getRepository(Post)
+        .createQueryBuilder('post')
+        .leftJoinAndSelect(
+          'post.postImages',
+          'postImage',
+          'postImage.status = :status',
+          { status: 'activated' },
+        )
+        .leftJoinAndSelect(
+          'post.postStyletags',
+          'postStyletag',
+          'postStyletag.status = :status',
+          { status: 'activated' },
+        )
+        .leftJoinAndSelect('postStyletag.styletag', 'styletag')
+        .leftJoinAndSelect(
+          'post.postClothings',
+          'postClothing',
+          'postClothing.status = :status',
+          { status: 'activated' },
+        )
+        .leftJoinAndSelect('postClothing.clothing', 'clothing')
+        .leftJoinAndSelect('post.user', 'user')
+        .where('post.id = :id', { id: updatedPost.id })
+        .getOne();
+
       await queryRunner.commitTransaction();
-      return await this.postRepository.findOne({
-        where: { id: updatedPost.id },
-        relations: [
-          'postImages',
-          'postStyletags',
-          'postClothings',
-          'user',
-          'postClothings.clothing',
-        ],
-      });
+      return resultPost;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw InternalServerException(error.message);
@@ -427,12 +463,17 @@ export class PostService {
   }
 
   async getPostById(postId: number): Promise<Post> {
-    return this.postRepository.findOne({
+    const post = await this.postRepository.findOne({
       where: {
         id: postId,
         status: 'activated',
       },
+      relations: ['user'],
     });
+    if (!post) {
+      throw DataNotFoundException('게시물을 찾을 수 없습니다.');
+    }
+    return post;
   }
 
   private async deactivateRepresentativePost(

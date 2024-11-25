@@ -211,27 +211,28 @@ export class PostController {
     if (req.user.id !== post.user.id) {
       throw UnauthorizedException('권한이 없습니다.');
     }
-    const updatedPost = await this.postService.patchPost(post, patchPostDto);
+    const updatedPost = await this.postService.patchPost(
+      post,
+      patchPostDto,
+      req.user.id,
+    );
     const postResponse: PostResponse = {
       postId: updatedPost.id,
       userId: updatedPost.user.id,
       content: updatedPost.content,
       isRepresentative: updatedPost.isRepresentative,
-      postImages: updatedPost.postImages
-        .filter((image) => image.status === 'activated')
-        .map((image) => ({
-          url: image.url,
-          orderNum: image.orderNum,
-        })),
-      postClothings: updatedPost.postClothings
-        .filter((postClothing) => postClothing.status === 'activated')
-        .map((postClothing) => ({
-          imageUrl: postClothing.clothing.imageUrl,
-          brandName: postClothing.clothing.brandName,
-          modelName: postClothing.clothing.modelName,
-          modelNumber: postClothing.clothing.modelNumber,
-          url: postClothing.clothing.url,
-        })),
+      postStyletags: post.postStyletags?.map((tag) => tag.styletag.tag),
+      postImages: updatedPost.postImages.map((image) => ({
+        url: image.url,
+        orderNum: image.orderNum,
+      })),
+      postClothings: updatedPost.postClothings.map((postClothing) => ({
+        imageUrl: postClothing.clothing.imageUrl,
+        brandName: postClothing.clothing.brandName,
+        modelName: postClothing.clothing.modelName,
+        modelNumber: postClothing.clothing.modelNumber,
+        url: postClothing.clothing.url,
+      })),
     };
     return new BaseResponse<PostResponse>(
       true,
