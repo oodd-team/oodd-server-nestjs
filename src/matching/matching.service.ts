@@ -145,4 +145,28 @@ export class MatchingService {
     }
     return matching;
   }
+
+  async existsMatching(
+    requesterId: number,
+    targetId: number,
+  ): Promise<boolean> {
+    const matching = await this.matchingRepository.findOne({
+      where: [
+        {
+          requester: { id: requesterId },
+          target: { id: targetId },
+          requestStatus: 'accepted',
+          status: 'activated',
+        },
+        {
+          requester: { id: targetId },
+          target: { id: requesterId },
+          requestStatus: 'accepted',
+          status: 'activated',
+        },
+      ],
+    });
+
+    return !!matching; // 매칭 데이터가 있으면 true 반환
+  }
 }
