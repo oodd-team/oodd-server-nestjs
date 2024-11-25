@@ -103,39 +103,7 @@ export class MatchingController {
   async getMatchings(
     @Req() req: Request,
   ): Promise<BaseResponse<GetMatchingsResponse>> {
-    const matchings = await this.matchingService.getMatchings(req.user.id);
-    const response: GetMatchingsResponse = {
-      isMatching: true,
-      matchingCount: matchings.length,
-      matching: matchings.map((matching) => {
-        const requesterPost =
-          matching.requester.posts.find((post) => post.isRepresentative) ||
-          matching.requester.posts.sort(
-            (a, b) =>
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-          )[0];
-
-        return {
-          matchingId: matching.id,
-          requester: {
-            requesterId: matching.requester.id,
-            nickname: matching.requester.nickname,
-            profilePictureUrl: matching.requester.profilePictureUrl,
-          },
-          requesterPost: {
-            postImages: requesterPost.postImages.map((image) => ({
-              url: image.url,
-              orderNum: image.orderNum,
-            })),
-            styleTags: requesterPost.postStyletags
-              ? requesterPost.postStyletags.map(
-                  (styleTag) => styleTag.styletag.tag,
-                )
-              : [],
-          },
-        };
-      }),
-    };
+    const response = await this.matchingService.getMatchings(req.user.id);
     return new BaseResponse(true, 'SUCCESS', response);
   }
 }
