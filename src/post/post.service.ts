@@ -30,6 +30,7 @@ export class PostService {
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
     private readonly userBlockService: UserBlockService,
+
     private readonly userService: UserService,
     private readonly postImageService: PostImageService,
     private readonly postStyletagService: PostStyletagService,

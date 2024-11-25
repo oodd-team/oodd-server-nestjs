@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  forwardRef,
   Get,
+  Inject,
   Param,
   Patch,
   Post,
@@ -38,6 +40,7 @@ import { PostService } from 'src/post/post.service';
 export class MatchingController {
   constructor(
     private readonly matchingService: MatchingService,
+    @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     private readonly postService: PostService,
   ) {}

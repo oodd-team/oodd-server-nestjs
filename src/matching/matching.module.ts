@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MatchingController } from './matching.controller';
 import { MatchingService } from './matching.service';
 import { Matching } from 'src/common/entities/matching.entity';
@@ -13,10 +13,11 @@ import { PostModule } from 'src/post/post.module';
     TypeOrmModule.forFeature([Matching]),
     ChatMessageModule,
     ChatRoomModule,
-    UserModule,
+    forwardRef(() => UserModule),
     PostModule,
   ],
   controllers: [MatchingController],
   providers: [MatchingService],
+  exports: [MatchingService],
 })
 export class MatchingModule {}

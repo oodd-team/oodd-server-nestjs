@@ -9,7 +9,7 @@ import { UserModule } from 'src/user/user.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([PostComment]),
-    UserModule,
+    forwardRef(() => UserModule),
     forwardRef(() => PostModule),
   ],
   controllers: [PostCommentController],
