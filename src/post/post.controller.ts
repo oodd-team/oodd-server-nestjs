@@ -25,15 +25,20 @@ import {
   PatchPostSwagger,
 } from './post.swagger';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { CreatePostDto } from './dtos/create-post.dto';
+import { CreatePostRequest } from './dtos/post.request';
 import { BaseResponse } from 'src/common/response/dto';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { Request } from 'express';
 import { GetPostResponse } from './dtos/get-post.dto';
-import { PatchPostDto } from './dtos/patch-Post.dto';
-import { PageOptionsDto } from '../common/response/page-options.dto';
-import { PageMetaDto } from '../common/response/page-meta.dto';
-import { DataNotFoundException } from 'src/common/exception/service.exception';
+import { PatchPostRequest } from './dtos/post.request';
+
+import {
+  DataNotFoundException,
+  UnauthorizedException,
+} from 'src/common/exception/service.exception';
+import { PostResponse } from './dtos/post.response';
+import { PageOptionsDto } from 'src/common/response/page-options.dto';
+import { PageMetaDto } from 'src/common/response/page-meta.dto';
 
 @Controller('post')
 @ApiBearerAuth('Authorization')
@@ -41,7 +46,6 @@ import { DataNotFoundException } from 'src/common/exception/service.exception';
 @ApiTags('[서비스] 게시글')
 export class PostController {
   constructor(private readonly postService: PostService) {}
-
   @Get()
   @GetPostsSwagger('게시글 리스트 조회 API')
   @ApiQuery({
@@ -120,8 +124,6 @@ export class PostController {
   ): Promise<BaseResponse<GetPostResponse>> {
     const currentUserId = req.user.id;
 
-    await this.postService.validatePost(postId);
-
     const post = await this.postService.getPost(postId);
 
     const postResponse: GetPostResponse = {
@@ -168,33 +170,74 @@ export class PostController {
   @Post()
   @CreatePostsSwagger('게시글 생성 API')
   async createPost(
-    @Body() createPostDto: CreatePostDto,
+    @Body() createPostDto: CreatePostRequest,
     @Req() req: Request,
-  ): Promise<BaseResponse<any>> {
-    const currentUserId = req.user.id;
+  ): Promise<BaseResponse<PostResponse>> {
+    const post = await this.postService.createPost(createPostDto, req.user.id);
+    const postResponse: PostResponse = {
+      postId: post.id,
+      userId: post.user.id,
+      content: post.content,
+      isRepresentative: post.isRepresentative,
+      postStyletags: post.postStyletags?.map((tag) => tag.styletag.tag),
+      postImages: post.postImages.map((image) => ({
+        url: image.url,
+        orderNum: image.orderNum,
+      })),
+      postClothings: post.postClothings.map((postClothing) => ({
+        imageUrl: postClothing.clothing.imageUrl,
+        brandName: postClothing.clothing.brandName,
+        modelName: postClothing.clothing.modelName,
+        modelNumber: postClothing.clothing.modelNumber,
+        url: postClothing.clothing.url,
+      })),
+    };
 
-    const post = await this.postService.createPost(
-      createPostDto,
-      currentUserId,
+    return new BaseResponse<PostResponse>(
+      true,
+      '게시글 작성 성공',
+      postResponse,
     );
-
-    return new BaseResponse(true, '게시글 작성 성공', post);
   }
 
   @Patch(':postId')
   @PatchPostSwagger('게시글 수정 API')
   async patchPost(
     @Param('postId') postId: number,
-    @Body() patchPostDto: PatchPostDto,
+    @Body() patchPostDto: PatchPostRequest,
     @Req() req: Request,
-  ): Promise<BaseResponse<any>> {
-    const currentUserId = req.user.id;
-
-    await this.postService.validatePost(postId, currentUserId);
-
-    const updatedPost = await this.postService.patchPost(postId, patchPostDto);
-
-    return new BaseResponse(true, '게시글 수정 성공', updatedPost);
+  ): Promise<BaseResponse<PostResponse>> {
+    const post = await this.postService.getPostById(postId);
+    if (req.user.id !== post.user.id) {
+      throw UnauthorizedException('권한이 없습니다.');
+    }
+    const updatedPost = await this.postService.patchPost(post, patchPostDto);
+    const postResponse: PostResponse = {
+      postId: updatedPost.id,
+      userId: updatedPost.user.id,
+      content: updatedPost.content,
+      isRepresentative: updatedPost.isRepresentative,
+      postImages: updatedPost.postImages
+        .filter((image) => image.status === 'activated')
+        .map((image) => ({
+          url: image.url,
+          orderNum: image.orderNum,
+        })),
+      postClothings: updatedPost.postClothings
+        .filter((postClothing) => postClothing.status === 'activated')
+        .map((postClothing) => ({
+          imageUrl: postClothing.clothing.imageUrl,
+          brandName: postClothing.clothing.brandName,
+          modelName: postClothing.clothing.modelName,
+          modelNumber: postClothing.clothing.modelNumber,
+          url: postClothing.clothing.url,
+        })),
+    };
+    return new BaseResponse<PostResponse>(
+      true,
+      '게시글 수정 성공',
+      postResponse,
+    );
   }
 
   @Delete(':postId')
@@ -204,8 +247,6 @@ export class PostController {
     @Req() req: Request,
   ): Promise<BaseResponse<any>> {
     const currentUserId = req.user.id;
-
-    await this.postService.validatePost(postId, currentUserId);
 
     await this.postService.deletePost(postId, currentUserId);
 
@@ -219,8 +260,6 @@ export class PostController {
     @Req() req: Request,
   ): Promise<BaseResponse<any>> {
     const currentUserId = req.user.id;
-
-    await this.postService.validatePost(postId, currentUserId);
 
     const updatedPost = await this.postService.patchIsRepresentative(
       postId,
