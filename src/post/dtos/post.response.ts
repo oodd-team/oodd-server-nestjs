@@ -1,6 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { PostStyletag } from 'src/common/entities/post-styletag.entity';
 
 class PostImageDto {
   @ApiProperty({
@@ -14,6 +13,26 @@ class PostImageDto {
     description: '이미지의 순서 번호',
   })
   orderNum: number;
+}
+
+class UserDto {
+  @ApiProperty({
+    example: '작성자 번호',
+    description: 'userId',
+  })
+  userId: number;
+
+  @ApiProperty({
+    example: 'nickname',
+    description: '사용자의 닉네임',
+  })
+  nickname: string;
+
+  @ApiProperty({
+    example: 'http://example.com/image.jpg',
+    description: '사용자의 프로필 사진 URL',
+  })
+  profilePictureUrl: string;
 }
 
 class PostClothingDto {
@@ -89,7 +108,9 @@ export class PostResponse {
   isRepresentative: boolean;
 }
 
-export class PostDetailResponse extends PostResponse {
+class PostDetailDto extends OmitType(PostResponse, ['userId']) {}
+
+export class PostDetailResponse extends PostDetailDto {
   @ApiProperty({
     example: '2024-10-11T09:00:00.000Z',
     description: '생성 시각',
@@ -103,16 +124,11 @@ export class PostDetailResponse extends PostResponse {
   updatedAt: string;
 
   @ApiProperty({
-    example: 'nickname',
-    description: '사용자의 닉네임',
+    type: UserDto,
+    description: '게시물 작성자 정보입니다.',
   })
-  userNickname: string;
-
-  @ApiProperty({
-    example: 'http://example.com/image.jpg',
-    description: '사용자의 프로필 사진 URL',
-  })
-  userProfilePictureUrl: string;
+  @Type(() => UserDto)
+  user: UserDto;
 
   @ApiProperty({
     example: 10,

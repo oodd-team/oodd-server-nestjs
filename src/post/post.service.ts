@@ -407,7 +407,9 @@ export class PostService {
       )
       .leftJoinAndSelect('post.user', 'user')
       .leftJoinAndSelect('post.postLikes', 'postLike')
+      .leftJoinAndSelect('postLike.user', 'postLikeUser')
       .leftJoinAndSelect('post.postComments', 'postComment')
+      .leftJoinAndSelect('postComment.user', 'postCommentUser')
       .leftJoinAndSelect(
         'post.postClothings',
         'postClothing',
@@ -439,7 +441,11 @@ export class PostService {
   ): PostDetailResponse {
     return {
       postId: post.id,
-      userId: post.user.id,
+      user: {
+        userId: post.user.id,
+        nickname: post.user.nickname,
+        profilePictureUrl: post.user.profilePictureUrl,
+      },
       content: post.content,
       isRepresentative: post.isRepresentative,
       postStyletags: post.postStyletags?.map((tag) => tag.styletag.tag),
@@ -457,8 +463,6 @@ export class PostService {
       likeCount: post.postLikes.length,
       commentCount: post.postComments.length,
       isPostLike: this.checkIsPostLiked(post, currentUserId),
-      userNickname: post.user.nickname,
-      userProfilePictureUrl: post.user.profilePictureUrl,
       createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
       updatedAt: dayjs(post.updatedAt).format('YYYY-MM-DDTHH:mm:ssZ'),
     };
