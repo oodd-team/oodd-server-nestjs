@@ -85,27 +85,31 @@ export class PostLikeService {
       throw DataNotFoundException('게시글을 찾을 수 없습니다.');
     }
 
-    const likeData = await this.postLikeRepository.find({
-      where: { post: { id: postId }, status: 'activated' },
+    const likeData = await this.postLikeRepository.findOne({
+      where: {
+        post: { id: postId },
+        user: { id: userId },
+      },
       relations: ['user', 'post'],
     });
 
-    const existingLike = likeData.filter((like) => like.user.id === userId);
+    const allLikesData = await this.postLikeRepository.find({
+      where: { post: { id: postId }, status: 'activated' },
+    });
 
-    if (existingLike.length > 0) {
+    if (likeData) {
       // 좋아요 actiavated인 경우 -> 좋아요 취소
       // 좋아요 deactivated인 경우 -> 다시 좋아요 누름
-      existingLike[0].status =
-        existingLike[0].status === 'deactivated' ? 'activated' : 'deactivated';
-      existingLike[0].updatedAt = new Date();
-      await this.postLikeRepository.save(existingLike);
+      likeData.status =
+        likeData.status === 'deactivated' ? 'activated' : 'deactivated';
+      await this.postLikeRepository.save(likeData);
       return {
-        id: existingLike[0].post.id,
-        isPostLike: existingLike[0].status === 'activated',
+        id: likeData.post.id,
+        isPostLike: likeData.status === 'activated',
         postLikesCount:
-          existingLike[0].status === 'activated'
-            ? likeData.length + 1
-            : likeData.length - 1,
+          likeData.status === 'activated'
+            ? allLikesData.length + 1
+            : allLikesData.length - 1,
       };
     } else {
       // 좋아요 생성 (처음 좋아요 눌림)
@@ -118,7 +122,7 @@ export class PostLikeService {
       return {
         id: newLike.post.id,
         isPostLike: newLike.status === 'activated',
-        postLikesCount: likeData.length + 1,
+        postLikesCount: allLikesData.length + 1,
       };
     }
   }
