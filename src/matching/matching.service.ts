@@ -138,7 +138,7 @@ export class MatchingService {
   async getMatchingById(matchingId: number): Promise<Matching> {
     const matching = await this.matchingRepository.findOne({
       where: { id: matchingId },
-      relations: ['target'],
+      relations: ['target', 'requester'],
     });
     if (!matching) {
       throw DataNotFoundException('해당 매칭 요청을 찾을 수 없습니다.');
