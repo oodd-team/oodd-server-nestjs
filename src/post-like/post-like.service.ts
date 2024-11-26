@@ -67,7 +67,7 @@ export class PostLikeService {
     });
 
     return {
-      totalLikes: totalLikes,
+      totalCount: totalLikes,
       likes: likes,
       meta: meta, // 페이지 메타 정보 반환
     };

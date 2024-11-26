@@ -8,7 +8,7 @@ export class GetPostLikesResponseDto {
     example: 2,
     description: '전체 좋아요 개수',
   })
-  totalLikes: number;
+  totalCount: number;
 
   @ApiProperty({
     example: [
@@ -43,7 +43,7 @@ export class GetPostLikesResponseDto {
   meta: PageMetaDto; // 페이지 메타 정보 추가
 
   constructor(totalLikes: number, likes: any[], meta: PageMetaDto) {
-    this.totalLikes = totalLikes;
+    this.totalCount = totalLikes;
     this.likes = likes;
     this.meta = meta;
   }

@@ -12,7 +12,7 @@ import {
   CreatePostLikeSwagger,
   GetPostLikesSwagger,
 } from './post-like.swagger';
-import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { PostLikeResponseDto } from './dtos/post-like.response';
 import { BaseResponse } from 'src/common/response/dto';
 import { GetPostLikesResponseDto } from './dtos/get-post-like.response.dto';
@@ -31,17 +31,6 @@ export class PostLikeController {
     private readonly postService: PostService,
   ) {}
 
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    description: '페이지 번호',
-    type: Number,
-  })
-  @ApiQuery({
-    name: 'take',
-    required: false,
-    description: '한 페이지에 불러올 데이터 개수',
-  })
   @Get(':postId')
   @GetPostLikesSwagger('게시글 좋아요 리스트 조회 API')
   async getPostLikes(
