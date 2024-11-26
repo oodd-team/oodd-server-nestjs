@@ -144,7 +144,7 @@ export class PostService {
         content: post.content,
         createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
         postImages: post.postImages.map((image) => ({
-          url: image.url,
+          imageUrl: image.url,
           orderNum: image.orderNum,
         })),
         isPostLike: this.checkIsPostLiked(post, currentUserId),

@@ -5,7 +5,7 @@ class PostImageDto {
     example: 'http://postimageurl.example',
     description: '게시물에 첨부된 이미지의 URL입니다.',
   })
-  url: string;
+  imageUrl: string;
 
   @ApiProperty({
     example: 1,
