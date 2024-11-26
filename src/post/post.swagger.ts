@@ -3,6 +3,7 @@ import {
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { BaseSwaggerDecorator } from 'nestjs-swagger-decorator';
 import { BaseResponse } from 'src/common/response/dto';
@@ -50,6 +51,24 @@ export function GetPostsSwagger(text: string) {
         }),
         ApiInternalServerErrorResponse({
           description: 'Internal Server Error',
+        }),
+        ApiQuery({
+          name: 'userId',
+          required: false,
+          description:
+            'User ID가 제공되면 사용자 게시글 조회, 제공되지 않으면 전체 게시글이 조회됩니다. User ID가 현재 사용자면 내 게시물 조회, 다른 사용자면 다른 사용자 게시물 조회입니다.',
+          type: Number,
+        }),
+        ApiQuery({
+          name: 'page',
+          required: false,
+          description: '페이지 번호',
+          type: Number,
+        }),
+        ApiQuery({
+          name: 'take',
+          required: false,
+          description: '한 페이지에 불러올 데이터 개수',
         }),
       ],
     ),

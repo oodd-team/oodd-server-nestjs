@@ -35,13 +35,13 @@ class PostDto {
     example: 10,
     description: '게시글에 달린 댓글 수입니다.',
   })
-  commentCount: number;
+  postCommentsCount: number;
 
   @ApiProperty({
     example: 5,
     description: '게시글의 좋아요 수입니다.',
   })
-  likeCount: number;
+  postLikesCount: number;
 
   @ApiProperty({
     example: true,
@@ -66,23 +66,23 @@ export class GetMyPostsResponse {
     example: 20,
     description: '사용자의 게시글에 달린 총 댓글 수입니다.',
   })
-  totalComments: number;
+  totalPostCommentsCount: number;
 
   @ApiProperty({
     example: 50,
     description: '사용자가 작성한 총 게시글 수입니다.',
   })
-  totalPosts: number;
+  totalPostsCount: number;
 
   @ApiProperty({
     example: 100,
     description: '사용자가 받은 총 좋아요 수입니다.',
   })
-  totalLikes: number;
+  totalPostLikesCount: number;
 }
 
 class OtherUserPostDto extends OmitType(PostDto, [
-  'commentCount',
+  'postCommentsCount',
   'isPostComment',
 ]) {}
 
@@ -97,11 +97,11 @@ export class GetOtherPostsResponse {
     example: 30,
     description: '다른 사용자가 작성한 총 게시글 수입니다.',
   })
-  totalPosts: number;
+  totalPostsCount: number;
 
   @ApiProperty({
     example: 200,
     description: '다른 사용자가 받은 총 좋아요 수입니다.',
   })
-  totalLikes: number;
+  totalPostLikesCount: number;
 }

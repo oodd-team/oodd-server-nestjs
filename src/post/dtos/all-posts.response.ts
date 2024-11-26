@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { PageMetaDto } from 'src/common/response/page-meta.dto';
 
 class PostImageDto {
   @ApiProperty({

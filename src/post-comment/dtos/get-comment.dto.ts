@@ -43,5 +43,5 @@ export class GetCommentsDto {
 
   @ApiProperty({ example: '10' })
   @IsBoolean()
-  totalComments: number;
+  totalCount: number;
 }

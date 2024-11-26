@@ -109,13 +109,13 @@ class PostDetailDto {
     example: 10,
     description: '게시글에 달린 댓글 수입니다.',
   })
-  commentCount: number;
+  postCommentsCount: number;
 
   @ApiProperty({
     example: 5,
     description: '게시글의 좋아요 수입니다.',
   })
-  likeCount: number;
+  postLikesCount: number;
 
   @ApiProperty({
     example: false,
