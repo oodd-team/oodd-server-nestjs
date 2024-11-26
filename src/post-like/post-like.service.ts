@@ -102,7 +102,7 @@ export class PostLikeService {
       return {
         id: existingLike[0].post.id,
         isPostLike: existingLike[0].status === 'activated',
-        postLikeCount:
+        postLikesCount:
           existingLike[0].status === 'activated'
             ? likeData.length + 1
             : likeData.length - 1,
@@ -118,7 +118,7 @@ export class PostLikeService {
       return {
         id: newLike.post.id,
         isPostLike: newLike.status === 'activated',
-        postLikeCount: likeData.length + 1,
+        postLikesCount: likeData.length + 1,
       };
     }
   }
