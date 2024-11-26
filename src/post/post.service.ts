@@ -60,6 +60,9 @@ export class PostService {
       )
       .leftJoinAndSelect('post.postLikes', 'postLike')
       .where('post.status = :status', { status: 'activated' })
+      .andWhere('post.user.id NOT IN (:currentUserId)', {
+        currentUserId: [currentUserId],
+      })
       .andWhere(
         blockedUserIds.length > 0
           ? 'post.user.id NOT IN (:...blockedUserIds)'
@@ -170,12 +173,12 @@ export class PostService {
         isRepresentative: post.isRepresentative,
         isPostLike: this.checkIsPostLiked(post, currentUserId),
         isPostComment: this.checkIsPostCommented(post, currentUserId),
-        likeCount: post.postLikes.length,
-        commentCount: post.postComments.length,
+        postLikesCount: post.postLikes.length,
+        postCommentsCount: post.postComments.length,
       })),
-      totalComments: this.calculateTotalComments(posts),
-      totalPosts: posts.length,
-      totalLikes: this.calculateTotalLikes(posts),
+      totalPostCommentsCount: this.calculateTotalComments(posts),
+      totalPostsCount: posts.length,
+      totalPostLikesCount: this.calculateTotalLikes(posts),
     };
   }
 
@@ -191,10 +194,10 @@ export class PostService {
         imageUrl: post.postImages[0]?.url,
         isRepresentative: post.isRepresentative,
         isPostLike: this.checkIsPostLiked(post, currentUserId),
-        likeCount: post.postLikes.length,
+        postLikesCount: post.postLikes.length,
       })),
-      totalPosts: posts.length,
-      totalLikes: this.calculateTotalLikes(posts),
+      totalPostsCount: posts.length,
+      totalPostLikesCount: this.calculateTotalLikes(posts),
     };
   }
 
@@ -460,8 +463,8 @@ export class PostService {
         modelNumber: postClothing.clothing.modelNumber,
         url: postClothing.clothing.url,
       })),
-      likeCount: post.postLikes.length,
-      commentCount: post.postComments.length,
+      postLikesCount: post.postLikes.length,
+      postCommentsCount: post.postComments.length,
       isPostLike: this.checkIsPostLiked(post, currentUserId),
       createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
       updatedAt: dayjs(post.updatedAt).format('YYYY-MM-DDTHH:mm:ssZ'),

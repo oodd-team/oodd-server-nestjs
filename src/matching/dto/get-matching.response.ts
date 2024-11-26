@@ -70,7 +70,7 @@ export class GetMatchingsResponse {
     description: '받은 매칭 수',
     example: 10,
   })
-  matchingCount: number;
+  matchingsCount: number;
 
   @ApiProperty({
     description: '매칭 정보',

@@ -17,5 +17,5 @@ export class PostLikeResponseDto {
     example: 1,
     description: '좋아요 개수',
   })
-  likeCount: number;
+  postLikeCount: number;
 }

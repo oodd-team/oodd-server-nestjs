@@ -75,7 +75,7 @@ export class PostCommentController {
         },
         isCommentWriter: comment.user.id == currentUserId,
       })),
-      totalComments: comments.length,
+      totalCount: comments.length,
     };
 
     return new BaseResponse(true, '댓글 목록 조회 성공', commenteResponse);
