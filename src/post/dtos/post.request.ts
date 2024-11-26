@@ -16,7 +16,7 @@ export class UploadImageDto {
     description: '업로드할 이미지의 URL입니다.',
   })
   @IsString()
-  imageurl: string;
+  imageUrl: string;
 
   @ApiProperty({ example: 1, description: '이미지의 순서 번호입니다.' })
   @IsNumber()
