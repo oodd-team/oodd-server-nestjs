@@ -23,7 +23,7 @@ import { UserService } from 'src/user/user.service';
 import { Request } from 'express';
 import {
   DataNotFoundException,
-  InternalServerException,
+  InvalidInputValueException,
   UnauthorizedException,
 } from 'src/common/exception/service.exception';
 import { BaseResponse } from 'src/common/response/dto';
@@ -91,7 +91,7 @@ export class MatchingController {
     }
 
     if (matching.requestStatus !== 'pending') {
-      throw InternalServerException('이미 처리된 요청입니다.');
+      throw InvalidInputValueException('이미 처리된 요청입니다.');
     }
 
     await this.matchingService.patchMatchingRequestStatus(matching, body);
