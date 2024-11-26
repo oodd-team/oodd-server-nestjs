@@ -444,7 +444,7 @@ export class PostService {
       isRepresentative: post.isRepresentative,
       postStyletags: post.postStyletags?.map((tag) => tag.styletag.tag),
       postImages: post.postImages.map((image) => ({
-        url: image.url,
+        imageUrl: image.url,
         orderNum: image.orderNum,
       })),
       postClothings: post.postClothings.map((postClothing) => ({
