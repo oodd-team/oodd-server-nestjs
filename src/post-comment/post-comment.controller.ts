@@ -65,9 +65,11 @@ export class PostCommentController {
 
     const commenteResponse: GetCommentsDto = {
       comments: comments.map((comment) => ({
+        id: comment.id,
         content: comment.content,
         createdAt: dayjs(comment.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
         user: {
+          id: comment.user.id,
           nickname: comment.user.nickname,
           profilePictureUrl: comment.user.profilePictureUrl,
         },
