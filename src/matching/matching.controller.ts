@@ -18,7 +18,10 @@ import {
   PatchMatchingRequestStatusSwagger,
 } from './matching.swagger';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { CreateMatchingReqeust } from './dto/matching.request';
+import {
+  CreateMatchingReqeust,
+  PatchMatchingRequest,
+} from './dto/matching.request';
 import { UserService } from 'src/user/user.service';
 import { Request } from 'express';
 import {
@@ -27,12 +30,14 @@ import {
   UnauthorizedException,
 } from 'src/common/exception/service.exception';
 import { BaseResponse } from 'src/common/response/dto';
-import { PostMatchingResponse } from './dto/matching.response';
+import {
+  GetMatchingsResponse,
+  PatchMatchingResponse,
+  PostMatchingResponse,
+} from './dto/matching.response';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
-import { PatchMatchingRequest } from './dto/Patch-matching.request';
-import { GetMatchingsResponse } from './dto/get-matching.response';
-import { PatchMatchingResponse } from './dto/Patch-matching.response';
 import { PostService } from 'src/post/post.service';
+import { ChatRoomService } from 'src/chat-room/chat-room.service';
 
 @ApiBearerAuth('Authorization')
 @Controller('matching')
@@ -43,6 +48,7 @@ export class MatchingController {
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     private readonly postService: PostService,
+    private readonly chatRoomService: ChatRoomService,
   ) {}
 
   @Post()
@@ -86,12 +92,19 @@ export class MatchingController {
     @Body() body: PatchMatchingRequest,
   ): Promise<BaseResponse<PatchMatchingResponse>> {
     const matching = await this.matchingService.getMatchingById(matchingId);
+    const chatRoom = await this.chatRoomService.getChatRoomByMatchingId(
+      matching.id,
+    );
     if (req.user.id !== matching.target.id) {
       throw UnauthorizedException('권한이 없습니다.');
     }
 
     if (matching.requestStatus !== 'pending') {
       throw InvalidInputValueException('이미 처리된 요청입니다.');
+    }
+
+    if (!chatRoom) {
+      throw DataNotFoundException('채팅방을 찾을 수 없습니다.');
     }
 
     await this.matchingService.patchMatchingRequestStatus(matching, body);
@@ -103,6 +116,7 @@ export class MatchingController {
         requesterId: matching.requester.id,
         targetId: matching.target.id,
         requestStatus: matching.requestStatus,
+        chatRoomId: chatRoom.id,
       },
     );
   }

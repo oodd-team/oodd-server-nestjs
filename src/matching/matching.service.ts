@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { CreateMatchingReqeust } from './dto/matching.request';
+import {
+  CreateMatchingReqeust,
+  PatchMatchingRequest,
+} from './dto/matching.request';
 import { DataSource, Repository } from 'typeorm';
 import { Matching } from 'src/common/entities/matching.entity';
 import { ChatRoomService } from '../chat-room/chat-room.service';
@@ -10,8 +13,7 @@ import {
 import { ChatMessageService } from 'src/chat-message/chat-message.service';
 import { ChatRoom } from 'src/common/entities/chat-room.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PatchMatchingRequest } from './dto/Patch-matching.request';
-import { GetMatchingsResponse } from './dto/get-matching.response';
+import { GetMatchingsResponse } from './dto/matching.response';
 
 @Injectable()
 export class MatchingService {
@@ -29,7 +31,7 @@ export class MatchingService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      queryRunner.manager.save(Matching, {
+      matching = await queryRunner.manager.save(Matching, {
         requester: { id: body.requesterId },
         target: { id: body.targetId },
       });

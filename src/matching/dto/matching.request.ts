@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsIn, IsInt, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class CreateMatchingReqeust {
   @ApiProperty({ example: 1, description: '신청하는 유저 아이디' })
@@ -18,4 +18,15 @@ export class CreateMatchingReqeust {
   @MinLength(1)
   @MaxLength(100)
   message: string;
+}
+
+export class PatchMatchingRequest {
+  @ApiProperty({
+    example: 'accept',
+    enum: ['accept', 'reject'],
+    description: '수락 또는 거절',
+  })
+  @IsString()
+  @IsIn(['accept', 'reject'])
+  requestStatus: 'accept' | 'reject';
 }

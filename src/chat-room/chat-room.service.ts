@@ -77,4 +77,13 @@ export class ChatRoomService {
 
     await this.chatRoomRepository.save(chatRoom);
   }
+
+  async getChatRoomByMatchingId(matchingId: number): Promise<ChatRoom> {
+    return await this.chatRoomRepository.findOne({
+      where: {
+        matching: { id: matchingId },
+      },
+      relations: ['matching'],
+    });
+  }
 }
