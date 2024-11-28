@@ -21,6 +21,7 @@ import { GetAllPostsResponse } from './dtos/all-posts.response';
 import {
   GetMyPostsResponse,
   GetOtherPostsResponse,
+  PostDto,
 } from './dtos/user-posts.response';
 import { PostDetailResponse } from './dtos/post.response';
 
@@ -30,6 +31,7 @@ export class PostService {
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
     private readonly userBlockService: UserBlockService,
+
     private readonly userService: UserService,
     private readonly postImageService: PostImageService,
     private readonly postStyletagService: PostStyletagService,
@@ -59,6 +61,9 @@ export class PostService {
       )
       .leftJoinAndSelect('post.postLikes', 'postLike')
       .where('post.status = :status', { status: 'activated' })
+      .andWhere('post.user.id NOT IN (:currentUserId)', {
+        currentUserId: [currentUserId],
+      })
       .andWhere(
         blockedUserIds.length > 0
           ? 'post.user.id NOT IN (:...blockedUserIds)'
@@ -94,7 +99,7 @@ export class PostService {
     posts: GetMyPostsResponse | GetOtherPostsResponse;
     total: number;
   }> {
-    const queryBuilder = this.dataSource
+    const [posts, total] = await this.dataSource
       .getRepository(Post)
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.user', 'user')
@@ -105,25 +110,26 @@ export class PostService {
         { status: 'activated', orderNum: 1 },
       )
       .leftJoinAndSelect('post.postLikes', 'postLike')
+      .leftJoinAndSelect('postLike.user', 'postLikeUser')
       .leftJoinAndSelect('post.postComments', 'postComment')
+      .leftJoinAndSelect('postComment.user', 'postCommentUser')
       .where('post.status = :status', { status: 'activated' })
-      .andWhere('post.user.id = :userId', { userId });
-
-    const [posts, total] = await queryBuilder
+      .andWhere('post.user.id = :userId', { userId })
       .select([
         'post.id',
         'post.isRepresentative',
         'post.createdAt',
         'user.id',
         'postImage.url',
-        'postLike.user.id',
-        'postComment.user.id',
+        'postComment.id',
+        'postLike.id',
+        'postLikeUser.id',
+        'postCommentUser.id',
       ])
       .orderBy('post.createdAt', 'DESC')
       .take(pageOptionsDto.take)
       .skip((pageOptionsDto.page - 1) * pageOptionsDto.take)
       .getManyAndCount();
-
     return {
       posts:
         userId === currentUserId
@@ -133,48 +139,15 @@ export class PostService {
     };
   }
 
-  private formatAllPosts(
-    posts: Post[],
-    currentUserId: number,
-  ): GetAllPostsResponse {
-    return {
-      post: posts.map((post) => ({
-        postId: post.id,
-        content: post.content,
-        createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
-        postImages: post.postImages.map((image) => ({
-          url: image.url,
-          orderNum: image.orderNum,
-        })),
-        isPostLike: this.checkIsPostLiked(post, currentUserId),
-        user: {
-          userId: post.user.id,
-          nickname: post.user.nickname,
-          profilePictureUrl: post.user.profilePictureUrl,
-        },
-      })),
-    };
-  }
-
   private formatMyPosts(
     posts: Post[],
     currentUserId: number,
   ): GetMyPostsResponse {
     return {
-      post: posts.map((post) => ({
-        postId: post.id,
-        userId: post.user.id,
-        createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
-        imageUrl: post.postImages[0]?.url,
-        isRepresentative: post.isRepresentative,
-        isPostLike: this.checkIsPostLiked(post, currentUserId),
-        isPostComment: this.checkIsPostCommented(post, currentUserId),
-        likeCount: post.postLikes.length,
-        commentCount: post.postComments.length,
-      })),
-      totalComments: this.calculateTotalComments(posts),
-      totalPosts: posts.length,
-      totalLikes: this.calculateTotalLikes(posts),
+      post: posts.map((post) => new PostDto(post, currentUserId)),
+      totalPostCommentsCount: this.calculateTotalComments(posts),
+      totalPostsCount: posts.length,
+      totalPostLikesCount: this.calculateTotalLikes(posts),
     };
   }
 
@@ -183,18 +156,17 @@ export class PostService {
     currentUserId: number,
   ): GetOtherPostsResponse {
     return {
-      post: posts.map((post) => ({
-        postId: post.id,
-        userId: post.user.id,
-        createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
-        imageUrl: post.postImages[0]?.url,
-        isRepresentative: post.isRepresentative,
-        isPostLike: this.checkIsPostLiked(post, currentUserId),
-        likeCount: post.postLikes.length,
-      })),
-      totalPosts: posts.length,
-      totalLikes: this.calculateTotalLikes(posts),
+      post: posts.map((post) => new PostDto(post, currentUserId)),
+      totalPostsCount: posts.length,
+      totalPostLikesCount: this.calculateTotalLikes(posts),
     };
+  }
+
+  private formatAllPosts(
+    posts: Post[],
+    currentUserId: number,
+  ): GetAllPostsResponse {
+    return new GetAllPostsResponse(posts, currentUserId);
   }
 
   async createPost(uploadPostDto: CreatePostRequest, currentUserId: number) {
@@ -359,34 +331,24 @@ export class PostService {
 
     await queryRunner.startTransaction();
 
-    // 게시글 조회
     const post = await this.postRepository.findOne({
       where: { id: postId, user: { id: userId }, status: 'activated' },
     });
 
     try {
-      // 게시글 삭제
       post.status = 'deactivated';
+      post.isRepresentative = false;
       post.softDelete();
-
       await queryRunner.manager.save(post);
 
-      // 연결된 PostImage 삭제
       await this.postImageService.deleteImagesByPostId(postId, queryRunner);
-
-      // 연결된 PostLike 삭제
       await this.postLikeService.deletePostLikeByPostId(postId, queryRunner);
-
-      // 연결된 PostComment 삭제
       await this.postCommentService.deleteCommentsByPostId(postId, queryRunner);
-
-      // 연결된 PostClothing 삭제
       await this.postClothingService.deletePostClothingByPostId(
         postId,
         queryRunner,
       );
 
-      // 연결된 PostStyleTag 삭제
       await this.postStyletagService.deletePostStyletagsByPostId(
         postId,
         queryRunner,
@@ -395,7 +357,7 @@ export class PostService {
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw InternalServerException('게시글 삭제에 실패했습니다.');
+      throw InternalServerException(error.message);
     } finally {
       await queryRunner.release();
     }
@@ -416,7 +378,9 @@ export class PostService {
       )
       .leftJoinAndSelect('post.user', 'user')
       .leftJoinAndSelect('post.postLikes', 'postLike')
+      .leftJoinAndSelect('postLike.user', 'postLikeUser')
       .leftJoinAndSelect('post.postComments', 'postComment')
+      .leftJoinAndSelect('postComment.user', 'postCommentUser')
       .leftJoinAndSelect(
         'post.postClothings',
         'postClothing',
@@ -448,12 +412,16 @@ export class PostService {
   ): PostDetailResponse {
     return {
       postId: post.id,
-      userId: post.user.id,
+      user: {
+        userId: post.user.id,
+        nickname: post.user.nickname,
+        profilePictureUrl: post.user.profilePictureUrl,
+      },
       content: post.content,
       isRepresentative: post.isRepresentative,
       postStyletags: post.postStyletags?.map((tag) => tag.styletag.tag),
       postImages: post.postImages.map((image) => ({
-        url: image.url,
+        imageUrl: image.url,
         orderNum: image.orderNum,
       })),
       postClothings: post.postClothings.map((postClothing) => ({
@@ -463,11 +431,9 @@ export class PostService {
         modelNumber: postClothing.clothing.modelNumber,
         url: postClothing.clothing.url,
       })),
-      likeCount: post.postLikes.length,
-      commentCount: post.postComments.length,
+      postLikesCount: post.postLikes.length,
+      postCommentsCount: post.postComments.length,
       isPostLike: this.checkIsPostLiked(post, currentUserId),
-      userNickname: post.user.nickname,
-      userProfilePictureUrl: post.user.profilePictureUrl,
       createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
       updatedAt: dayjs(post.updatedAt).format('YYYY-MM-DDTHH:mm:ssZ'),
     };
@@ -490,20 +456,9 @@ export class PostService {
       // 대표 게시글 지정
       if (!post.isRepresentative) {
         // 기존 대표 게시글이 있다면, 그 게시글의 isRepresentative를 false로 변경
-        await queryRunner.manager.update(
-          Post,
-          {
-            user: { id: currentUserId },
-            isRepresentative: true,
-            status: 'activated',
-          },
-          { isRepresentative: false },
-        );
-
-        // 현재 게시글을 대표로 설정
+        await this.deactivateRepresentativePost(queryRunner, currentUserId);
         post.isRepresentative = true;
       } else {
-        // 대표 설정 해제
         post.isRepresentative = false;
       }
 
@@ -512,7 +467,7 @@ export class PostService {
       return updatedPost;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw InternalServerException('게시글 수정에 실패했습니다.');
+      throw InternalServerException(error.message);
     } finally {
       await queryRunner.release();
     }

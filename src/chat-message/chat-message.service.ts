@@ -41,12 +41,12 @@ export class ChatMessageService {
       fromUser: {
         id: message.fromUser.id,
         nickname: message.fromUser.nickname,
-        profileUrl: message.fromUser.profilePictureUrl,
+        profilePictureUrl: message.fromUser.profilePictureUrl,
       },
       toUser: {
         id: message.toUser.id,
         nickname: message.toUser.nickname,
-        profileUrl: message.toUser.profilePictureUrl,
+        profilePictureUrl: message.toUser.profilePictureUrl,
       },
       createdAt: message.createdAt,
       toUserReadAt: message.toUserReadAt,

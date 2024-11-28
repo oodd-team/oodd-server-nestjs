@@ -24,7 +24,7 @@ import {
   PatchIsRepresentativeSwagger,
   PatchPostSwagger,
 } from './post.swagger';
-import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CreatePostRequest } from './dtos/post.request';
 import { BaseResponse } from 'src/common/response/dto';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
@@ -48,24 +48,6 @@ export class PostController {
   constructor(private readonly postService: PostService) {}
   @Get()
   @GetPostsSwagger('게시글 리스트 조회 API')
-  @ApiQuery({
-    name: 'userId',
-    required: false,
-    description:
-      'User ID가 제공되면 사용자 게시글 조회, 제공되지 않으면 전체 게시글이 조회됩니다. User ID가 현재 사용자면 내 게시물 조회, 다른 사용자면 다른 사용자 게시물 조회입니다.',
-    type: Number,
-  })
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    description: '페이지 번호',
-    type: Number,
-  })
-  @ApiQuery({
-    name: 'take',
-    required: false,
-    description: '한 페이지에 불러올 데이터 개수',
-  })
   async getPosts(
     @Req() req: Request,
     @Query() pageOptionsDto?: PageOptionsDto,
@@ -101,10 +83,12 @@ export class PostController {
         req.user.id,
       ));
     }
-
     const pageMetaDto = new PageMetaDto({ pageOptionsDto: pageOptions, total });
 
-    if (pageMetaDto.last_page < pageMetaDto.page) {
+    if (
+      pageMetaDto.last_page >= 1 &&
+      pageMetaDto.last_page < pageMetaDto.page
+    ) {
       throw DataNotFoundException('해당 페이지는 존재하지 않습니다');
     }
 
@@ -139,7 +123,7 @@ export class PostController {
       isRepresentative: post.isRepresentative,
       postStyletags: post.postStyletags?.map((tag) => tag.styletag.tag),
       postImages: post.postImages.map((image) => ({
-        url: image.url,
+        imageUrl: image.url,
         orderNum: image.orderNum,
       })),
       postClothings: post.postClothings.map((postClothing) => ({
@@ -181,7 +165,7 @@ export class PostController {
       isRepresentative: updatedPost.isRepresentative,
       postStyletags: post.postStyletags?.map((tag) => tag.styletag.tag),
       postImages: updatedPost.postImages.map((image) => ({
-        url: image.url,
+        imageUrl: image.url,
         orderNum: image.orderNum,
       })),
       postClothings: updatedPost.postClothings.map((postClothing) => ({
@@ -205,9 +189,7 @@ export class PostController {
     @Param('postId') postId: number,
     @Req() req: Request,
   ): Promise<BaseResponse<any>> {
-    const currentUserId = req.user.id;
-
-    await this.postService.deletePost(postId, currentUserId);
+    await this.postService.deletePost(postId, req.user.id);
 
     return new BaseResponse(true, '게시글이 삭제되었습니다.');
   }
@@ -218,13 +200,8 @@ export class PostController {
     @Param('postId') postId: number,
     @Req() req: Request,
   ): Promise<BaseResponse<any>> {
-    const currentUserId = req.user.id;
+    await this.postService.patchIsRepresentative(postId, req.user.id);
 
-    const updatedPost = await this.postService.patchIsRepresentative(
-      postId,
-      currentUserId,
-    );
-
-    return new BaseResponse(true, '대표 게시글 설정/해제 성공', updatedPost);
+    return new BaseResponse(true, '대표 게시글 설정/해제 성공');
   }
 }

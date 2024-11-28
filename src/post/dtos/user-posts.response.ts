@@ -1,14 +1,16 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
+import dayjs from 'dayjs';
+import { Post } from 'src/common/entities/post.entity';
 
-class PostDto {
+export class PostDto {
   @ApiProperty({
-    example: '19',
+    example: 19,
     description: '조회한 작성자의 user ID 입니다.',
   })
   userId: number;
 
   @ApiProperty({
-    example: '3',
+    example: 3,
     description: '게시글의 번호입니다.',
   })
   postId: number;
@@ -35,13 +37,13 @@ class PostDto {
     example: 10,
     description: '게시글에 달린 댓글 수입니다.',
   })
-  commentCount: number;
+  postCommentsCount: number;
 
   @ApiProperty({
     example: 5,
     description: '게시글의 좋아요 수입니다.',
   })
-  likeCount: number;
+  postLikesCount: number;
 
   @ApiProperty({
     example: true,
@@ -54,7 +56,23 @@ class PostDto {
     description: '현재 사용자가 게시글에 댓글을 작성했는지 여부입니다.',
   })
   isPostComment: boolean;
+
+  constructor(post: Post, currentUserId: number) {
+    this.userId = post.user.id;
+    this.postId = post.id;
+    this.isRepresentative = post.isRepresentative;
+    (this.createdAt = dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ')),
+      (this.imageUrl = post.postImages?.[0]?.url || '');
+    this.postCommentsCount = post.postComments?.length || 0;
+    this.postLikesCount = post.postLikes?.length || 0;
+    this.isPostLike =
+      post.postLikes?.some((like) => like.user.id === currentUserId) || false;
+    this.isPostComment =
+      post.postComments?.some((comment) => comment.user.id === currentUserId) ||
+      false;
+  }
 }
+
 export class GetMyPostsResponse {
   @ApiProperty({
     type: [PostDto],
@@ -66,42 +84,20 @@ export class GetMyPostsResponse {
     example: 20,
     description: '사용자의 게시글에 달린 총 댓글 수입니다.',
   })
-  totalComments: number;
+  totalPostCommentsCount: number;
 
   @ApiProperty({
     example: 50,
     description: '사용자가 작성한 총 게시글 수입니다.',
   })
-  totalPosts: number;
+  totalPostsCount: number;
 
   @ApiProperty({
     example: 100,
     description: '사용자가 받은 총 좋아요 수입니다.',
   })
-  totalLikes: number;
+  totalPostLikesCount: number;
 }
-
-class OtherUserPostDto extends OmitType(PostDto, [
-  'commentCount',
-  'isPostComment',
+export class GetOtherPostsResponse extends OmitType(GetMyPostsResponse, [
+  'totalPostCommentsCount',
 ]) {}
-
-export class GetOtherPostsResponse {
-  @ApiProperty({
-    type: [OtherUserPostDto],
-    description: '다른 사용자의 게시글 목록입니다.',
-  })
-  post: OtherUserPostDto[];
-
-  @ApiProperty({
-    example: 30,
-    description: '다른 사용자가 작성한 총 게시글 수입니다.',
-  })
-  totalPosts: number;
-
-  @ApiProperty({
-    example: 200,
-    description: '다른 사용자가 받은 총 좋아요 수입니다.',
-  })
-  totalLikes: number;
-}

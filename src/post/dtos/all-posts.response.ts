@@ -1,23 +1,30 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { PageMetaDto } from 'src/common/response/page-meta.dto';
+import dayjs from 'dayjs';
+import { Post } from 'src/common/entities/post.entity';
+import { PostImage } from 'src/common/entities/post-image.entity';
 
 class PostImageDto {
   @ApiProperty({
     example: 'http://postimageurl.example',
     description: '게시물에 첨부된 이미지의 URL입니다.',
   })
-  url: string;
+  imageUrl: string;
 
   @ApiProperty({
     example: 1,
     description: '이미지의 순서를 나타내는 번호입니다.',
   })
   orderNum: number;
+
+  constructor(postImage: PostImage) {
+    this.imageUrl = postImage.url;
+    this.orderNum = postImage.orderNum;
+  }
 }
 
 class UserDto {
   @ApiProperty({
-    example: '19',
+    example: 19,
     description: '작성자의 user ID 입니다.',
   })
   userId: number;
@@ -33,11 +40,17 @@ class UserDto {
     description: '작성자의 프로필 사진 URL입니다.',
   })
   profilePictureUrl: string;
+
+  constructor(user: any) {
+    this.userId = user.id;
+    this.nickname = user.nickname;
+    this.profilePictureUrl = user.profilePictureUrl;
+  }
 }
 
 export class PostDto {
   @ApiProperty({
-    example: '3',
+    example: 3,
     description: '게시글의 번호입니다.',
   })
   postId: number;
@@ -71,6 +84,17 @@ export class PostDto {
     description: '게시글 작성자의 정보입니다.',
   })
   user: UserDto;
+
+  constructor(post: Post, currentUserId: number) {
+    this.postId = post.id;
+    this.content = post.content;
+    this.createdAt = dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ');
+    this.postImages =
+      post.postImages?.map((image) => new PostImageDto(image)) || [];
+    this.isPostLike =
+      post.postLikes?.some((like) => like.user.id === currentUserId) || false;
+    this.user = new UserDto(post.user);
+  }
 }
 
 export class GetAllPostsResponse {
@@ -79,4 +103,8 @@ export class GetAllPostsResponse {
     description: '조회된 게시글 목록입니다.',
   })
   post: PostDto[];
+
+  constructor(posts: Post[], currentUserId: number) {
+    this.post = posts.map((post) => new PostDto(post, currentUserId));
+  }
 }

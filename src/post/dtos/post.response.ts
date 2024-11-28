@@ -1,19 +1,38 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { PostStyletag } from 'src/common/entities/post-styletag.entity';
 
 class PostImageDto {
   @ApiProperty({
     example: 'http://example.com/image.jpg',
     description: '게시물 이미지 URL',
   })
-  url: string;
+  imageUrl: string;
 
   @ApiProperty({
     example: 1,
     description: '이미지의 순서 번호',
   })
   orderNum: number;
+}
+
+class UserDto {
+  @ApiProperty({
+    example: 1,
+    description: 'userId',
+  })
+  userId: number;
+
+  @ApiProperty({
+    example: 'nickname',
+    description: '사용자의 닉네임',
+  })
+  nickname: string;
+
+  @ApiProperty({
+    example: 'http://example.com/image.jpg',
+    description: '사용자의 프로필 사진 URL',
+  })
+  profilePictureUrl: string;
 }
 
 class PostClothingDto {
@@ -44,13 +63,13 @@ class PostClothingDto {
 
 export class PostResponse {
   @ApiProperty({
-    example: '게시물 번호',
+    example: 1,
     description: '게시물 번호입니다.',
   })
   postId: number;
 
   @ApiProperty({
-    example: '작성자 번호',
+    example: 1,
     description: 'userId',
   })
   userId: number;
@@ -89,7 +108,9 @@ export class PostResponse {
   isRepresentative: boolean;
 }
 
-export class PostDetailResponse extends PostResponse {
+class PostDetailDto extends OmitType(PostResponse, ['userId']) {}
+
+export class PostDetailResponse extends PostDetailDto {
   @ApiProperty({
     example: '2024-10-11T09:00:00.000Z',
     description: '생성 시각',
@@ -103,28 +124,23 @@ export class PostDetailResponse extends PostResponse {
   updatedAt: string;
 
   @ApiProperty({
-    example: 'nickname',
-    description: '사용자의 닉네임',
+    type: UserDto,
+    description: '게시물 작성자 정보입니다.',
   })
-  userNickname: string;
-
-  @ApiProperty({
-    example: 'http://example.com/image.jpg',
-    description: '사용자의 프로필 사진 URL',
-  })
-  userProfilePictureUrl: string;
+  @Type(() => UserDto)
+  user: UserDto;
 
   @ApiProperty({
     example: 10,
     description: '게시글에 달린 댓글 수입니다.',
   })
-  commentCount: number;
+  postCommentsCount: number;
 
   @ApiProperty({
     example: 5,
     description: '게시글의 좋아요 수입니다.',
   })
-  likeCount: number;
+  postLikesCount: number;
 
   @ApiProperty({
     example: false,

@@ -5,6 +5,7 @@ import {
   ApiInternalServerErrorResponse,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiResponse,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -38,6 +39,17 @@ export function GetPostLikesSwagger(apiSummary: string) {
       ApiInternalServerErrorResponse({
         description: '서버 오류입니다.',
         type: BaseResponse,
+      }),
+      ApiQuery({
+        name: 'page',
+        required: false,
+        description: '페이지 번호',
+        type: Number,
+      }),
+      ApiQuery({
+        name: 'take',
+        required: false,
+        description: '한 페이지에 불러올 데이터 개수',
       }),
     ],
   );

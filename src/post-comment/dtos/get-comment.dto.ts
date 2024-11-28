@@ -1,13 +1,28 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsString } from 'class-validator';
+import { IsBoolean, IsNumber, IsString } from 'class-validator';
+
+class UserDto {
+  @ApiProperty({ example: 10 })
+  id: number;
+
+  @ApiProperty({ example: '닉네임' })
+  nickname: string;
+
+  @ApiProperty({ example: 'profilePictureUrl.jpeg' })
+  profilePictureUrl: string;
+}
 
 class CommentDto {
+  @ApiProperty({ example: 10 })
+  @IsNumber()
+  id: number;
+
   @ApiProperty({ example: '댓글 내용' })
   @IsString()
   content: string;
 
   @ApiProperty({ example: '2024-10-04 17:49:53' })
-  createdAt: String;
+  createdAt: string;
 
   @ApiProperty({
     properties: {
@@ -15,10 +30,7 @@ class CommentDto {
       profilePictureUrl: { type: 'string', example: 'profilePictureUrl.jpeg' },
     },
   })
-  user: {
-    nickname: string;
-    profilePictureUrl: string;
-  };
+  user: UserDto;
 
   @ApiProperty()
   @IsBoolean()
@@ -29,7 +41,7 @@ export class GetCommentsDto {
   @ApiProperty({ type: [CommentDto] })
   comments: CommentDto[];
 
-  @ApiProperty({ example: '10' })
+  @ApiProperty({ example: 10 })
   @IsBoolean()
-  totalComments: number;
+  totalCount: number;
 }

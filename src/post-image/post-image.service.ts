@@ -26,7 +26,7 @@ export class PostImageService {
 
     const postImageEntities = postImages.map((image: UploadImageDto) => {
       return this.postImageRepository.create({
-        url: image.imageurl,
+        url: image.imageUrl,
         orderNum: image.orderNum,
         post: post,
       });
@@ -56,7 +56,7 @@ export class PostImageService {
     const imagesToRemove = existingImages.filter(
       (existingImage) =>
         existingImage.status === 'activated' &&
-        !postImages.some((newImage) => newImage.imageurl === existingImage.url),
+        !postImages.some((newImage) => newImage.imageUrl === existingImage.url),
     );
 
     // 이미지 삭제
@@ -65,9 +65,9 @@ export class PostImageService {
     // 새 이미지 추가
     await Promise.all(
       postImages.map(async (newImage) => {
-        if (existingImageUrls.has(newImage.imageurl)) {
+        if (existingImageUrls.has(newImage.imageUrl)) {
           const existingImage = existingImages.find(
-            (image) => image.url === newImage.imageurl,
+            (image) => image.url === newImage.imageUrl,
           );
 
           // 기존 이미지의 orderNum이 수정된 경우
@@ -78,7 +78,7 @@ export class PostImageService {
         } else {
           // 새로운 이미지 저장
           const newPostImage = this.postImageRepository.create({
-            url: newImage.imageurl,
+            url: newImage.imageUrl,
             orderNum: newImage.orderNum,
             post,
           });

@@ -11,8 +11,8 @@ import { Request, Response } from 'express';
 import { KakaoAuthGuard } from './guards/kakao.auth.guard';
 import { NaverAuthGuard } from './guards/naver.auth.guard';
 import { AuthGuard } from './guards/jwt.auth.guard';
-import { UserDto } from './dto/auth.response';
 import { BaseResponse } from '../common/response/dto';
+import { GetUserInfo } from 'src/user/dto/response/get-user.response';
 
 @Controller('auth')
 @ApiTags('[서비스] Auth 관련')
@@ -64,14 +64,16 @@ export class AuthController {
   @ApiBearerAuth('Authorization')
   @GetJwtInfoSwagger('JWT 토큰 정보 조회 API')
   @Get('/me')
-  async test(@Req() req: Request): Promise<BaseResponse<UserDto>> {
+  async test(@Req() req: Request): Promise<BaseResponse<GetUserInfo>> {
     const user = await this.userService.getUserById(req.user?.id);
-    return new BaseResponse<UserDto>(true, 'SUCCESS', {
-      id: user.id,
+    return new BaseResponse<GetUserInfo>(true, 'SUCCESS', {
+      userId: user.id,
       email: user.email,
       nickname: user.nickname,
       profilePictureUrl: user.profilePictureUrl,
       name: user.name,
+      phoneNumber: user.phoneNumber,
+      bio: user.bio,
     });
   }
 }

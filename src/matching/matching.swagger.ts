@@ -5,10 +5,12 @@ import {
   ApiOperation,
 } from '@nestjs/swagger';
 import { BaseSwaggerDecorator } from 'nestjs-swagger-decorator';
-import { PostMatchingResponse } from './dto/matching.response';
+import {
+  GetMatchingsResponse,
+  PatchMatchingResponse,
+  PostMatchingResponse,
+} from './dto/matching.response';
 import { BaseResponse } from 'src/common/response/dto';
-import { GetMatchingsResponse } from './dto/get-matching.response';
-import { PatchMatchingResponse } from './dto/Patch-matching.response';
 
 // 매칭 생성 API Swagger
 export function CreateMatchingSwagger(apiSummary: string) {

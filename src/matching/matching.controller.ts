@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  forwardRef,
   Get,
+  Inject,
   Param,
   Patch,
   Post,
@@ -16,20 +18,26 @@ import {
   PatchMatchingRequestStatusSwagger,
 } from './matching.swagger';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { CreateMatchingReqeust } from './dto/matching.request';
+import {
+  CreateMatchingReqeust,
+  PatchMatchingRequest,
+} from './dto/matching.request';
 import { UserService } from 'src/user/user.service';
 import { Request } from 'express';
 import {
   DataNotFoundException,
-  InternalServerException,
+  InvalidInputValueException,
   UnauthorizedException,
 } from 'src/common/exception/service.exception';
 import { BaseResponse } from 'src/common/response/dto';
-import { PostMatchingResponse } from './dto/matching.response';
+import {
+  GetMatchingsResponse,
+  PatchMatchingResponse,
+  PostMatchingResponse,
+} from './dto/matching.response';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
-import { PatchMatchingRequest } from './dto/Patch-matching.request';
-import { GetMatchingsResponse } from './dto/get-matching.response';
-import { PatchMatchingResponse } from './dto/Patch-matching.response';
+import { PostService } from 'src/post/post.service';
+import { ChatRoomService } from 'src/chat-room/chat-room.service';
 
 @ApiBearerAuth('Authorization')
 @Controller('matching')
@@ -37,7 +45,10 @@ import { PatchMatchingResponse } from './dto/Patch-matching.response';
 export class MatchingController {
   constructor(
     private readonly matchingService: MatchingService,
+    @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
+    private readonly postService: PostService,
+    private readonly chatRoomService: ChatRoomService,
   ) {}
 
   @Post()
@@ -52,6 +63,17 @@ export class MatchingController {
 
     if (!(await this.userService.getUserById(body.targetId)))
       throw DataNotFoundException('대상 유저가 존재하지 않습니다.');
+
+    if (
+      !(await this.postService.findByFields({
+        where: {
+          user: { id: body.requesterId },
+          status: 'activated',
+        },
+      }))
+    ) {
+      throw DataNotFoundException('신청 유저의 게시물이 존재하지 않습니다.');
+    }
 
     const chatRoom = await this.matchingService.createMatching(body);
     return new BaseResponse<PostMatchingResponse>(true, 'SUCCESS', {
@@ -70,12 +92,19 @@ export class MatchingController {
     @Body() body: PatchMatchingRequest,
   ): Promise<BaseResponse<PatchMatchingResponse>> {
     const matching = await this.matchingService.getMatchingById(matchingId);
+    const chatRoom = await this.chatRoomService.getChatRoomByMatchingId(
+      matching.id,
+    );
     if (req.user.id !== matching.target.id) {
       throw UnauthorizedException('권한이 없습니다.');
     }
 
     if (matching.requestStatus !== 'pending') {
-      throw InternalServerException('이미 처리된 요청입니다.');
+      throw InvalidInputValueException('이미 처리된 요청입니다.');
+    }
+
+    if (!chatRoom) {
+      throw DataNotFoundException('채팅방을 찾을 수 없습니다.');
     }
 
     await this.matchingService.patchMatchingRequestStatus(matching, body);
@@ -87,6 +116,7 @@ export class MatchingController {
         requesterId: matching.requester.id,
         targetId: matching.target.id,
         requestStatus: matching.requestStatus,
+        chatRoomId: chatRoom.id,
       },
     );
   }
@@ -103,39 +133,7 @@ export class MatchingController {
   async getMatchings(
     @Req() req: Request,
   ): Promise<BaseResponse<GetMatchingsResponse>> {
-    const matchings = await this.matchingService.getMatchings(req.user.id);
-    const response: GetMatchingsResponse = {
-      isMatching: true,
-      matchingCount: matchings.length,
-      matching: matchings.map((matching) => {
-        const requesterPost =
-          matching.requester.posts.find((post) => post.isRepresentative) ||
-          matching.requester.posts.sort(
-            (a, b) =>
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-          )[0];
-
-        return {
-          matchingId: matching.id,
-          requester: {
-            requesterId: matching.requester.id,
-            nickname: matching.requester.nickname,
-            profilePictureUrl: matching.requester.profilePictureUrl,
-          },
-          requesterPost: {
-            postImages: requesterPost.postImages.map((image) => ({
-              url: image.url,
-              orderNum: image.orderNum,
-            })),
-            styleTags: requesterPost.postStyletags
-              ? requesterPost.postStyletags.map(
-                  (styleTag) => styleTag.styletag.tag,
-                )
-              : [],
-          },
-        };
-      }),
-    };
+    const response = await this.matchingService.getMatchings(req.user.id);
     return new BaseResponse(true, 'SUCCESS', response);
   }
 }

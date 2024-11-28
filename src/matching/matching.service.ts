@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { CreateMatchingReqeust } from './dto/matching.request';
+import {
+  CreateMatchingReqeust,
+  PatchMatchingRequest,
+} from './dto/matching.request';
 import { DataSource, Repository } from 'typeorm';
 import { Matching } from 'src/common/entities/matching.entity';
 import { ChatRoomService } from '../chat-room/chat-room.service';
@@ -10,7 +13,7 @@ import {
 import { ChatMessageService } from 'src/chat-message/chat-message.service';
 import { ChatRoom } from 'src/common/entities/chat-room.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PatchMatchingRequest } from './dto/Patch-matching.request';
+import { GetMatchingsResponse } from './dto/matching.response';
 
 @Injectable()
 export class MatchingService {
@@ -28,7 +31,7 @@ export class MatchingService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      queryRunner.manager.save(Matching, {
+      matching = await queryRunner.manager.save(Matching, {
         requester: { id: body.requesterId },
         target: { id: body.targetId },
       });
@@ -84,30 +87,88 @@ export class MatchingService {
     }
   }
 
-  async getMatchings(currentUserId: number): Promise<Matching[]> {
-    return await this.matchingRepository.find({
-      where: {
-        requestStatus: 'pending',
-        status: 'activated',
-        target: { id: currentUserId },
-      },
-      relations: [
-        'requester',
-        'requester.posts',
-        'requester.posts.postImages',
-        'requester.posts.postStyletags.styletag',
-      ],
-    });
+  async getMatchings(currentUserId: number): Promise<GetMatchingsResponse> {
+    const matchings = await this.matchingRepository
+      .createQueryBuilder('matching')
+      .leftJoinAndSelect('matching.requester', 'requester')
+      .leftJoinAndSelect('requester.posts', 'post')
+      .leftJoinAndSelect('post.postImages', 'image')
+      .leftJoinAndSelect('post.postStyletags', 'styleTag')
+      .leftJoinAndSelect('styleTag.styletag', 'styletag')
+      .where('matching.targetId = :currentUserId', { currentUserId })
+      .andWhere('matching.requestStatus = :status', { status: 'pending' })
+      .andWhere('matching.status = :activated', { activated: 'activated' })
+      .orderBy(
+        // 우선순위: isRepresentative가 true인 게시물 먼저, 그 다음은 최신 게시물
+        'CASE WHEN post.isRepresentative = true THEN 0 ELSE 1 END',
+        'ASC',
+      )
+      .addOrderBy('post.createdAt', 'DESC')
+      .getMany();
+
+    const response: GetMatchingsResponse = {
+      isMatching: matchings.length > 0,
+      matchingsCount: matchings.length,
+      matching: matchings.map((matching) => {
+        const requesterPost = matching.requester.posts[0];
+
+        return {
+          matchingId: matching.id,
+          requester: {
+            requesterId: matching.requester.id,
+            nickname: matching.requester.nickname,
+            profilePictureUrl: matching.requester.profilePictureUrl,
+          },
+          requesterPost: {
+            postImages: requesterPost.postImages.map((image) => ({
+              url: image.url,
+              orderNum: image.orderNum,
+            })),
+            styleTags: requesterPost.postStyletags
+              ? requesterPost.postStyletags.map(
+                  (styleTag) => styleTag.styletag.tag,
+                )
+              : [],
+          },
+        };
+      }),
+    };
+
+    return response;
   }
 
   async getMatchingById(matchingId: number): Promise<Matching> {
     const matching = await this.matchingRepository.findOne({
       where: { id: matchingId },
-      relations: ['target'],
+      relations: ['target', 'requester'],
     });
     if (!matching) {
       throw DataNotFoundException('해당 매칭 요청을 찾을 수 없습니다.');
     }
     return matching;
+  }
+
+  async existsMatching(
+    requesterId: number,
+    targetId: number,
+  ): Promise<boolean> {
+    const matching = await this.matchingRepository.findOne({
+      where: [
+        {
+          requester: { id: requesterId },
+          target: { id: targetId },
+          requestStatus: 'accepted',
+          status: 'activated',
+        },
+        {
+          requester: { id: targetId },
+          target: { id: requesterId },
+          requestStatus: 'accepted',
+          status: 'activated',
+        },
+      ],
+    });
+
+    return !!matching; // 매칭 데이터가 있으면 true 반환
   }
 }

@@ -1,17 +1,21 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuthService } from 'src/auth/auth.service';
 import { SocialUser } from 'src/auth/dto/auth.dto';
 import { User } from 'src/common/entities/user.entity';
-import { DataNotFoundException, InternalServerException } from 'src/common/exception/service.exception';
+import {
+  DataNotFoundException,
+  InternalServerException,
+} from 'src/common/exception/service.exception';
 import { DataSource, FindOneOptions, Repository } from 'typeorm';
-import { PatchUserRequest } from './dto/patch-user.request';
+import { PatchUserRequest } from './dto/response/patch-user.request';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @Inject(forwardRef(() => AuthService))
     private readonly authService: AuthService,
     private readonly dataSource: DataSource,
   ) {}
@@ -106,6 +110,5 @@ export class UserService {
     } catch (error) {
       throw InternalServerException('회원 탈퇴에 실패했습니다.');
     }
-
   }
 }

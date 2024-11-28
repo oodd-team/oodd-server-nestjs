@@ -7,7 +7,7 @@ import {
 } from '@nestjs/swagger';
 import { BaseSwaggerDecorator } from 'nestjs-swagger-decorator';
 import { BaseResponse } from 'src/common/response/dto';
-import { PatchUserResponse } from './dto/patch-user.response';
+import { PatchUserResponse } from './dto/response/patch-user.response';
 
 // 유저 조회 API Swagger
 export function GetUserSwagger(apiSummary: string) {

@@ -53,7 +53,7 @@ export class PostCommentController {
     return new BaseResponse(true, '댓글 작성 성공', postComment);
   }
 
-  @Get(':postId')
+  @Get()
   @GetPostCommentsSwagger('게시글 댓글 리스트 조회 API')
   async getPostComments(
     @Query('postId') postId: number,
@@ -65,15 +65,17 @@ export class PostCommentController {
 
     const commenteResponse: GetCommentsDto = {
       comments: comments.map((comment) => ({
+        id: comment.id,
         content: comment.content,
         createdAt: dayjs(comment.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
         user: {
+          id: comment.user.id,
           nickname: comment.user.nickname,
           profilePictureUrl: comment.user.profilePictureUrl,
         },
         isCommentWriter: comment.user.id == currentUserId,
       })),
-      totalComments: comments.length,
+      totalCount: comments.length,
     };
 
     return new BaseResponse(true, '댓글 목록 조회 성공', commenteResponse);
