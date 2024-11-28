@@ -21,6 +21,7 @@ import { GetAllPostsResponse } from './dtos/all-posts.response';
 import {
   GetMyPostsResponse,
   GetOtherPostsResponse,
+  PostDto,
 } from './dtos/user-posts.response';
 import { PostDetailResponse } from './dtos/post.response';
 
@@ -98,7 +99,7 @@ export class PostService {
     posts: GetMyPostsResponse | GetOtherPostsResponse;
     total: number;
   }> {
-    const queryBuilder = this.dataSource
+    const [posts, total] = await this.dataSource
       .getRepository(Post)
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.user', 'user')
@@ -109,25 +110,26 @@ export class PostService {
         { status: 'activated', orderNum: 1 },
       )
       .leftJoinAndSelect('post.postLikes', 'postLike')
+      .leftJoinAndSelect('postLike.user', 'postLikeUser')
       .leftJoinAndSelect('post.postComments', 'postComment')
+      .leftJoinAndSelect('postComment.user', 'postCommentUser')
       .where('post.status = :status', { status: 'activated' })
-      .andWhere('post.user.id = :userId', { userId });
-
-    const [posts, total] = await queryBuilder
+      .andWhere('post.user.id = :userId', { userId })
       .select([
         'post.id',
         'post.isRepresentative',
         'post.createdAt',
         'user.id',
         'postImage.url',
-        'postLike.user.id',
-        'postComment.user.id',
+        'postComment.id',
+        'postLike.id',
+        'postLikeUser.id',
+        'postCommentUser.id',
       ])
       .orderBy('post.createdAt', 'DESC')
       .take(pageOptionsDto.take)
       .skip((pageOptionsDto.page - 1) * pageOptionsDto.take)
       .getManyAndCount();
-
     return {
       posts:
         userId === currentUserId
@@ -137,45 +139,12 @@ export class PostService {
     };
   }
 
-  private formatAllPosts(
-    posts: Post[],
-    currentUserId: number,
-  ): GetAllPostsResponse {
-    return {
-      post: posts.map((post) => ({
-        postId: post.id,
-        content: post.content,
-        createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
-        postImages: post.postImages.map((image) => ({
-          imageUrl: image.url,
-          orderNum: image.orderNum,
-        })),
-        isPostLike: this.checkIsPostLiked(post, currentUserId),
-        user: {
-          userId: post.user.id,
-          nickname: post.user.nickname,
-          profilePictureUrl: post.user.profilePictureUrl,
-        },
-      })),
-    };
-  }
-
   private formatMyPosts(
     posts: Post[],
     currentUserId: number,
   ): GetMyPostsResponse {
     return {
-      post: posts.map((post) => ({
-        postId: post.id,
-        userId: post.user.id,
-        createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
-        imageUrl: post.postImages[0]?.url,
-        isRepresentative: post.isRepresentative,
-        isPostLike: this.checkIsPostLiked(post, currentUserId),
-        isPostComment: this.checkIsPostCommented(post, currentUserId),
-        postLikesCount: post.postLikes.length,
-        postCommentsCount: post.postComments.length,
-      })),
+      post: posts.map((post) => new PostDto(post, currentUserId)),
       totalPostCommentsCount: this.calculateTotalComments(posts),
       totalPostsCount: posts.length,
       totalPostLikesCount: this.calculateTotalLikes(posts),
@@ -187,18 +156,17 @@ export class PostService {
     currentUserId: number,
   ): GetOtherPostsResponse {
     return {
-      post: posts.map((post) => ({
-        postId: post.id,
-        userId: post.user.id,
-        createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
-        imageUrl: post.postImages[0]?.url,
-        isRepresentative: post.isRepresentative,
-        isPostLike: this.checkIsPostLiked(post, currentUserId),
-        postLikesCount: post.postLikes.length,
-      })),
+      post: posts.map((post) => new PostDto(post, currentUserId)),
       totalPostsCount: posts.length,
       totalPostLikesCount: this.calculateTotalLikes(posts),
     };
+  }
+
+  private formatAllPosts(
+    posts: Post[],
+    currentUserId: number,
+  ): GetAllPostsResponse {
+    return new GetAllPostsResponse(posts, currentUserId);
   }
 
   async createPost(uploadPostDto: CreatePostRequest, currentUserId: number) {

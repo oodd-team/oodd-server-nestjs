@@ -36,7 +36,7 @@ export class PatchMatchingResponse {
 class RequesterResponse {
   @ApiProperty({
     description: '매칭 요청자의 ID',
-    example: '19',
+    example: 19,
   })
   requesterId: number;
 
