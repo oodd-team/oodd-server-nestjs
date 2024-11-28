@@ -109,9 +109,23 @@ export class PostService {
         'postImage.status = :status AND postImage.orderNum = :orderNum',
         { status: 'activated', orderNum: 1 },
       )
-      .leftJoinAndSelect('post.postLikes', 'postLike')
+      .leftJoinAndSelect(
+        'post.postLikes',
+        'postLike',
+        'postLike.status = :likeStatus',
+        {
+          likeStatus: 'activated',
+        },
+      )
       .leftJoinAndSelect('postLike.user', 'postLikeUser')
-      .leftJoinAndSelect('post.postComments', 'postComment')
+      .leftJoinAndSelect(
+        'post.postComments',
+        'postComment',
+        'postComment.status = :commentStatus',
+        {
+          commentStatus: 'activated',
+        },
+      )
       .leftJoinAndSelect('postComment.user', 'postCommentUser')
       .where('post.status = :status', { status: 'activated' })
       .andWhere('post.user.id = :userId', { userId })
@@ -377,9 +391,23 @@ export class PostService {
         { imageStatus: 'activated' },
       )
       .leftJoinAndSelect('post.user', 'user')
-      .leftJoinAndSelect('post.postLikes', 'postLike')
+      .leftJoinAndSelect(
+        'post.postLikes',
+        'postLike',
+        'postLike.status = :likeStatus',
+        {
+          likeStatus: 'activated',
+        },
+      )
       .leftJoinAndSelect('postLike.user', 'postLikeUser')
-      .leftJoinAndSelect('post.postComments', 'postComment')
+      .leftJoinAndSelect(
+        'post.postComments',
+        'postComment',
+        'postComment.status = :commentStatus',
+        {
+          commentStatus: 'activated',
+        },
+      )
       .leftJoinAndSelect('postComment.user', 'postCommentUser')
       .leftJoinAndSelect(
         'post.postClothings',
