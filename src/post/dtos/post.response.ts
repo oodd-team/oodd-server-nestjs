@@ -17,7 +17,7 @@ class PostImageDto {
 
 class UserDto {
   @ApiProperty({
-    example: '작성자 번호',
+    example: 1,
     description: 'userId',
   })
   userId: number;
@@ -63,13 +63,13 @@ class PostClothingDto {
 
 export class PostResponse {
   @ApiProperty({
-    example: '게시물 번호',
+    example: 1,
     description: '게시물 번호입니다.',
   })
   postId: number;
 
   @ApiProperty({
-    example: '작성자 번호',
+    example: 1,
     description: 'userId',
   })
   userId: number;

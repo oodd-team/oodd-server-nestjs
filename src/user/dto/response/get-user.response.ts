@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 export class GetUserInfo {
   @ApiProperty({
     description: 'user ID',
-    example: '19',
+    example: 19,
   })
   userId: number;
 
