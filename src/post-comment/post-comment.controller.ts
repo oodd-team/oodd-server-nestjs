@@ -61,7 +61,10 @@ export class PostCommentController {
   ): Promise<BaseResponse<GetCommentsDto>> {
     const currentUserId = req.user.id;
 
-    const comments = await this.postCommentService.getPostComments(postId);
+    const comments = await this.postCommentService.getPostComments(
+      postId,
+      currentUserId,
+    );
 
     const commenteResponse: GetCommentsDto = {
       comments: comments.map((comment) => ({

@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { PostComment } from 'src/common/entities/post-comment.entity';
-import { QueryRunner } from 'typeorm';
+import { Not, QueryRunner } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateCommentDto } from './dtos/create-comment.dto';
@@ -85,16 +85,27 @@ export class PostCommentService {
   }
 
   // 댓글 리스트 조회
-  async getPostComments(postId: number): Promise<PostComment[]> {
+  async getPostComments(
+    postId: number,
+    currentUserId: number,
+  ): Promise<PostComment[]> {
     return await this.postCommentRepository.find({
-      where: { post: { id: postId }, status: 'activated' },
+      where: {
+        post: { id: postId },
+        status: 'activated',
+        user: { status: 'activated', id: Not(currentUserId) },
+      },
       relations: ['user'],
     });
   }
 
   private async findCommentById(commentId: number): Promise<PostComment> {
     const comment = await this.postCommentRepository.findOne({
-      where: { id: commentId, status: 'activated' },
+      where: {
+        id: commentId,
+        status: 'activated',
+        user: { status: 'activated' },
+      },
       relations: ['user'],
     });
 
