@@ -54,7 +54,12 @@ export class PostController {
     @Query('userId') userId?: number,
   ): Promise<
     BaseResponse<
-      (GetAllPostsResponse | GetMyPostsResponse | GetOtherPostsResponse) & {
+      (
+        | GetAllPostsResponse
+        | GetMyPostsResponse
+        | GetOtherPostsResponse
+        | { posts: []; meta: PageMetaDto }
+      ) & {
         meta: PageMetaDto;
       }
     >
@@ -89,7 +94,10 @@ export class PostController {
       pageMetaDto.last_page >= 1 &&
       pageMetaDto.last_page < pageMetaDto.page
     ) {
-      throw DataNotFoundException('해당 페이지는 존재하지 않습니다');
+      return new BaseResponse(false, '해당 페이지는 존재하지 않습니다', {
+        posts: [],
+        meta: pageMetaDto,
+      });
     }
 
     return new BaseResponse(true, '게시글 리스트 조회 성공', {
