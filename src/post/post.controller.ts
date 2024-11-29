@@ -39,7 +39,7 @@ import { PageMetaDto } from 'src/common/response/page-meta.dto';
 
 @Controller('post')
 @ApiBearerAuth('Authorization')
-//@UseGuards(AuthGuard)
+@UseGuards(AuthGuard)
 @ApiTags('[서비스] 게시글')
 export class PostController {
   constructor(private readonly postService: PostService) {}
@@ -76,11 +76,14 @@ export class PostController {
       ({ posts, total } = await this.postService.getUserPosts(
         pageOptions,
         userId,
-        19,
+        req.user.id,
       ));
     } else {
       // 전체 게시글 조회
-      ({ posts, total } = await this.postService.getAllPosts(pageOptions, 19));
+      ({ posts, total } = await this.postService.getAllPosts(
+        pageOptions,
+        req.user.id,
+      ));
     }
     const pageMetaDto = new PageMetaDto({ pageOptionsDto: pageOptions, total });
 

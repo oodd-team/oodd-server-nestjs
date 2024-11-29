@@ -59,7 +59,14 @@ export class PostService {
         'postImage.status = :status',
         { status: 'activated' },
       )
-      .leftJoinAndSelect('post.postLikes', 'postLike')
+      .leftJoinAndSelect(
+        'post.postLikes',
+        'postLike',
+        'postLike.status = :likeStatus',
+        {
+          likeStatus: 'activated',
+        },
+      )
       .leftJoinAndSelect('postLike.user', 'postLikeUser')
       .where('post.status = :status', { status: 'activated' })
       .andWhere('post.user.id NOT IN (:currentUserId)', {
@@ -82,7 +89,8 @@ export class PostService {
         'user.profilePictureUrl',
         'postImage.url',
         'postImage.orderNum',
-        'postLike.user.id',
+        'postLikeUser.id',
+        'postLike',
       ])
       .orderBy('post.createdAt', 'DESC')
       .take(pageOptionsDto.take)
@@ -137,7 +145,7 @@ export class PostService {
         'user.id',
         'postImage.url',
         'postComment.id',
-        'postLike.id',
+        'postLike',
         'postLikeUser.id',
         'postCommentUser.id',
       ])
