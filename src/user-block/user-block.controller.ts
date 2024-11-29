@@ -19,20 +19,19 @@ export class UserBlockController {
   @CreateBlockUserSwagger('유저 차단하기 API')
   async createUserBlock(
     @Body() createUserBlockDto: CreateUserBlockDto,
-    @Req() req: Request, 
+    @Req() req: Request,
   ): Promise<BaseResponse<null>> {
-    const fromUserId = req.user['id']; 
-    //console.log('fromUserId is ', fromUserId);
+    const fromUserId = req.user['id'];
 
     createUserBlockDto.fromUserId = fromUserId;
 
-  const resultCode = await this.userBlockService.createBlock(createUserBlockDto);
+    const resultCode =
+      await this.userBlockService.createBlock(createUserBlockDto);
 
-  if (resultCode === 'BLOCKED_SUCCESS') {
-    return new BaseResponse<null>(true, 'BLOCKED_SUCCESS', null);
-  } else if (resultCode === 'UNBLOCKED_SUCCESS') {
-    return new BaseResponse<null>(true, 'UNBLOCKED_SUCCESS', null);
+    if (resultCode === 'BLOCKED_SUCCESS') {
+      return new BaseResponse<null>(true, 'BLOCKED_SUCCESS', null);
+    } else if (resultCode === 'UNBLOCKED_SUCCESS') {
+      return new BaseResponse<null>(true, 'UNBLOCKED_SUCCESS', null);
+    }
   }
-  
-}
 }

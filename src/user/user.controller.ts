@@ -47,7 +47,6 @@ export class UserController {
   ): Promise<BaseResponse<GetOtherUserInfo>> {
     const user = await this.userService.getUserById(userId);
 
-    console.log(req.user);
     // 현재 사용자의 ID를 가져옵니다. req.user에서 추출할 수 있습니다.
     const currentUserId = req.user.id; // 또는 다른 방법으로 현재 사용자 ID를 가져옴
 
@@ -75,8 +74,6 @@ export class UserController {
     @Param('userId') userId: number,
     @Req() req: Request,
   ): Promise<BaseResponse<null>> {
-    //console.log("req.user['id'] is ~~~~~~~~~~~~~~~~~",typeof(req.user['id']) );
-    //console.log("Number(userId) is ~~~~~~~~~~~~~~~~~", typeof(Number(userId)));
     if (req.user['id'] != Number(userId)) {
       throw UnauthorizedException('권한이 없습니다.');
     }
