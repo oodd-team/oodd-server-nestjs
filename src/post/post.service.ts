@@ -60,6 +60,7 @@ export class PostService {
         { status: 'activated' },
       )
       .leftJoinAndSelect('post.postLikes', 'postLike')
+      .leftJoinAndSelect('postLike.user', 'postLikeUser')
       .where('post.status = :status', { status: 'activated' })
       .andWhere('post.user.id NOT IN (:currentUserId)', {
         currentUserId: [currentUserId],
@@ -130,6 +131,7 @@ export class PostService {
       .take(pageOptionsDto.take)
       .skip((pageOptionsDto.page - 1) * pageOptionsDto.take)
       .getManyAndCount();
+
     return {
       posts:
         userId === currentUserId

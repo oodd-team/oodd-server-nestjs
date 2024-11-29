@@ -32,17 +32,14 @@ import { Request } from 'express';
 import { PostDetailResponse } from './dtos/post.response';
 import { PatchPostRequest } from './dtos/post.request';
 
-import {
-  DataNotFoundException,
-  UnauthorizedException,
-} from 'src/common/exception/service.exception';
+import { UnauthorizedException } from 'src/common/exception/service.exception';
 import { PostResponse } from './dtos/post.response';
 import { PageOptionsDto } from 'src/common/response/page-options.dto';
 import { PageMetaDto } from 'src/common/response/page-meta.dto';
 
 @Controller('post')
 @ApiBearerAuth('Authorization')
-@UseGuards(AuthGuard)
+//@UseGuards(AuthGuard)
 @ApiTags('[서비스] 게시글')
 export class PostController {
   constructor(private readonly postService: PostService) {}
@@ -79,14 +76,11 @@ export class PostController {
       ({ posts, total } = await this.postService.getUserPosts(
         pageOptions,
         userId,
-        req.user.id,
+        19,
       ));
     } else {
       // 전체 게시글 조회
-      ({ posts, total } = await this.postService.getAllPosts(
-        pageOptions,
-        req.user.id,
-      ));
+      ({ posts, total } = await this.postService.getAllPosts(pageOptions, 19));
     }
     const pageMetaDto = new PageMetaDto({ pageOptionsDto: pageOptions, total });
 
