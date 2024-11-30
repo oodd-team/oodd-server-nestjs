@@ -87,8 +87,7 @@ export class PostService {
         'user.id',
         'user.nickname',
         'user.profilePictureUrl',
-        'postImage.url',
-        'postImage.orderNum',
+        'postImage',
         'postLikeUser.id',
         'postLike',
       ])
@@ -143,7 +142,7 @@ export class PostService {
         'post.isRepresentative',
         'post.createdAt',
         'user.id',
-        'postImage.url',
+        'postImage',
         'postComment.id',
         'postLike',
         'postLikeUser.id',
