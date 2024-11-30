@@ -16,14 +16,12 @@ import { PostClothingService } from 'src/post-clothing/post-clothing.service';
 import { PostLikeService } from 'src/post-like/post-like.service';
 import { PostCommentService } from 'src/post-comment/post-comment.service';
 import { PageOptionsDto } from '../common/response/page-options.dto';
-import dayjs from 'dayjs';
 import { GetAllPostsResponse } from './dtos/all-posts.response';
 import {
   GetMyPostsResponse,
   GetOtherPostsResponse,
   PostDto,
 } from './dtos/user-posts.response';
-import { PostDetailResponse } from './dtos/post.response';
 
 @Injectable()
 export class PostService {
@@ -378,11 +376,10 @@ export class PostService {
   }
 
   // 게시글 상세 조회
-  async getPost(
-    postId: number,
-    currentUserId: number,
-  ): Promise<PostDetailResponse> {
-    const post = await this.postRepository
+  async getPost(postId: number, currentUserId: number): Promise<Post | null> {
+    const blockedUserIds =
+      await this.userBlockService.getBlockedUserIdsByRequesterId(currentUserId);
+    return await this.postRepository
       .createQueryBuilder('post')
       .leftJoinAndSelect(
         'post.postImages',
@@ -394,18 +391,20 @@ export class PostService {
       .leftJoinAndSelect(
         'post.postLikes',
         'postLike',
-        'postLike.status = :likeStatus',
+        'postLike.status = :likeStatus AND postLike.user.id NOT IN (:...blockedUserIds)',
         {
           likeStatus: 'activated',
+          blockedUserIds: blockedUserIds.length > 0 ? blockedUserIds : [-1], // 차단된 사용자가 없으면 무효화된 조건 (-1)
         },
       )
       .leftJoinAndSelect('postLike.user', 'postLikeUser')
       .leftJoinAndSelect(
         'post.postComments',
         'postComment',
-        'postComment.status = :commentStatus',
+        'postComment.status = :commentStatus AND postComment.user.id NOT IN (:...blockedUserIds)',
         {
           commentStatus: 'activated',
+          blockedUserIds: blockedUserIds.length > 0 ? blockedUserIds : [-1],
         },
       )
       .leftJoinAndSelect('postComment.user', 'postCommentUser')
@@ -426,45 +425,6 @@ export class PostService {
       .where('post.id = :postId', { postId })
       .andWhere('post.status = :postStatus', { postStatus: 'activated' })
       .getOne();
-
-    if (!post) {
-      throw DataNotFoundException('해당 게시글을 찾을 수 없습니다.');
-    }
-
-    return this.returnPostDetail(post, currentUserId);
-  }
-
-  private returnPostDetail(
-    post: Post,
-    currentUserId: number,
-  ): PostDetailResponse {
-    return {
-      postId: post.id,
-      user: {
-        userId: post.user.id,
-        nickname: post.user.nickname,
-        profilePictureUrl: post.user.profilePictureUrl,
-      },
-      content: post.content,
-      isRepresentative: post.isRepresentative,
-      postStyletags: post.postStyletags?.map((tag) => tag.styletag.tag),
-      postImages: post.postImages.map((image) => ({
-        imageUrl: image.url,
-        orderNum: image.orderNum,
-      })),
-      postClothings: post.postClothings.map((postClothing) => ({
-        imageUrl: postClothing.clothing.imageUrl,
-        brandName: postClothing.clothing.brandName,
-        modelName: postClothing.clothing.modelName,
-        modelNumber: postClothing.clothing.modelNumber,
-        url: postClothing.clothing.url,
-      })),
-      postLikesCount: post.postLikes.length,
-      postCommentsCount: post.postComments.length,
-      isPostLike: this.checkIsPostLiked(post, currentUserId),
-      createdAt: dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
-      updatedAt: dayjs(post.updatedAt).format('YYYY-MM-DDTHH:mm:ssZ'),
-    };
   }
 
   // 대표 게시글 설정

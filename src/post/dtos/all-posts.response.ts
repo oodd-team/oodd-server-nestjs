@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import dayjs from 'dayjs';
 import { Post } from 'src/common/entities/post.entity';
 import { PostImage } from 'src/common/entities/post-image.entity';
+import { User } from 'src/common/entities/user.entity';
 
 class PostImageDto {
   @ApiProperty({
@@ -41,7 +42,7 @@ class UserDto {
   })
   profilePictureUrl: string;
 
-  constructor(user: any) {
+  constructor(user: User) {
     this.userId = user.id;
     this.nickname = user.nickname;
     this.profilePictureUrl = user.profilePictureUrl;
