@@ -152,9 +152,9 @@ export class PostService {
         'post.isRepresentative',
         'post.createdAt',
         'user.id',
-        'postImage.url',
+        'postImage',
         'postComment.id',
-        'postLike.id',
+        'postLike',
         'postLikeUser.id',
         'postCommentUser.id',
       ])
@@ -162,6 +162,7 @@ export class PostService {
       .take(pageOptionsDto.take)
       .skip((pageOptionsDto.page - 1) * pageOptionsDto.take)
       .getManyAndCount();
+
     return {
       posts:
         userId === currentUserId
