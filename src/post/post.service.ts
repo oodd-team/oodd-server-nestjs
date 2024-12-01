@@ -16,16 +16,13 @@ import { PostClothingService } from 'src/post-clothing/post-clothing.service';
 import { PostLikeService } from 'src/post-like/post-like.service';
 import { PostCommentService } from 'src/post-comment/post-comment.service';
 import { PageOptionsDto } from '../common/response/page-options.dto';
-import dayjs from 'dayjs';
 import { GetAllPostsResponse } from './dto/all-posts.response';
 import {
   GetMyPostsResponse,
   GetOtherPostsResponse,
   PostDto,
 } from './dto/user-posts.response';
-import { PostDetailResponse } from './dto/post.response';
 import { GetAllPostDto } from './dto/dto/get-all-posts.dto';
-import { Matching } from 'src/common/entities/matching.entity';
 import { MatchingService } from 'src/matching/matching.service';
 
 @Injectable()

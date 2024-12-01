@@ -32,7 +32,10 @@ import { Request } from 'express';
 import { PostDetailResponse } from './dto/post.response';
 import { PatchPostRequest } from './dto/request/post.request';
 
-import { UnauthorizedException } from 'src/common/exception/service.exception';
+import {
+  DataNotFoundException,
+  UnauthorizedException,
+} from 'src/common/exception/service.exception';
 import { PostResponse } from './dto/post.response';
 import { PageOptionsDto } from 'src/common/response/page-options.dto';
 import { PageMetaDto } from 'src/common/response/page-meta.dto';
