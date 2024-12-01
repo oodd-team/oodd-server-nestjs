@@ -110,8 +110,12 @@ export class PostController {
     @Req() req: Request,
   ): Promise<BaseResponse<PostDetailResponse>> {
     const post = await this.postService.getPost(postId, req.user.id);
+    if (!post) {
+      throw DataNotFoundException('해당 게시글을 찾을 수 없습니다.');
+    }
 
-    return new BaseResponse(true, '게시글 조회 성공', post);
+    const postDetailResponse = new PostDetailResponse(post, req.user.id);
+    return new BaseResponse(true, '게시글 조회 성공', postDetailResponse);
   }
 
   @Post()
