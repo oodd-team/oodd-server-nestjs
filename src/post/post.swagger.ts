@@ -7,14 +7,14 @@ import {
 } from '@nestjs/swagger';
 import { BaseSwaggerDecorator } from 'nestjs-swagger-decorator';
 import { BaseResponse } from 'src/common/response/dto';
-import { GetAllPostsResponse } from './dtos/all-posts.response';
+import { GetAllPostsResponse } from './dto/all-posts.response';
 import {
   GetMyPostsResponse,
   GetOtherPostsResponse,
-} from './dtos/user-posts.response';
+} from './dto/user-posts.response';
 import { applyDecorators } from '@nestjs/common';
-import { PostDetailResponse } from './dtos/post.response';
-import { PostResponse } from './dtos/post.response';
+import { PostDetailResponse } from './dto/post.response';
+import { PostResponse } from './dto/post.response';
 
 // 게시글 리스트 조회하기 API Swagger
 export function GetPostsSwagger(text: string) {

@@ -12,6 +12,7 @@ import { PostImageModule } from 'src/post-image/post-image.module';
 import { DayjsModule } from 'src/common/dayjs/dayjs.module';
 import { PostLikeModule } from 'src/post-like/post-like.module';
 import { PostCommentModule } from 'src/post-comment/post-comment.module';
+import { MatchingModule } from 'src/matching/matching.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { PostCommentModule } from 'src/post-comment/post-comment.module';
     UserBlockModule,
     PostClothingModule,
     DayjsModule,
+    forwardRef(() => MatchingModule),
     forwardRef(() => PostLikeModule),
     forwardRef(() => PostCommentModule),
   ],

@@ -1,11 +1,11 @@
 import { IsArray } from 'class-validator';
 import { PageMetaDto } from './page-meta.dto';
 import { ApiProperty } from '@nestjs/swagger';
-import { GetAllPostsResponse } from '../../post/dtos/all-posts.response';
+import { GetAllPostsResponse } from '../../post/dto/all-posts.response';
 import {
   GetMyPostsResponse,
   GetOtherPostsResponse,
-} from '../../post/dtos/user-posts.response';
+} from '../../post/dto/user-posts.response';
 
 export class PageDto<T> {
   @ApiProperty({

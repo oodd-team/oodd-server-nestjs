@@ -14,6 +14,7 @@ import { ChatMessageService } from 'src/chat-message/chat-message.service';
 import { ChatRoom } from 'src/common/entities/chat-room.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GetMatchingsResponse } from './dto/matching.response';
+import { MatchingRequestStatusEnum } from 'src/common/enum/matchingRequestStatus';
 
 @Injectable()
 export class MatchingService {
@@ -24,6 +25,35 @@ export class MatchingService {
     private readonly chatMessageService: ChatMessageService,
     private readonly dataSource: DataSource,
   ) {}
+  async getMatchingByUserId(
+    requesterId: number,
+    targetId: number,
+  ): Promise<Matching> {
+    return await this.matchingRepository.findOne({
+      where: [
+        {
+          requester: { id: requesterId },
+          target: { id: targetId },
+          status: 'activated',
+        },
+        {
+          requester: { id: targetId },
+          target: { id: requesterId },
+          status: 'activated',
+        },
+      ],
+    });
+  }
+
+  async getMatchingsByCurrentId(currentUserId: number): Promise<Matching[]> {
+    return await this.matchingRepository.find({
+      relations: ['requester', 'target'],
+      where: [
+        { requester: { id: currentUserId }, status: 'activated' },
+        { target: { id: currentUserId }, status: 'activated' },
+      ],
+    });
+  }
 
   async createMatching(body: CreateMatchingReqeust): Promise<ChatRoom> {
     let matching, chatRoom;
@@ -68,10 +98,10 @@ export class MatchingService {
 
     try {
       if (body.requestStatus === 'accept') {
-        matching.requestStatus = 'accepted';
+        matching.requestStatus = MatchingRequestStatusEnum.ACCEPTED;
         matching.acceptedAt = new Date();
       } else if (body.requestStatus === 'reject') {
-        matching.requestStatus = 'rejected';
+        matching.requestStatus = MatchingRequestStatusEnum.REJECTED;
         matching.rejectedAt = new Date();
       }
 
@@ -157,13 +187,13 @@ export class MatchingService {
         {
           requester: { id: requesterId },
           target: { id: targetId },
-          requestStatus: 'accepted',
+          requestStatus: MatchingRequestStatusEnum.ACCEPTED,
           status: 'activated',
         },
         {
           requester: { id: targetId },
           target: { id: requesterId },
-          requestStatus: 'accepted',
+          requestStatus: MatchingRequestStatusEnum.ACCEPTED,
           status: 'activated',
         },
       ],
