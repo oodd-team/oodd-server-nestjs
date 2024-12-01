@@ -75,6 +75,14 @@ export class MatchingController {
       throw DataNotFoundException('신청 유저의 게시물이 존재하지 않습니다.');
     }
 
+    if (
+      await this.matchingService.getMatchingByUserId(
+        body.requesterId,
+        body.targetId,
+      )
+    )
+      throw InvalidInputValueException('이미 매칭 요청을 보냈습니다.');
+
     const chatRoom = await this.matchingService.createMatching(body);
     return new BaseResponse<PostMatchingResponse>(true, 'SUCCESS', {
       chatRoomId: chatRoom.id,

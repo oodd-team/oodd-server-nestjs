@@ -3,6 +3,7 @@ import { BaseEntity } from './base.entity';
 import { User } from './user.entity';
 import { ChatRoom } from './chat-room.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { MatchingRequestStatusEnum } from '../enum/matchingRequestStatus';
 
 @Entity('Matching')
 export class Matching extends BaseEntity {
@@ -23,13 +24,13 @@ export class Matching extends BaseEntity {
   })
   message!: string;
 
-  @Column({ type: 'enum', enum: ['pending', 'accepted', 'rejected'] })
+  @Column({ type: 'enum', enum: MatchingRequestStatusEnum })
   @ApiProperty({
-    enum: ['pending', 'accepted', 'rejected'],
+    enum: MatchingRequestStatusEnum,
     description: '매칭 상태',
     example: 'pending',
   })
-  requestStatus: 'pending' | 'accepted' | 'rejected' = 'pending';
+  requestStatus: MatchingRequestStatusEnum = MatchingRequestStatusEnum.PENDING;
 
   @Column({ type: 'datetime', nullable: true })
   rejectedAt: Date = null;

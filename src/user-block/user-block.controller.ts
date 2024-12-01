@@ -6,7 +6,6 @@ import { CreateUserBlockDto } from './dtos/user-block.dto';
 import { BaseResponse } from 'src/common/response/dto';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { Request } from 'express';
-import { UnauthorizedException } from 'src/common/exception/service.exception';
 
 @ApiBearerAuth('Authorization')
 @Controller('user-block')

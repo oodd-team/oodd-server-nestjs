@@ -85,10 +85,10 @@ export class User extends BaseEntity {
   sentChatMessages?: ChatMessage[];
 
   @OneToMany(() => Matching, (matching) => matching.requester)
-  requestedMatchings?: Matching[];
+  requestedMatchings: Matching[];
 
   @OneToMany(() => Matching, (matching) => matching.target)
-  targetedMatchings?: Matching[];
+  targetedMatchings: Matching[];
 
   @OneToMany(() => PostLike, (postLike) => postLike.user)
   postLikes!: PostLike[];
