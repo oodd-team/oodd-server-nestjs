@@ -18,12 +18,12 @@ import {
 import { CreateCommentDto } from './dtos/create-comment.dto';
 import { Request } from 'express';
 import { BaseResponse } from 'src/common/response/dto';
-import { PostService } from 'src/post/post.service';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { PostComment } from 'src/common/entities/post-comment.entity';
 import { GetCommentsDto } from './dtos/get-comment.dto';
 import dayjs from 'dayjs';
+import { UserBlockService } from 'src/user-block/user-block.service';
 
 @ApiBearerAuth('Authorization')
 @Controller('post-comment')
@@ -32,7 +32,7 @@ import dayjs from 'dayjs';
 export class PostCommentController {
   constructor(
     private readonly postCommentService: PostCommentService,
-    private readonly postService: PostService,
+    private readonly userBlockService: UserBlockService,
   ) {}
 
   @Post()
@@ -61,7 +61,13 @@ export class PostCommentController {
   ): Promise<BaseResponse<GetCommentsDto>> {
     const currentUserId = req.user.id;
 
-    const comments = await this.postCommentService.getPostComments(postId);
+    const blockedUserIds: number[] =
+      await this.userBlockService.getBlockedUserIds(currentUserId);
+
+    const comments = await this.postCommentService.getPostComments(
+      postId,
+      blockedUserIds,
+    );
 
     const commenteResponse: GetCommentsDto = {
       comments: comments.map((comment) => ({

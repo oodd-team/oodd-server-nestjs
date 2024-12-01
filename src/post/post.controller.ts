@@ -11,11 +11,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { PostService } from './post.service';
-import { GetAllPostsResponse } from './dtos/all-posts.response';
+import { GetAllPostsResponse } from './dto/all-posts.response';
 import {
   GetMyPostsResponse,
   GetOtherPostsResponse,
-} from './dtos/user-posts.response';
+} from './dto/user-posts.response';
 import {
   CreatePostsSwagger,
   DeletePostSwagger,
@@ -25,18 +25,15 @@ import {
   PatchPostSwagger,
 } from './post.swagger';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { CreatePostRequest } from './dtos/post.request';
+import { CreatePostRequest } from './dto/request/post.request';
 import { BaseResponse } from 'src/common/response/dto';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { Request } from 'express';
-import { PostDetailResponse } from './dtos/post.response';
-import { PatchPostRequest } from './dtos/post.request';
+import { PostDetailResponse } from './dto/post.response';
+import { PatchPostRequest } from './dto/request/post.request';
 
-import {
-  DataNotFoundException,
-  UnauthorizedException,
-} from 'src/common/exception/service.exception';
-import { PostResponse } from './dtos/post.response';
+import { UnauthorizedException } from 'src/common/exception/service.exception';
+import { PostResponse } from './dto/post.response';
 import { PageOptionsDto } from 'src/common/response/page-options.dto';
 import { PageMetaDto } from 'src/common/response/page-meta.dto';
 
@@ -54,7 +51,12 @@ export class PostController {
     @Query('userId') userId?: number,
   ): Promise<
     BaseResponse<
-      (GetAllPostsResponse | GetMyPostsResponse | GetOtherPostsResponse) & {
+      (
+        | GetAllPostsResponse
+        | GetMyPostsResponse
+        | GetOtherPostsResponse
+        | { posts: []; meta: PageMetaDto }
+      ) & {
         meta: PageMetaDto;
       }
     >
@@ -89,7 +91,10 @@ export class PostController {
       pageMetaDto.last_page >= 1 &&
       pageMetaDto.last_page < pageMetaDto.page
     ) {
-      throw DataNotFoundException('해당 페이지는 존재하지 않습니다');
+      return new BaseResponse(false, '해당 페이지는 존재하지 않습니다', {
+        posts: [],
+        meta: pageMetaDto,
+      });
     }
 
     return new BaseResponse(true, '게시글 리스트 조회 성공', {

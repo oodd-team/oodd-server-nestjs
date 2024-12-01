@@ -4,24 +4,29 @@ import { DataSource, FindOneOptions, QueryRunner, Repository } from 'typeorm';
 import { Post } from '../common/entities/post.entity';
 import { UserService } from 'src/user/user.service';
 import { PostImageService } from 'src/post-image/post-image.service';
-import { CreatePostRequest } from './dtos/post.request';
+import { CreatePostRequest } from './dto/request/post.request';
 import { PostStyletagService } from '../post-styletag/post-styletag.service';
 import {
   DataNotFoundException,
   InternalServerException,
 } from 'src/common/exception/service.exception';
-import { PatchPostRequest } from './dtos/post.request';
+import { PatchPostRequest } from './dto/request/post.request';
 import { UserBlockService } from 'src/user-block/user-block.service';
 import { PostClothingService } from 'src/post-clothing/post-clothing.service';
 import { PostLikeService } from 'src/post-like/post-like.service';
 import { PostCommentService } from 'src/post-comment/post-comment.service';
 import { PageOptionsDto } from '../common/response/page-options.dto';
-import { GetAllPostsResponse } from './dtos/all-posts.response';
+import dayjs from 'dayjs';
+import { GetAllPostsResponse } from './dto/all-posts.response';
 import {
   GetMyPostsResponse,
   GetOtherPostsResponse,
   PostDto,
-} from './dtos/user-posts.response';
+} from './dto/user-posts.response';
+import { PostDetailResponse } from './dto/post.response';
+import { GetAllPostDto } from './dto/dto/get-all-posts.dto';
+import { Matching } from 'src/common/entities/matching.entity';
+import { MatchingService } from 'src/matching/matching.service';
 
 @Injectable()
 export class PostService {
@@ -29,7 +34,7 @@ export class PostService {
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
     private readonly userBlockService: UserBlockService,
-
+    private readonly matchingService: MatchingService,
     private readonly userService: UserService,
     private readonly postImageService: PostImageService,
     private readonly postStyletagService: PostStyletagService,
@@ -47,46 +52,61 @@ export class PostService {
     const blockedUserIds =
       await this.userBlockService.getBlockedUserIdsByRequesterId(currentUserId);
 
+    console.log(blockedUserIds);
+    console.log(currentUserId);
+
     const queryBuilder = this.dataSource
       .getRepository(Post)
       .createQueryBuilder('post')
-      .leftJoinAndSelect('post.user', 'user')
+      .select(['post.id', 'post.content', 'post.createdAt'])
+      .leftJoin('post.user', 'user')
+      .addSelect(['user.id', 'user.nickname', 'user.profilePictureUrl'])
       .leftJoinAndSelect(
         'post.postImages',
         'postImage',
         'postImage.status = :status',
         { status: 'activated' },
       )
-      .leftJoinAndSelect('post.postLikes', 'postLike')
+      .leftJoin(
+        'post.postLikes',
+        'postLike',
+        'postLike.status = :status and postLike.postId = post.id and postLike.userId = :currentUserId',
+        {
+          status: 'activated',
+          currentUserId,
+        },
+      )
+      .addSelect(['postLike.id'])
       .where('post.status = :status', { status: 'activated' })
-      .andWhere('post.user.id NOT IN (:currentUserId)', {
+      .andWhere('user.status = :status', { status: 'activated' })
+      .andWhere('user.id NOT IN (:currentUserId)', {
         currentUserId: [currentUserId],
       })
       .andWhere(
         blockedUserIds.length > 0
-          ? 'post.user.id NOT IN (:...blockedUserIds)'
+          ? 'user.id NOT IN (:...blockedUserIds)'
           : '1=1',
         { blockedUserIds },
-      );
-
-    const [posts, total] = await queryBuilder
-      .select([
-        'post.id',
-        'post.content',
-        'post.createdAt',
-        'user.id',
-        'user.nickname',
-        'user.profilePictureUrl',
-        'postImage.url',
-        'postImage.orderNum',
-        'postLike.user.id',
-      ])
+      )
       .orderBy('post.createdAt', 'DESC')
       .take(pageOptionsDto.take)
-      .skip((pageOptionsDto.page - 1) * pageOptionsDto.take)
-      .getManyAndCount();
+      .skip((pageOptionsDto.page - 1) * pageOptionsDto.take);
 
-    return { posts: this.formatAllPosts(posts, currentUserId), total };
+    const posts = await queryBuilder.getMany();
+
+    const total = await queryBuilder.getCount();
+
+    const currentUserMatchings =
+      await this.matchingService.getMatchingsByCurrentId(currentUserId);
+
+    return {
+      posts: new GetAllPostsResponse(
+        posts as unknown as GetAllPostDto[],
+        currentUserId,
+        currentUserMatchings,
+      ),
+      total,
+    };
   }
 
   async getUserPosts(
@@ -132,9 +152,9 @@ export class PostService {
         'post.isRepresentative',
         'post.createdAt',
         'user.id',
-        'postImage.url',
+        'postImage',
         'postComment.id',
-        'postLike.id',
+        'postLike',
         'postLikeUser.id',
         'postCommentUser.id',
       ])
@@ -142,6 +162,7 @@ export class PostService {
       .take(pageOptionsDto.take)
       .skip((pageOptionsDto.page - 1) * pageOptionsDto.take)
       .getManyAndCount();
+
     return {
       posts:
         userId === currentUserId
@@ -172,13 +193,6 @@ export class PostService {
       totalPostsCount: posts.length,
       totalPostLikesCount: this.calculateTotalLikes(posts),
     };
-  }
-
-  private formatAllPosts(
-    posts: Post[],
-    currentUserId: number,
-  ): GetAllPostsResponse {
-    return new GetAllPostsResponse(posts, currentUserId);
   }
 
   async createPost(uploadPostDto: CreatePostRequest, currentUserId: number) {

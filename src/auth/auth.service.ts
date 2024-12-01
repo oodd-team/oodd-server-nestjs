@@ -15,7 +15,6 @@ export class AuthService {
     user: SocialUser,
     provider: 'kakao' | 'naver',
   ): Promise<string> {
-    console.log(user);
     let userBySocial;
     if (provider === 'kakao')
       userBySocial = await this.userSerivce.getUserByKaKaoId(user.kakaoId);
