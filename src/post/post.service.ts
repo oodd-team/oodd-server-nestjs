@@ -61,16 +61,6 @@ export class PostService {
       .select(['post.id', 'post.content', 'post.createdAt'])
       .leftJoin('post.user', 'user')
       .addSelect(['user.id', 'user.nickname', 'user.profilePictureUrl'])
-      .leftJoin(
-        Matching,
-        'matching',
-        '((matching.requesterId = :currentUserId AND matching.targetId = user.id) OR (matching.targetId = :currentUserId AND matching.requesterId = user.id)) AND matching.status = :matchingStatus',
-        {
-          currentUserId,
-          matchingStatus: 'activated', // 매칭 상태 필터링
-        },
-      )
-      .addSelect(['matching.requestStatus AS post_isFriendRequestStatus']) // 요청 상태를 선택
       .leftJoinAndSelect(
         'post.postImages',
         'postImage',
