@@ -23,6 +23,9 @@ export class ChatRoomService {
         userId,
       })
       .andWhere('chatRoom.status = :status', { status: 'activated' })
+      .andWhere('chatRoom.requestStatus = :requestStatus', {
+        requestStatus: 'accepted',
+      })
       .orderBy('chatMessages.createdAt', 'DESC')
       .getMany();
 
