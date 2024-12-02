@@ -51,5 +51,5 @@ export class GetAllPostDto extends PickType(Post, ['id', 'content']) {
     description: '좋아요 IDs',
     example: [1, 2, 3],
   })
-  postLikesUserIds: number[]; // 좋아요 목록
+  postLikes: number[]; // 좋아요 목록
 }

@@ -90,6 +90,7 @@ export class PostService {
       .skip((pageOptionsDto.page - 1) * pageOptionsDto.take);
 
     const posts = await queryBuilder.getMany();
+    console.log(posts);
 
     const total = await queryBuilder.getCount();
 

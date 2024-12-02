@@ -28,8 +28,7 @@ export class PostDto extends GetAllPostDto {
     this.content = post.content;
     this.createdAt = dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ');
     this.postImages = post.postImages ?? [];
-    this.isPostLike =
-      post.postLikesUserIds?.some((like) => like === currentUserId) || false;
+    this.isPostLike = post.postLikes.length > 0 ? true : false;
     this.requestStatus = requestStatus;
     this.user = new UserDto(post.user);
   }
