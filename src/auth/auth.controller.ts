@@ -13,6 +13,7 @@ import { NaverAuthGuard } from './guards/naver.auth.guard';
 import { AuthGuard } from './guards/jwt.auth.guard';
 import { BaseResponse } from '../common/response/dto';
 import { GetUserInfo } from 'src/user/dto/response/get-user.response';
+import dayjs from 'dayjs';
 
 @Controller('auth')
 @ApiTags('[서비스] Auth 관련')
@@ -73,6 +74,7 @@ export class AuthController {
       profilePictureUrl: user.profilePictureUrl,
       name: user.name,
       phoneNumber: user.phoneNumber,
+      birthDate: dayjs(user.birthDate).format('YYYY-MM-DD'),
       bio: user.bio,
     });
   }
