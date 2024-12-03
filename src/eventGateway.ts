@@ -68,18 +68,18 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     payload: {
       chatRoomId: number;
       toUserId: number;
-      message: string;
+      content: string;
       fromUserId: number;
       createdAt: string;
     },
   ) {
-    const { chatRoomId, toUserId, message, fromUserId, createdAt } = payload;
+    const { chatRoomId, toUserId, content, fromUserId, createdAt } = payload;
 
     // 메시지 저장 로직
     const newMessage = await this.chatMessageService.saveMessage(
       chatRoomId,
       toUserId,
-      message,
+      content,
       fromUserId,
       createdAt,
     );

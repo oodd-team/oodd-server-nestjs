@@ -15,17 +15,40 @@ export class ChatMessageService {
   async saveMessage(
     chatRoomId: number,
     toUserId: number,
-    message: string,
+    content: string,
     fromUserId: number,
     createdAt: string,
   ) {
-    return await this.chatMessageRepository.save({
+    const newMessage = await this.chatMessageRepository.save({
       chatRoomId,
       toUserId,
-      message,
+      content,
       fromUserId,
       createdAt,
     });
+
+    const newMessageWithUser = await this.chatMessageRepository.findOne({
+      where: { id: newMessage.id },
+      relations: ['fromUser', 'toUser'],
+    });
+
+    return {
+      id: newMessageWithUser.id,
+      chatRoomId: newMessageWithUser.chatRoom.id,
+      content: newMessageWithUser.content,
+      fromUser: {
+        id: newMessageWithUser.fromUser.id,
+        nickname: newMessageWithUser.fromUser.nickname,
+        profilePictureUrl: newMessageWithUser.fromUser.profilePictureUrl,
+      },
+      toUser: {
+        id: newMessageWithUser.toUser.id,
+        nickname: newMessageWithUser.toUser.nickname,
+        profilePictureUrl: newMessageWithUser.toUser.profilePictureUrl,
+      },
+      createdAt: newMessageWithUser.createdAt,
+      toUserReadAt: newMessageWithUser.toUserReadAt,
+    };
   }
 
   async getMessagesByChatRoomId(chatRoomId: number) {
@@ -37,6 +60,7 @@ export class ChatMessageService {
 
     return messages.map((message) => ({
       id: message.id,
+      chatRoomId: message.chatRoom.id,
       content: message.content,
       fromUser: {
         id: message.fromUser.id,
