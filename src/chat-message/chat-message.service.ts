@@ -20,11 +20,11 @@ export class ChatMessageService {
     createdAt: string,
   ) {
     const newMessage = await this.chatMessageRepository.save({
-      chatRoomId,
-      toUserId,
-      content,
-      fromUserId,
-      createdAt,
+      chatRoom: { id: chatRoomId },
+      toUser: { id: toUserId },
+      content: content,
+      fromUser: { id: fromUserId },
+      createdAt: createdAt,
     });
 
     const newMessageWithUser = await this.chatMessageRepository.findOne({
@@ -35,7 +35,7 @@ export class ChatMessageService {
     return {
       id: newMessageWithUser.id,
       chatRoomId: chatRoomId,
-      content: newMessageWithUser.content,
+      content: content,
       fromUser: {
         id: fromUserId,
         nickname: newMessageWithUser.fromUser.nickname,
@@ -46,7 +46,7 @@ export class ChatMessageService {
         nickname: newMessageWithUser.toUser.nickname,
         profilePictureUrl: newMessageWithUser.toUser.profilePictureUrl,
       },
-      createdAt: newMessageWithUser.createdAt,
+      createdAt: createdAt,
       toUserReadAt: newMessageWithUser.toUserReadAt,
     };
   }
