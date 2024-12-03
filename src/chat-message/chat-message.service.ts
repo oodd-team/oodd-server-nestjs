@@ -29,24 +29,24 @@ export class ChatMessageService {
 
     const newMessageWithUser = await this.chatMessageRepository.findOne({
       where: { id: newMessage.id },
-      relations: ['fromUser', 'toUser'],
+      relations: ['fromUser', 'toUser', 'chatRoom'],
     });
 
     return {
       id: newMessageWithUser.id,
-      chatRoomId: newMessage.chatRoomId,
-      content: newMessage.content,
+      chatRoomId: newMessageWithUser.chatRoom.id,
+      content: newMessageWithUser.content,
       fromUser: {
-        id: newMessage.fromUserId,
+        id: newMessageWithUser.fromUser.id,
         nickname: newMessageWithUser.fromUser.nickname,
         profilePictureUrl: newMessageWithUser.fromUser.profilePictureUrl,
       },
       toUser: {
-        id: newMessage.toUserId,
+        id: newMessageWithUser.toUser.id,
         nickname: newMessageWithUser.toUser.nickname,
         profilePictureUrl: newMessageWithUser.toUser.profilePictureUrl,
       },
-      createdAt: newMessage.createdAt,
+      createdAt: newMessageWithUser.createdAt,
       toUserReadAt: newMessageWithUser.toUserReadAt,
     };
   }
