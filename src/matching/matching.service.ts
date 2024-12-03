@@ -100,6 +100,12 @@ export class MatchingService {
       if (body.requestStatus === 'accept') {
         matching.requestStatus = MatchingRequestStatusEnum.ACCEPTED;
         matching.acceptedAt = new Date();
+
+        const chatRoom = await this.chatRoomService.getChatRoomByMatchingId(
+          matching.id,
+        );
+        chatRoom.requestStatus = 'accepted';
+        await queryRunner.manager.save(chatRoom);
       } else if (body.requestStatus === 'reject') {
         matching.requestStatus = MatchingRequestStatusEnum.REJECTED;
         matching.rejectedAt = new Date();

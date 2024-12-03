@@ -23,11 +23,11 @@ export class PatchMatchingResponse {
   targetId: number;
 
   @ApiProperty({
-    example: 'accept',
-    enum: ['accept', 'reject', 'pending'],
+    example: 'accepted',
+    enum: ['accepted', 'rejected', 'pending'],
     description: '수락 또는 거절',
   })
-  requestStatus: 'accept' | 'reject' | 'pending';
+  requestStatus: 'accepted' | 'rejected' | 'pending';
 
   @ApiProperty({ example: 1, description: '채팅방 아이디' })
   chatRoomId?: number;
