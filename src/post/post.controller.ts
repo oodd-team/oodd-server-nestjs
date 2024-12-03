@@ -135,7 +135,7 @@ export class PostController {
       isRepresentative: post.isRepresentative,
       postStyletags: post.postStyletags?.map((tag) => tag.styletag.tag),
       postImages: post.postImages.map((image) => ({
-        imageUrl: image.url,
+        url: image.url,
         orderNum: image.orderNum,
       })),
       postClothings: post.postClothings.map((postClothing) => ({
@@ -177,7 +177,7 @@ export class PostController {
       isRepresentative: updatedPost.isRepresentative,
       postStyletags: post.postStyletags?.map((tag) => tag.styletag.tag),
       postImages: updatedPost.postImages.map((image) => ({
-        imageUrl: image.url,
+        url: image.url,
         orderNum: image.orderNum,
       })),
       postClothings: updatedPost.postClothings.map((postClothing) => ({

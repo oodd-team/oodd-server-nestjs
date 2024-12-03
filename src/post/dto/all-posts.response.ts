@@ -1,8 +1,9 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, PickType } from '@nestjs/swagger';
 import dayjs from 'dayjs';
 import { GetAllPostDto, UserDto } from './dto/get-all-posts.dto';
 import { MatchingRequestStatusEnum } from '../../common/enum/matchingRequestStatus';
 import { Matching } from 'src/common/entities/matching.entity';
+import { User } from 'src/common/entities/user.entity';
 
 export class PostDto extends GetAllPostDto {
   @ApiProperty({
@@ -34,6 +35,11 @@ export class PostDto extends GetAllPostDto {
   }
 }
 
+class MatchingDto extends PickType(Matching, ['requestStatus']) {
+  target: User | null;
+  requester: User | null;
+}
+
 export class GetAllPostsResponse {
   @ApiProperty({
     type: [PostDto],
@@ -44,13 +50,13 @@ export class GetAllPostsResponse {
   constructor(
     posts: GetAllPostDto[],
     currentUserId: number,
-    matchings?: Matching[],
+    matchings?: MatchingDto[],
   ) {
     this.post = posts.map((post) => {
       const matching = matchings?.find(
-        (matching) =>
-          matching.requester.id === post.user.id ||
-          matching.target.id === post.user.id,
+        (matching: MatchingDto) =>
+          (matching.requester ? matching.requester.id === post.user.id : 0) ||
+          (matching.target ? matching.target.id === post.user.id : 0),
       );
       return new PostDto(post, currentUserId, matching?.requestStatus ?? null);
     });
