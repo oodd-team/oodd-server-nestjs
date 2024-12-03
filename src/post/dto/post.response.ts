@@ -1,4 +1,4 @@
-import { ApiProperty, OmitType } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import dayjs from 'dayjs';
 import { PostClothing } from 'src/common/entities/post-clothing.entity';

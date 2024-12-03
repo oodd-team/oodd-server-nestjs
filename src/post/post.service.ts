@@ -49,9 +49,6 @@ export class PostService {
     const blockedUserIds =
       await this.userBlockService.getBlockedUserIdsByRequesterId(currentUserId);
 
-    console.log(blockedUserIds);
-    console.log(currentUserId);
-
     const queryBuilder = this.dataSource
       .getRepository(Post)
       .createQueryBuilder('post')

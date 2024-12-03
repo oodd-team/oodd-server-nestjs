@@ -1,32 +1,11 @@
-import { ApiProperty, OmitType } from '@nestjs/swagger';
-import dayjs from 'dayjs';
+import { ApiProperty, OmitType, PickType } from '@nestjs/swagger';
 import { Post } from 'src/common/entities/post.entity';
 
-export class PostDto {
-  @ApiProperty({
-    example: 19,
-    description: '조회한 작성자의 user ID 입니다.',
-  })
-  userId: number;
-
-  @ApiProperty({
-    example: 3,
-    description: '게시글의 번호입니다.',
-  })
-  postId: number;
-
-  @ApiProperty({
-    example: true,
-    description: '대표 게시글 여부를 나타냅니다.',
-  })
-  isRepresentative: boolean;
-
-  @ApiProperty({
-    example: '2024-10-21T09:00:00.000Z',
-    description: '게시글이 작성된 시간입니다.',
-  })
-  createdAt: string;
-
+export class PostDto extends PickType(Post, [
+  'id',
+  'isRepresentative',
+  'createdAt',
+]) {
   @ApiProperty({
     example: 'http://imageurl.example',
     description: '게시글의 썸네일 URL입니다.',
@@ -58,11 +37,11 @@ export class PostDto {
   isPostComment: boolean;
 
   constructor(post: Post, currentUserId: number) {
-    this.userId = post.user.id;
-    this.postId = post.id;
+    super();
+    this.id = post.id;
     this.isRepresentative = post.isRepresentative;
-    (this.createdAt = dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ')),
-      (this.imageUrl = post.postImages?.[0]?.url || '');
+    this.createdAt = post.createdAt;
+    this.imageUrl = post.postImages?.[0]?.url || '';
     this.postCommentsCount = post.postComments?.length || 0;
     this.postLikesCount = post.postLikes?.length || 0;
     this.isPostLike =
