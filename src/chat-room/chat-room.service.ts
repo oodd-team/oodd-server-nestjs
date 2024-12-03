@@ -23,16 +23,27 @@ export class ChatRoomService {
         userId,
       })
       .andWhere('chatRoom.status = :status', { status: 'activated' })
+      .andWhere('chatRoom.requestStatus = :requestStatus', {
+        requestStatus: 'accepted',
+      })
       .orderBy('chatMessages.createdAt', 'DESC')
       .getMany();
 
     // 각 채팅방에서 최신 메시지를 선택
     const chatRoomsWithLatestMessages = chatRooms.map((room) => {
+      const otherUser =
+        room.fromUser.id === userId ? room.toUser : room.fromUser;
       const latestMessage =
         room.chatMessages.length > 0 ? room.chatMessages[0] : null; // 가장 최근 메시지 선택
+
       return {
-        ...room,
-        latestMessage, // 최신 메시지 포함
+        chatRoomId: room.id,
+        otherUser: {
+          id: otherUser.id,
+          nickname: otherUser.nickname,
+          profileUrl: otherUser.profilePictureUrl,
+        },
+        latestMessage: latestMessage,
       };
     });
     return chatRoomsWithLatestMessages;
