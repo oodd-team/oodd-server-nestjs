@@ -42,6 +42,12 @@ export class GetUserInfo {
     example: '안녕하세요',
   })
   bio: string;
+
+  @ApiProperty({
+    description: '생일',
+    example: '2000-12-17',
+  })
+  birthDate: string;
 }
 
 export class GetOtherUserInfo extends GetUserInfo {

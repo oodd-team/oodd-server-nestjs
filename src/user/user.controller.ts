@@ -27,6 +27,7 @@ import {
 import { PatchUserResponse } from './dto/response/patch-user.response';
 import { GetOtherUserInfo } from './dto/response/get-user.response';
 import { MatchingService } from 'src/matching/matching.service';
+import dayjs from 'dayjs';
 
 @ApiBearerAuth('Authorization')
 @Controller('user')
@@ -64,6 +65,7 @@ export class UserController {
       nickname: user.nickname,
       profilePictureUrl: user.profilePictureUrl,
       bio: user.bio,
+      birthDate: dayjs(user.birthDate).format('YYYY-MM-DD'),
       isFriend: isFriend,
     });
   }
