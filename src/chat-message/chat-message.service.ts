@@ -60,7 +60,7 @@ export class ChatMessageService {
 
     return messages.map((message) => ({
       id: message.id,
-      chatRoomId: message.chatRoom.id,
+      chatRoomId: chatRoomId,
       content: message.content,
       fromUser: {
         id: message.fromUser.id,
