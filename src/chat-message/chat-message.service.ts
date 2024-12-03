@@ -34,19 +34,19 @@ export class ChatMessageService {
 
     return {
       id: newMessageWithUser.id,
-      chatRoomId: newMessageWithUser.chatRoom.id,
-      content: newMessageWithUser.content,
+      chatRoomId: chatRoomId,
+      content: content,
       fromUser: {
-        id: newMessageWithUser.fromUser.id,
+        id: fromUserId,
         nickname: newMessageWithUser.fromUser.nickname,
         profilePictureUrl: newMessageWithUser.fromUser.profilePictureUrl,
       },
       toUser: {
-        id: newMessageWithUser.toUser.id,
+        id: toUserId,
         nickname: newMessageWithUser.toUser.nickname,
         profilePictureUrl: newMessageWithUser.toUser.profilePictureUrl,
       },
-      createdAt: newMessageWithUser.createdAt,
+      createdAt: createdAt,
       toUserReadAt: newMessageWithUser.toUserReadAt,
     };
   }
