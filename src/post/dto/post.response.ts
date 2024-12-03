@@ -11,7 +11,7 @@ class PostImageDto {
     example: 'http://example.com/image.jpg',
     description: '게시물 이미지 URL',
   })
-  imageUrl: string;
+  url: string;
 
   @ApiProperty({
     example: 1,
@@ -20,7 +20,7 @@ class PostImageDto {
   orderNum: number;
 
   constructor(postImage: PostImage) {
-    this.imageUrl = postImage.url;
+    this.url = postImage.url;
     this.orderNum = postImage.orderNum;
   }
 }
