@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { PostImageController } from './post-image.controller';
 import { PostImageService } from './post-image.service';
 
 @Module({
-  controllers: [PostImageController],
-  providers: [PostImageService]
+  imports: [TypeOrmModule.forFeature([PostImage])],
+  providers: [PostImageService],
+  exports: [PostImageService],
 })
 export class PostImageModule {}

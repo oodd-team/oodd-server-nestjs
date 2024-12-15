@@ -3,6 +3,8 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Column,
+  BeforeUpdate,
+  DeleteDateColumn,
 } from 'typeorm';
 
 export abstract class BaseEntity {
@@ -18,6 +20,6 @@ export abstract class BaseEntity {
   @UpdateDateColumn({ type: 'datetime', nullable: true })
   updatedAt!: Date | null;
 
-  @Column({ type: 'datetime', nullable: true })
+  @DeleteDateColumn({ type: 'datetime', nullable: true })
   deletedAt!: Date | null;
 }

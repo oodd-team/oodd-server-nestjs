@@ -1,4 +1,44 @@
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
-export class AuthService {}
+export class AuthService {
+  constructor(
+    @Inject(forwardRef(() => UserService))
+    private readonly userSerivce: UserService,
+    private readonly jwtService: JwtService,
+  ) {}
+
+  async socialLogin(
+    user: SocialUser,
+    provider: 'kakao' | 'naver',
+  ): Promise<string> {
+    let userBySocial;
+    if (provider === 'kakao')
+      userBySocial = await this.userSerivce.getUserByKaKaoId(user.kakaoId);
+    else if (provider === 'naver')
+      userBySocial = await this.userSerivce.getUserByNaverId(user.naverId);
+
+    if (!userBySocial)
+      return await this.userSerivce.createUserByKakaoOrNaver(user);
+
+    return await this.generateJwtToken({
+      id: userBySocial.id,
+      email: userBySocial.email,
+      nickname: userBySocial.nickname,
+      kakaoId: userBySocial.kakaoId ? userBySocial.kakaoId : undefined,
+      naverId: userBySocial.naverId ? userBySocial.naverId : undefined,
+    });
+  }
+
+  async generateJwtToken(user: JwtPayload): Promise<string> {
+    return this.jwtService.sign(user);
+  }
+
+  async tokenValidateUser(
+    payload: JwtPayload,
+  ): Promise<JwtPayload | undefined> {
+    return await this.userSerivce.findByFields({
+      where: { id: payload.id, status: 'activated' },
+    });
+  }
+}

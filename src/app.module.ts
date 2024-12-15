@@ -19,6 +19,8 @@ import { StyletagModule } from './styletag/styletag.module';
 import { UserBlockModule } from './user-block/user-block.module';
 import { UserReportModule } from './user-report/user-report.module';
 import { AuthModule } from './auth/auth.module';
+import { DayjsModule } from './common/dayjs/dayjs.module';
+import { EventsGateway } from './eventGateway';
 
 @Module({
   imports: [
@@ -62,6 +64,6 @@ import { AuthModule } from './auth/auth.module';
     AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, EventsGateway],
 })
 export class AppModule {}

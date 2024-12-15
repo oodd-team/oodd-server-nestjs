@@ -6,7 +6,7 @@ import { Post } from './post.entity';
 @Entity('PostReport')
 export class PostReport extends BaseEntity {
   @ManyToOne(() => User, (user) => user.postReports)
-  @JoinColumn({ name: 'reporterId' })
+  @JoinColumn({ name: 'requesterId' })
   reporter!: User;
 
   @ManyToOne(() => Post, (post) => post.postReports)
