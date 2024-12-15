@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { setupSwagger } from './utils/swagger';
-import { ServiceExceptionToHttpExceptionFilter } from './common/exception-filter';
+import { ServiceExceptionToHttpExceptionFilter } from './common/exception-filter/service.exception.to.http.exception.filter';
 import { ValidationPipe } from '@nestjs/common';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 
@@ -11,7 +11,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
   app.useWebSocketAdapter(new IoAdapter(app));
   setupSwagger(app);
-  await app.listen(3000);
+  await app.listen(process.env.PORT);
   console.log(`Application is running on: ${await app.getUrl()}`);
 }
 bootstrap();

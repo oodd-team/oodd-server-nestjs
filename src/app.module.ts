@@ -19,7 +19,7 @@ import { StyletagModule } from './styletag/styletag.module';
 import { UserBlockModule } from './user-block/user-block.module';
 import { UserReportModule } from './user-report/user-report.module';
 import { AuthModule } from './auth/auth.module';
-import { DayjsModule } from './common/dayjs/dayjs.module';
+import { DayjsModule } from './common/dayjs/dayjs.module'; // DayjsModule 추가
 import { EventsGateway } from './eventGateway';
 
 @Module({
@@ -51,6 +51,7 @@ import { EventsGateway } from './eventGateway';
     ChatRoomModule,
     ClothingModule,
     MatchingModule,
+    DayjsModule, // DayjsModule 추가
     PostClothingModule,
     PostCommentModule,
     PostImageModule,
@@ -62,6 +63,9 @@ import { EventsGateway } from './eventGateway';
     UserBlockModule,
     UserReportModule,
     AuthModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
   ],
   controllers: [AppController],
   providers: [AppService, EventsGateway],

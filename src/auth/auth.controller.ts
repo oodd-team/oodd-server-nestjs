@@ -18,9 +18,12 @@ import dayjs from 'dayjs';
 @Controller('auth')
 @ApiTags('[서비스] Auth 관련')
 export class AuthController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly authService: AuthService,
+  ) {}
 
-  @Post()
+  @Get('/login/kakao')
   @KakaoLoginSwagger('kakao 로그인 API')
   @UseGuards(KakaoAuthGuard)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -39,7 +42,7 @@ export class AuthController {
     return res.redirect(url + '?token=' + jwtToken);
   }
 
-  @Post()
+  @Get('/login/naver')
   @NaverLoginSwagger('naver 로그인 API')
   @UseGuards(NaverAuthGuard)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

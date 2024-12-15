@@ -1,11 +1,11 @@
 # This workflow will do a clean install of node dependencies, cache/restore them, build the source code and run tests across different versions of node
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
 
-name: dev-deploy
+name: prod-deploy
 
 on:
   push:
-    branches: ['dev']
+    branches: ['main']
 
 jobs:
   build:
@@ -34,22 +34,22 @@ jobs:
           echo "DB_HOST=${{secrets.DB_HOST}}" >> .env
           echo "DB_USER=${{ secrets.DB_USER }}" >> .env
           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-          echo "DB_DATABASE=${{ secrets.DEV_DB_DATABASE }}" >> .env
+          echo "DB_DATABASE=${{ secrets.PROD_DB_DATABASE }}" >> .env
           echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
           echo "JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }}" >> .env
           echo "KAKAO_ID=${{ secrets.KAKAO_ID }}" >> .env
           echo "KAKAO_SECRET=${{ secrets.KAKAO_SECRET }}" >> .env
-          echo "KAKAO_REDIRECT=${{ secrets.DEV_KAKAO_REDIRECT }}" >> .env
+          echo "KAKAO_REDIRECT=${{ secrets.PROD_KAKAO_REDIRECT }}" >> .env
           echo "NAVER_ID=${{ secrets.NAVER_ID }}" >> .env
           echo "NAVER_SECRET=${{ secrets.NAVER_SECRET }}" >> .env
-          echo "NAVER_REDIRECT=${{ secrets.DEV_NAVER_REDIRECT }}" >> .env
-          echo "PORT"=${{ secrets.DEV_PORT }} >> .env
+          echo "NAVER_REDIRECT=${{ secrets.PROD_NAVER_REDIRECT }}" >> .env
+          echo "PORT"=${{ secrets.PROD_PORT }} >> .env
 
       - name: copy appspec.yml
-        run: cp appspec/appspec-dev.yml appspec.yml
+        run: cp appspec/appspec-prod.yml appspec.yml
 
       - name: copy scripts
-        run: mkdir -p scripts && cp dev-scripts/after-deploy.sh scripts/after-deploy.sh
+        run: mkdir -p scripts && cp prod-scripts/after-deploy.sh scripts/after-deploy.sh
 
       - name: build server files
         working-directory: ./
@@ -68,11 +68,11 @@ jobs:
           aws-region: ap-northeast-2
 
       - name: upload to S3
-        run: aws s3 cp --region ap-northeast-2 ./build.zip s3://oodd-dev-api-bucket/
+        run: aws s3 cp --region ap-northeast-2 ./build.zip s3://oodd-prod-api-bucket/
 
       - name: deploy with AWS codeDeploy
         run: aws deploy create-deployment
-          --application-name nestjs-app-dev
+          --application-name nestjs-app-prod
           --deployment-config-name CodeDeployDefault.OneAtATime
-          --deployment-group-name nestjs-app-dev-group
-          --s3-location bucket=oodd-dev-api-bucket,bundleType=zip,key=build.zip
+          --deployment-group-name nestjs-app-prod-group
+          --s3-location bucket=oodd-prod-api-bucket,bundleType=zip,key=build.zip
