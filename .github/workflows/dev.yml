@@ -33,7 +33,7 @@ jobs:
         run: |
           echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
           echo "DB_USER=${{ secrets.DB_USER }}" >> .env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+          echo "DB_PASSWORD=${{ secrets.DEV_DB_PASSWORD }}" >> .env
           echo "DB_DATABASE=${{ secrets.DEV_DB_DATABASE }}" >> .env
           echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
           echo "JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }}" >> .env
@@ -68,11 +68,11 @@ jobs:
           aws-region: ap-northeast-2
 
       - name: upload to S3
-        run: aws s3 cp --region ap-northeast-2 ./build.zip s3://oodd-dev-api-bucket/
+        run: aws s3 cp --region ap-northeast-2 ./build.zip s3://oodd-api-bucket/dev/
 
       - name: deploy with AWS codeDeploy
         run: aws deploy create-deployment
           --application-name nestjs-app-dev
           --deployment-config-name CodeDeployDefault.OneAtATime
           --deployment-group-name nestjs-app-dev-group
-          --s3-location bucket=oodd-dev-api-bucket,bundleType=zip,key=build.zip
+          --s3-location bucket=oodd-api-bucket,bundleType=zip,key=dev/build.zip
