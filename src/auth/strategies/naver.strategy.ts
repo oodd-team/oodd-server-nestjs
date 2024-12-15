@@ -9,9 +9,9 @@ import { Request } from 'express';
 export class NaverStrategy extends PassportStrategy(Strategy, 'naver') {
   constructor(private configService: ConfigService) {
     super({
-      clientID: configService.get('NAVER_ID'),
-      clientSecret: configService.get('NAVER_SECRET'),
-      callbackURL: configService.get('NAVER_REDIRECT'),
+      clientID: process.env.NAVER_ID,
+      clientSecret: process.env.NAVER_SECRET,
+      callbackURL: process.env.NAVER_REDIRECT,
       passReqToCallback: true,
     });
   }
