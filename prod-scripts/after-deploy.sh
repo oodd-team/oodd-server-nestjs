@@ -1,7 +1,7 @@
 #!/bin/bash
 REPOSITORY=/home/ubuntu/build
 APP_NAME=node_app_prod
-
+export PATH=$PATH:$(npm root -g)
 cd $REPOSITORY
 
 # Check if the app is already running
