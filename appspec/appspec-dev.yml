@@ -1,7 +1,7 @@
 version: 0.0
 os: linux
 files:
-  - source: /dev
+  - source: /
     destination: /home/ubuntu/build-dev
     overwrite: yes
 file_exists_behavior: OVERWRITE
