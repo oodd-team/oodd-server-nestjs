@@ -24,15 +24,12 @@ import { EventsGateway } from './eventGateway';
 
 @Module({
   imports: [
-    UserModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),
     TypeOrmModule.forRoot({
       type: 'mysql',
-      host: process.env.DEV_DB_HOST
-        ? process.env.DEV_DB_HOST
-        : process.env.DB_HOST,
+      host: process.env.DB_HOST,
       port: 3306,
       username: process.env.DEV_DB_USER
         ? process.env.DEV_DB_USER
@@ -47,6 +44,7 @@ import { EventsGateway } from './eventGateway';
       logging: true, // 정확히 어떤 sql 쿼리가 실행됐는지 로그 출력
       synchronize: false, // 현재 entity 와 실제 데이터베이스 상 모델을 동기화
     }),
+    UserModule,
     ChatMessageModule,
     ChatRoomModule,
     ClothingModule,
@@ -63,9 +61,6 @@ import { EventsGateway } from './eventGateway';
     UserBlockModule,
     UserReportModule,
     AuthModule,
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
   ],
   controllers: [AppController],
   providers: [AppService, EventsGateway],
