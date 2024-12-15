@@ -1,0 +1,18 @@
+version: 0.0
+os: linux
+files:
+  - source: /dev
+    destination: /home/ubuntu/build-dev
+    overwrite: yes
+file_exists_behavior: OVERWRITE
+permissions:
+  - object: /home/ubuntu
+    pattern: '**'
+    owner: ubuntu
+    group: ubuntu
+
+hooks:
+  AfterInstall:
+    - location: scripts/after-deploy.sh
+      timeout: 60
+      runas: ubuntu
