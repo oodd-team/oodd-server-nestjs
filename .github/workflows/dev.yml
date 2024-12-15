@@ -68,7 +68,7 @@ jobs:
           aws-region: ap-northeast-2
 
       - name: upload to S3
-        run: aws s3 cp --region ap-northeast-2 ./build.zip s3://oodd-dev-api-bucket/dev/
+        run: aws s3 cp --region ap-northeast-2 ./build.zip s3://oodd-api-bucket/dev/
 
       - name: deploy with AWS codeDeploy
         run: aws deploy create-deployment
