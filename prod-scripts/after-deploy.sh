@@ -1,8 +1,8 @@
 #!/bin/bash
 REPOSITORY=/home/ubuntu/build
 APP_NAME=node_app_prod
-export PATH=$PATH:$(npm root -g)
 cd $REPOSITORY
+export PATH=$PATH:$(npm root -g)
 
 # Check if the app is already running
 if pm2 list | grep $APP_NAME > /dev/null
