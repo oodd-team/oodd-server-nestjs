@@ -38,6 +38,7 @@ import {
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { PostService } from 'src/post/post.service';
 import { ChatRoomService } from 'src/chat-room/chat-room.service';
+import { MatchingRequestStatusEnum } from 'src/common/enum/matchingRequestStatus';
 
 @ApiBearerAuth('Authorization')
 @Controller('matching')
@@ -109,7 +110,7 @@ export class MatchingController {
     if (req.user.id !== matching.target.id) {
       throw UnauthorizedException('권한이 없습니다.');
     }
-    if (matching.requestStatus !== 'pending') {
+    if (matching.requestStatus !== MatchingRequestStatusEnum.PENDING) {
       throw InvalidInputValueException('이미 처리된 요청입니다.');
     }
     if (!chatRoom) {
