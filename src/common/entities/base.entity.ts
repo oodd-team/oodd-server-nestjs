@@ -4,8 +4,8 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Column,
-  BeforeUpdate,
   DeleteDateColumn,
+  BeforeUpdate,
 } from 'typeorm';
 
 export abstract class BaseEntity {
