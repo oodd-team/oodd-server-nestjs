@@ -75,4 +75,4 @@ jobs:
           --application-name nestjs-app-prod
           --deployment-config-name CodeDeployDefault.OneAtATime
           --deployment-group-name nestjs-app-prod-group
-          --s3-location bucket=oodd-api-bucket,bundleType=zip,key=build.zip
+          --s3-location bucket=oodd-api-bucket,bundleType=zip,key=prod/build.zip

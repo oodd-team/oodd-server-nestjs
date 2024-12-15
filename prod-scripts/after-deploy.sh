@@ -4,6 +4,8 @@ APP_NAME=node_app_prod
 
 cd $REPOSITORY
 
+sudo -s
+
 # Check if the app is already running
 if sudo pm2 list | grep $APP_NAME > /dev/null
 then
