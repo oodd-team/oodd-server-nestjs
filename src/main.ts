@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { setupSwagger } from './utils/swagger';
-import { ServiceExceptionToHttpExceptionFilter } from './common/exception-filter/service.exception.to.http.exception.filter';
+import { ServiceExceptionToHttpExceptionFilter } from './common/exception-filter';
 import { ValidationPipe } from '@nestjs/common';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 

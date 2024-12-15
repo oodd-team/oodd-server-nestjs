@@ -61,6 +61,10 @@ import { EventsGateway } from './eventGateway';
     UserBlockModule,
     UserReportModule,
     AuthModule,
+
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
   ],
   controllers: [AppController],
   providers: [AppService, EventsGateway],
