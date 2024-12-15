@@ -103,14 +103,15 @@ export class MatchingController {
     const chatRoom = await this.chatRoomService.getChatRoomByMatchingId(
       matching.id,
     );
+    if (!matching) {
+      throw DataNotFoundException('해당 매칭 요청을 찾을 수 없습니다.');
+    }
     if (req.user.id !== matching.target.id) {
       throw UnauthorizedException('권한이 없습니다.');
     }
-
     if (matching.requestStatus !== 'pending') {
       throw InvalidInputValueException('이미 처리된 요청입니다.');
     }
-
     if (!chatRoom) {
       throw DataNotFoundException('채팅방을 찾을 수 없습니다.');
     }
