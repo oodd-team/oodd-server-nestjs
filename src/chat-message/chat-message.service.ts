@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ChatMessage } from 'src/common/entities/chat-message.entity';
 import { ChatRoom } from 'src/common/entities/chat-room.entity';
+import { StatusEnum } from 'src/common/enum/entityStatus';
 import { CreateMatchingReqeust } from 'src/matching/dto/matching.request';
 import { QueryRunner, Repository } from 'typeorm';
 
@@ -53,7 +54,7 @@ export class ChatMessageService {
 
   async getMessagesByChatRoomId(chatRoomId: number) {
     const messages = await this.chatMessageRepository.find({
-      where: { chatRoom: { id: chatRoomId }, status: 'activated' },
+      where: { chatRoom: { id: chatRoomId }, status: StatusEnum.ACTIVATED },
       order: { createdAt: 'ASC' }, // 오래된 메시지부터 최신 메시지 순으로 정렬
       relations: ['fromUser', 'toUser'], // 메시지 발신자, 수신자 정보도 함께 로드
     });

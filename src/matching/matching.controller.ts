@@ -38,6 +38,7 @@ import {
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { PostService } from 'src/post/post.service';
 import { ChatRoomService } from 'src/chat-room/chat-room.service';
+import { StatusEnum } from 'src/common/enum/entityStatus';
 
 @ApiBearerAuth('Authorization')
 @Controller('matching')
@@ -68,7 +69,7 @@ export class MatchingController {
       !(await this.postService.findByFields({
         where: {
           user: { id: body.requesterId },
-          status: 'activated',
+          status: StatusEnum.ACTIVATED,
         },
       }))
     ) {

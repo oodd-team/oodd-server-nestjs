@@ -24,6 +24,7 @@ import {
 } from './dto/user-posts.response';
 import { GetAllPostDto } from './dto/dto/get-all-posts.dto';
 import { MatchingService } from 'src/matching/matching.service';
+import { StatusEnum } from 'src/common/enum/entityStatus';
 
 @Injectable()
 export class PostService {
@@ -204,7 +205,7 @@ export class PostService {
     await queryRunner.startTransaction();
 
     const user = await this.userService.findByFields({
-      where: { id: currentUserId, status: 'activated' },
+      where: { id: currentUserId, status: StatusEnum.ACTIVATED },
     });
 
     try {
@@ -353,11 +354,11 @@ export class PostService {
     await queryRunner.startTransaction();
 
     const post = await this.postRepository.findOne({
-      where: { id: postId, user: { id: userId }, status: 'activated' },
+      where: { id: postId, user: { id: userId }, status: StatusEnum.ACTIVATED },
     });
 
     try {
-      post.status = 'deactivated';
+      post.status = StatusEnum.DEACTIVATED;
       post.isRepresentative = false;
       post.softDelete();
       await queryRunner.manager.save(post);
@@ -446,7 +447,11 @@ export class PostService {
     await queryRunner.startTransaction();
 
     const post = await this.postRepository.findOne({
-      where: { id: postId, user: { id: currentUserId }, status: 'activated' },
+      where: {
+        id: postId,
+        user: { id: currentUserId },
+        status: StatusEnum.ACTIVATED,
+      },
     });
 
     try {
@@ -474,7 +479,7 @@ export class PostService {
     const post = await this.postRepository.findOne({
       where: {
         id: postId,
-        status: 'activated',
+        status: StatusEnum.ACTIVATED,
       },
       relations: ['user'],
     });

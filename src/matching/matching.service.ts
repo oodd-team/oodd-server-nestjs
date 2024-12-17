@@ -15,6 +15,7 @@ import { ChatRoom } from 'src/common/entities/chat-room.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GetMatchingsResponse } from './dto/matching.response';
 import { MatchingRequestStatusEnum } from 'src/common/enum/matchingRequestStatus';
+import { StatusEnum } from 'src/common/enum/entityStatus';
 
 @Injectable()
 export class MatchingService {
@@ -34,12 +35,12 @@ export class MatchingService {
         {
           requester: { id: requesterId },
           target: { id: targetId },
-          status: 'activated',
+          status: StatusEnum.ACTIVATED,
         },
         {
           requester: { id: targetId },
           target: { id: requesterId },
-          status: 'activated',
+          status: StatusEnum.ACTIVATED,
         },
       ],
     });
@@ -49,8 +50,8 @@ export class MatchingService {
     return await this.matchingRepository.find({
       relations: ['requester', 'target'],
       where: [
-        { requester: { id: currentUserId }, status: 'activated' },
-        { target: { id: currentUserId }, status: 'activated' },
+        { requester: { id: currentUserId }, status: StatusEnum.ACTIVATED },
+        { target: { id: currentUserId }, status: StatusEnum.ACTIVATED },
       ],
     });
   }
@@ -194,13 +195,13 @@ export class MatchingService {
           requester: { id: requesterId },
           target: { id: targetId },
           requestStatus: MatchingRequestStatusEnum.ACCEPTED,
-          status: 'activated',
+          status: StatusEnum.ACTIVATED,
         },
         {
           requester: { id: targetId },
           target: { id: requesterId },
           requestStatus: MatchingRequestStatusEnum.ACCEPTED,
-          status: 'activated',
+          status: StatusEnum.ACTIVATED,
         },
       ],
     });
