@@ -11,6 +11,7 @@ import {
 } from 'src/common/exception/service.exception';
 import { UserService } from 'src/user/user.service';
 import { PostService } from 'src/post/post.service';
+import { StatusEnum } from 'src/common/enum/entityStatus';
 
 @Injectable()
 export class PostCommentService {
@@ -29,10 +30,10 @@ export class PostCommentService {
     createCommentDto: CreateCommentDto,
   ): Promise<PostComment> {
     const post = await this.postService.findByFields({
-      where: { id: postId, status: 'activated' },
+      where: { id: postId, status: StatusEnum.ACTIVATED },
     });
     const user = await this.userService.findByFields({
-      where: { id: currentUserId, status: 'activated' },
+      where: { id: currentUserId, status: StatusEnum.ACTIVATED },
     });
     const postComment = this.postCommentRepository.create({
       content: createCommentDto.content,
@@ -54,7 +55,7 @@ export class PostCommentService {
 
     await Promise.all(
       commentsToRemove.map(async (comment) => {
-        comment.status = 'deactivated';
+        comment.status = StatusEnum.DEACTIVATED;
         comment.softDelete();
         return queryRunner.manager.save(comment);
       }),
@@ -70,7 +71,7 @@ export class PostCommentService {
     const comment = await this.findCommentById(commentId);
 
     try {
-      comment.status = 'deactivated';
+      comment.status = StatusEnum.DEACTIVATED;
       comment.softDelete();
 
       await queryRunner.manager.save(comment);
@@ -92,8 +93,8 @@ export class PostCommentService {
     return await this.postCommentRepository.find({
       where: {
         post: { id: postId },
-        status: 'activated',
-        user: { status: 'activated', id: Not(In(blockedUserIds)) },
+        status: StatusEnum.ACTIVATED,
+        user: { status: StatusEnum.ACTIVATED, id: Not(In(blockedUserIds)) },
       },
       relations: ['user'],
     });
@@ -103,8 +104,8 @@ export class PostCommentService {
     const comment = await this.postCommentRepository.findOne({
       where: {
         id: commentId,
-        status: 'activated',
-        user: { status: 'activated' },
+        status: StatusEnum.ACTIVATED,
+        user: { status: StatusEnum.ACTIVATED },
       },
       relations: ['user'],
     });

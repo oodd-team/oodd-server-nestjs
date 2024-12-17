@@ -9,6 +9,7 @@ import {
   InternalServerException,
   InvalidInputValueException,
 } from 'src/common/exception/service.exception';
+import { StatusEnum } from 'src/common/enum/entityStatus';
 
 @Injectable()
 export class PostStyletagService {
@@ -106,8 +107,8 @@ export class PostStyletagService {
 
       if (existingPostStyletag) {
         // 기존 태그가 있을 경우
-        if (existingPostStyletag.status === 'deactivated') {
-          existingPostStyletag.status = 'activated';
+        if (existingPostStyletag.status === StatusEnum.DEACTIVATED) {
+          existingPostStyletag.status = StatusEnum.ACTIVATED;
           await queryRunner.manager.save(existingPostStyletag);
         }
       } else {
@@ -135,7 +136,7 @@ export class PostStyletagService {
     queryRunner: QueryRunner,
   ): Promise<void> {
     for (const tag of tagToDelete) {
-      tag.status = 'deactivated';
+      tag.status = StatusEnum.DEACTIVATED;
       tag.softDelete();
     }
     await queryRunner.manager.save(tagToDelete);
@@ -152,7 +153,7 @@ export class PostStyletagService {
 
     await Promise.all(
       tagsToRemove.map(async (tag) => {
-        tag.status = 'deactivated';
+        tag.status = StatusEnum.DEACTIVATED;
         tag.softDelete();
         return queryRunner.manager.save(tag);
       }),

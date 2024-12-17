@@ -4,6 +4,7 @@ import { ClothingService } from 'src/clothing/clothing.service';
 import { Clothing } from 'src/common/entities/clothing.entity';
 import { PostClothing } from 'src/common/entities/post-clothing.entity';
 import { Post } from 'src/common/entities/post.entity';
+import { StatusEnum } from 'src/common/enum/entityStatus';
 import { UploadClothingDto } from 'src/post/dto/request/post.request';
 import { PatchClothingDto } from 'src/post/dto/request/post.request';
 import { QueryRunner, Repository } from 'typeorm';
@@ -44,7 +45,7 @@ export class PostClothingService {
     queryRunner?: QueryRunner,
   ): Promise<void> {
     const existingPostClothings = await this.postClothingRepository.find({
-      where: { post: post, status: 'activated' },
+      where: { post: post, status: StatusEnum.ACTIVATED },
       relations: ['clothing'],
     });
 
@@ -109,7 +110,7 @@ export class PostClothingService {
   ): Promise<void> {
     await Promise.all(
       postClothing.map(async (postClothingItem) => {
-        postClothingItem.status = 'deactivated';
+        postClothingItem.status = StatusEnum.DEACTIVATED;
         postClothingItem.softDelete();
 
         await this.clothingService.deleteClothing(
@@ -134,7 +135,7 @@ export class PostClothingService {
 
     await Promise.all(
       clothingToRemove.map(async (Postclothing) => {
-        Postclothing.status = 'deactivated';
+        Postclothing.status = StatusEnum.DEACTIVATED;
         Postclothing.softDelete();
         await this.clothingService.deleteClothing(
           Postclothing.clothing,
