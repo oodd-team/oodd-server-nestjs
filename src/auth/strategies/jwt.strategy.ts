@@ -17,7 +17,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       // accessToken 위치
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET,
+      secretOrKey: configService.get('JWT_SECRET'),
     });
   }
 

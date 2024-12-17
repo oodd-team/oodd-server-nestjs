@@ -9,6 +9,7 @@ import { DataNotFoundException } from 'src/common/exception/service.exception';
 import { GetPostLikesResponseDto } from './dtos/get-post-like.response.dto';
 import { PageOptionsDto } from 'src/common/response/page-options.dto';
 import { PageMetaDto } from 'src/common/response/page-meta.dto';
+import { StatusEnum } from 'src/common/enum/entityStatus';
 
 @Injectable()
 export class PostLikeService {
@@ -29,7 +30,7 @@ export class PostLikeService {
 
     await Promise.all(
       likesToRemove.map(async (like) => {
-        like.status = 'deactivated';
+        like.status = StatusEnum.DEACTIVATED;
         like.softDelete();
         return queryRunner.manager.save(like);
       }),
@@ -43,7 +44,7 @@ export class PostLikeService {
   ): Promise<GetPostLikesResponseDto> {
     // 전체 좋아요 수를 먼저 조회
     const [userLikes, totalLikes] = await this.postLikeRepository.findAndCount({
-      where: { post: { id: postId }, status: 'activated' },
+      where: { post: { id: postId }, status: StatusEnum.ACTIVATED },
       relations: ['user'],
       skip: (pageOptionsDto.page - 1) * pageOptionsDto.take, // 페이지에 따라 건너뛸 수
       take: pageOptionsDto.take, // 요청된 페이지 당 아이템 수
@@ -94,14 +95,16 @@ export class PostLikeService {
     });
 
     const allLikesData = await this.postLikeRepository.find({
-      where: { post: { id: postId }, status: 'activated' },
+      where: { post: { id: postId }, status: StatusEnum.ACTIVATED },
     });
 
     if (likeData) {
       // 좋아요 actiavated인 경우 -> 좋아요 취소
       // 좋아요 deactivated인 경우 -> 다시 좋아요 누름
       likeData.status =
-        likeData.status === 'deactivated' ? 'activated' : 'deactivated';
+        likeData.status === StatusEnum.DEACTIVATED
+          ? StatusEnum.ACTIVATED
+          : StatusEnum.DEACTIVATED;
       await this.postLikeRepository.save(likeData);
       return {
         id: likeData.post.id,
@@ -116,7 +119,7 @@ export class PostLikeService {
       const newLike = this.postLikeRepository.create({
         user: { id: userId },
         post: post,
-        status: 'activated',
+        status: StatusEnum.ACTIVATED,
       });
       await this.postLikeRepository.save(newLike);
       return {

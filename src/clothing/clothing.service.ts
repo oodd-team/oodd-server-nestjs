@@ -5,6 +5,7 @@ import { Clothing } from 'src/common/entities/clothing.entity';
 import { UploadClothingDto } from 'src/post/dto/request/post.request';
 import { DataNotFoundException } from 'src/common/exception/service.exception';
 import { PatchClothingDto } from 'src/post/dto/request/post.request';
+import { StatusEnum } from 'src/common/enum/entityStatus';
 
 @Injectable()
 export class ClothingService {
@@ -38,7 +39,7 @@ export class ClothingService {
     queryRunner: QueryRunner,
   ): Promise<Clothing> {
     const existingClothing = await this.clothingRepository.findOne({
-      where: { id: uploadClothingDto.id, status: 'activated' },
+      where: { id: uploadClothingDto.id, status: StatusEnum.ACTIVATED },
     });
 
     if (!existingClothing) {
@@ -66,7 +67,7 @@ export class ClothingService {
     clothing: Clothing,
     queryRunner: QueryRunner,
   ): Promise<Clothing> {
-    clothing.status = 'deactivated';
+    clothing.status = StatusEnum.DEACTIVATED;
     clothing.softDelete();
     return await queryRunner.manager.save(clothing);
   }

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ChatRoom } from 'src/common/entities/chat-room.entity';
 import { Matching } from 'src/common/entities/matching.entity';
+import { StatusEnum } from 'src/common/enum/entityStatus';
 import { DataNotFoundException } from 'src/common/exception/service.exception';
 import { CreateMatchingReqeust } from 'src/matching/dto/matching.request';
 import { Repository, QueryRunner } from 'typeorm';
@@ -82,7 +83,7 @@ export class ChatRoomService {
 
     // 양쪽 사용자가 모두 나갔을 경우, 채팅방 비활성화
     if (chatRoom.fromUserLeavedAt && chatRoom.toUserLeavedAt) {
-      chatRoom.status = 'deactivated';
+      chatRoom.status = StatusEnum.DEACTIVATED;
       chatRoom.softDelete();
     }
 

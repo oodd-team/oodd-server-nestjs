@@ -5,6 +5,7 @@ import { Repository, QueryRunner } from 'typeorm';
 import { Post } from 'src/common/entities/post.entity';
 import { UploadImageDto } from 'src/post/dto/request/post.request';
 import { InvalidInputValueException } from 'src/common/exception/service.exception';
+import { StatusEnum } from 'src/common/enum/entityStatus';
 
 @Injectable()
 export class PostImageService {
@@ -94,7 +95,7 @@ export class PostImageService {
   ): Promise<void> {
     await Promise.all(
       imagesToRemove.map(async (image) => {
-        image.status = 'deactivated';
+        image.status = StatusEnum.DEACTIVATED;
         image.softDelete();
         image.orderNum = 0;
         return queryRunner.manager.save(image);
@@ -113,7 +114,7 @@ export class PostImageService {
 
     await Promise.all(
       imagesToRemove.map(async (image) => {
-        image.status = 'deactivated';
+        image.status = StatusEnum.DEACTIVATED;
         image.softDelete();
         image.orderNum = 0;
         return queryRunner.manager.save(image);

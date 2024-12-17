@@ -3,29 +3,33 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserReport } from '../common/entities/user-report.entity';
 import { CreateUserReportDto } from '../user-report/dto/user-report.dto';
-import { DataNotFoundException, InvalidInputValueException } from 'src/common/exception/service.exception';
+import {
+  DataNotFoundException,
+  InvalidInputValueException,
+} from 'src/common/exception/service.exception';
 import { UserService } from 'src/user/user.service';
+import { StatusEnum } from 'src/common/enum/entityStatus';
 
 @Injectable()
 export class UserReportService {
   constructor(
     @InjectRepository(UserReport)
     private readonly userReportRepository: Repository<UserReport>,
-    private readonly userService: UserService, 
+    private readonly userService: UserService,
   ) {}
 
   async createReport(createUserReportDto: CreateUserReportDto): Promise<void> {
     const { fromUserId, toUserId, reason } = createUserReportDto;
 
     const fromUser = await this.userService.findByFields({
-      where: { id: fromUserId, status: 'activated' },
+      where: { id: fromUserId, status: StatusEnum.ACTIVATED },
     });
     const toUser = await this.userService.findByFields({
-      where: { id: toUserId, status: 'activated' },
+      where: { id: toUserId, status: StatusEnum.ACTIVATED },
     });
 
     if (!fromUser || !toUser) {
-        throw DataNotFoundException('유저를 찾을 수 없습니다.');
+      throw DataNotFoundException('유저를 찾을 수 없습니다.');
     }
 
     // 중복 신고 확인
@@ -37,7 +41,7 @@ export class UserReportService {
       .getOne();
 
     if (existingReport) {
-      throw InvalidInputValueException('이미 해당 유저를 신고하였습니다.'); 
+      throw InvalidInputValueException('이미 해당 유저를 신고하였습니다.');
     }
 
     const userReport = this.userReportRepository.create({
@@ -46,7 +50,7 @@ export class UserReportService {
       reason,
       createdAt: new Date(),
       updatedAt: new Date(),
-      status: 'activated',
+      status: StatusEnum.ACTIVATED,
     });
 
     await this.userReportRepository.save(userReport);
