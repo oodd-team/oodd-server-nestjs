@@ -9,9 +9,9 @@ import { Request } from 'express';
 export class JwtKakaoStrategy extends PassportStrategy(Strategy, 'kakao') {
   constructor(private configService: ConfigService) {
     super({
-      clientID: process.env.KAKAO_ID, //.env파일에 들어있음\
-      clientSecret: process.env.KAKAO_SECRET, //.env파일에 들어있음
-      callbackURL: process.env.KAKAO_REDIRECT, //.env파일에 들어있음
+      clientID: configService.get('KAKAO_ID'), //.env파일에 들어있음\
+      clientSecret: configService.get('KAKAO_SECRET'), //.env파일에 들어있음
+      callbackURL: configService.get('KAKAO_REDIRECT'), //.env파일에 들어있음
       passReqToCallback: true,
     });
   }
