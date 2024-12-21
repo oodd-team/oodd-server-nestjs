@@ -8,6 +8,7 @@ import {
   DataNotFoundException,
   ForbiddenException,
 } from 'src/common/exception/service.exception';
+import { StatusEnum } from 'src/common/enum/entityStatus';
 
 @Injectable()
 export class UserBlockService {
@@ -21,7 +22,7 @@ export class UserBlockService {
     currentUserId: number,
   ): Promise<number[]> {
     const blockedUsers = await this.userBlockRepository.find({
-      where: { requester: { id: currentUserId }, status: 'activated' },
+      where: { requester: { id: currentUserId }, status: StatusEnum.ACTIVATED },
       relations: ['target'],
     });
 
@@ -32,10 +33,10 @@ export class UserBlockService {
     const { fromUserId, toUserId, action } = createUserBlockDto;
 
     const fromUser = await this.userService.findByFields({
-      where: { id: fromUserId, status: 'activated' },
+      where: { id: fromUserId, status: StatusEnum.ACTIVATED },
     });
     const toUser = await this.userService.findByFields({
-      where: { id: toUserId, status: 'activated' },
+      where: { id: toUserId, status: StatusEnum.ACTIVATED },
     });
 
     if (!fromUser || !toUser) {
@@ -47,13 +48,13 @@ export class UserBlockService {
 
     if (action === 'block') {
       if (existingBlock) {
-        existingBlock.status = 'activated';
+        existingBlock.status = StatusEnum.ACTIVATED;
         await this.userBlockRepository.save(existingBlock);
       } else {
         const userBlock = this.userBlockRepository.create({
           requester: fromUser,
           target: toUser,
-          status: 'activated',
+          status: StatusEnum.ACTIVATED,
         });
         await this.userBlockRepository.save(userBlock);
       }
@@ -62,7 +63,7 @@ export class UserBlockService {
       if (!existingBlock) {
         throw ForbiddenException('차단 이력이 존재하지 않습니다.');
       }
-      existingBlock.status = 'deactivated';
+      existingBlock.status = StatusEnum.DEACTIVATED;
       await this.userBlockRepository.save(existingBlock);
       return 'UNBLOCKED_SUCCESS';
     } else {
@@ -72,7 +73,7 @@ export class UserBlockService {
 
   async getBlockedUserIds(currentUserId: number): Promise<number[]> {
     const blockedUsers = await this.userBlockRepository.find({
-      where: { requester: { id: currentUserId }, status: 'activated' },
+      where: { requester: { id: currentUserId }, status: StatusEnum.ACTIVATED },
       relations: ['target'],
     });
 

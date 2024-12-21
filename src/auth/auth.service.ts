@@ -2,6 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { JwtPayload, SocialUser } from './dto/auth.dto';
 import { JwtService } from '@nestjs/jwt';
+import { StatusEnum } from 'src/common/enum/entityStatus';
 
 @Injectable()
 export class AuthService {
@@ -41,7 +42,7 @@ export class AuthService {
     payload: JwtPayload,
   ): Promise<JwtPayload | undefined> {
     return await this.userSerivce.findByFields({
-      where: { id: payload.id, status: 'activated' },
+      where: { id: payload.id, status: StatusEnum.ACTIVATED },
     });
   }
 }

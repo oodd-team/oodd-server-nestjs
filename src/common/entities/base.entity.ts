@@ -4,16 +4,21 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Column,
-  BeforeUpdate,
   DeleteDateColumn,
+  BeforeUpdate,
 } from 'typeorm';
+import { StatusEnum } from '../enum/entityStatus';
 
 export abstract class BaseEntity {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column({ default: 'activated' })
-  status!: 'activated' | 'deactivated';
+  @Column({
+    type: 'enum',
+    enum: StatusEnum,
+    default: StatusEnum.ACTIVATED,
+  })
+  status!: StatusEnum;
 
   @CreateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   createdAt!: Date;

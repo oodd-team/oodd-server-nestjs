@@ -1,5 +1,5 @@
 import { BaseSwaggerDecorator } from 'nestjs-swagger-decorator';
-import { LoginResponse, UserDto } from './dto/auth.response';
+import { LoginResponse } from './dto/auth.response';
 import { BaseResponse } from 'src/common/response/dto';
 import { ErrorCodeVo } from 'src/common/exception/error';
 import { ApiInternalServerErrorResponse } from '@nestjs/swagger';
