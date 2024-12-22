@@ -42,6 +42,7 @@ export class MatchingService {
       const matching = await queryRunner.manager.save(Matching, {
         requester: { id: body.requesterId },
         target: { id: body.targetId },
+        message: body.message,
       });
 
       const chatRoom = await this.chatRoomService.createChatRoom(
