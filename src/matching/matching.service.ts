@@ -23,25 +23,6 @@ export class MatchingService {
     private readonly chatMessageService: ChatMessageService,
     private readonly dataSource: DataSource,
   ) {}
-  async getMatchingByUserId(
-    requesterId: number,
-    targetId: number,
-  ): Promise<Matching> {
-    return await this.matchingRepository.findOne({
-      where: [
-        {
-          requester: { id: requesterId },
-          target: { id: targetId },
-          status: StatusEnum.ACTIVATED,
-        },
-        {
-          requester: { id: targetId },
-          target: { id: requesterId },
-          status: StatusEnum.ACTIVATED,
-        },
-      ],
-    });
-  }
 
   async getMatchingsByCurrentId(currentUserId: number): Promise<Matching[]> {
     return await this.matchingRepository.find({
@@ -179,10 +160,7 @@ export class MatchingService {
     });
   }
 
-  async existsMatching(
-    requesterId: number,
-    targetId: number,
-  ): Promise<boolean> {
+  async isMatching(requesterId: number, targetId: number): Promise<boolean> {
     const count = await this.matchingRepository.count({
       where: [
         {
@@ -201,5 +179,34 @@ export class MatchingService {
     });
 
     return count > 0;
+  }
+
+  async existsMatching(
+    requesterId: number,
+    targetId: number,
+  ): Promise<boolean> {
+    const matching = await this.matchingRepository.findOne({
+      where: [
+        {
+          requester: { id: requesterId },
+          target: { id: targetId },
+          status: StatusEnum.ACTIVATED,
+        },
+        {
+          requester: { id: targetId },
+          target: { id: requesterId },
+          status: StatusEnum.ACTIVATED,
+        },
+      ],
+    });
+
+    // 매칭이 없거나 REJECTED 상태이면 false
+    if (
+      !matching ||
+      matching.requestStatus === MatchingRequestStatusEnum.REJECTED
+    ) {
+      return false;
+    }
+    return true;
   }
 }
