@@ -8,7 +8,7 @@ import {
   InternalServerException,
 } from 'src/common/exception/service.exception';
 import { DataSource, FindOneOptions, Repository } from 'typeorm';
-import { PatchUserRequest } from './dto/response/patch-user.request';
+import { PatchUserRequest } from './dto/response/user.request';
 import { StatusEnum } from 'src/common/enum/entityStatus';
 
 @Injectable()

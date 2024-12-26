@@ -5,7 +5,7 @@ export class GetUserInfo {
     description: 'user ID',
     example: 19,
   })
-  userId: number;
+  id: number;
 
   @ApiProperty({
     description: '이름',
@@ -52,8 +52,8 @@ export class GetUserInfo {
 
 export class GetOtherUserInfo extends GetUserInfo {
   @ApiProperty({
-    description: '친구 여부',
+    description: '매칭(친구) 여부',
     example: true,
   })
-  isFriend: boolean;
+  isMatching: boolean;
 }
