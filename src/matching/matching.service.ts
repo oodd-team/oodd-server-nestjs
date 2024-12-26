@@ -74,22 +74,22 @@ export class MatchingService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-
+    const chatRoom = await this.chatRoomService.getChatRoomByMatchingId(
+      matching.id,
+    );
     try {
       if (body.requestStatus === 'accept') {
         matching.requestStatus = MatchingRequestStatusEnum.ACCEPTED;
         matching.acceptedAt = new Date();
-
-        const chatRoom = await this.chatRoomService.getChatRoomByMatchingId(
-          matching.id,
-        );
         chatRoom.requestStatus = MatchingRequestStatusEnum.ACCEPTED;
-        await queryRunner.manager.save(chatRoom);
       } else if (body.requestStatus === 'reject') {
         matching.requestStatus = MatchingRequestStatusEnum.REJECTED;
         matching.rejectedAt = new Date();
+        chatRoom.requestStatus = MatchingRequestStatusEnum.REJECTED;
+        chatRoom.status = StatusEnum.DEACTIVATED;
+        chatRoom.softDelete();
       }
-
+      await queryRunner.manager.save(chatRoom);
       await queryRunner.manager.save(matching);
       await queryRunner.commitTransaction();
 
@@ -114,7 +114,9 @@ export class MatchingService {
       .andWhere('matching.requestStatus = :status', {
         status: MatchingRequestStatusEnum.PENDING,
       })
-      .andWhere('matching.status = :activated', { activated: 'activated' })
+      .andWhere('matching.status = :activated', {
+        activated: StatusEnum.ACTIVATED,
+      })
       .orderBy(
         // 우선순위: isRepresentative가 true인 게시물 먼저, 그 다음은 최신 게시물
         'CASE WHEN post.isRepresentative = true THEN 0 ELSE 1 END',
@@ -130,22 +132,22 @@ export class MatchingService {
         const requesterPost = matching.requester.posts[0];
 
         return {
-          matchingId: matching.id,
+          id: matching.id,
           requester: {
-            requesterId: matching.requester.id,
+            id: matching.requester.id,
             nickname: matching.requester.nickname,
             profilePictureUrl: matching.requester.profilePictureUrl,
-          },
-          requesterPost: {
-            postImages: requesterPost.postImages.map((image) => ({
-              url: image.url,
-              orderNum: image.orderNum,
-            })),
-            styleTags: requesterPost.postStyletags
-              ? requesterPost.postStyletags.map(
-                  (styleTag) => styleTag.styletag.tag,
-                )
-              : [],
+            representativePost: {
+              postImages: requesterPost.postImages.map((image) => ({
+                url: image.url,
+                orderNum: image.orderNum,
+              })),
+              styleTags: requesterPost.postStyletags
+                ? requesterPost.postStyletags.map(
+                    (styleTag) => styleTag.styletag.tag,
+                  )
+                : [],
+            },
           },
         };
       }),
