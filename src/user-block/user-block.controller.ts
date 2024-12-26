@@ -2,7 +2,7 @@ import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { UserBlockService } from './user-block.service';
 import { CreateBlockUserSwagger } from './user-block.swagget';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { CreateUserBlockDto } from './dtos/user-block.dto';
+import { UserBlockRequest } from './dtos/user-block.request';
 import { BaseResponse } from 'src/common/response/dto';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { Request } from 'express';
@@ -17,13 +17,10 @@ export class UserBlockController {
   @Post()
   @CreateBlockUserSwagger('유저 차단하기 API')
   async createUserBlock(
-    @Body() createUserBlockDto: CreateUserBlockDto,
+    @Body() createUserBlockDto: UserBlockRequest,
     @Req() req: Request,
   ): Promise<BaseResponse<null>> {
-    const fromUserId = req.user['id'];
-
-    createUserBlockDto.fromUserId = fromUserId;
-
+    createUserBlockDto.requesterId = req.user.id;
     const resultCode =
       await this.userBlockService.createBlock(createUserBlockDto);
 

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserBlock } from 'src/common/entities/user-block.entity';
 import { Repository } from 'typeorm';
-import { CreateUserBlockDto } from './dtos/user-block.dto';
+import { UserBlockRequest } from './dtos/user-block.request';
 import { UserService } from 'src/user/user.service';
 import {
   DataNotFoundException,
@@ -29,14 +29,14 @@ export class UserBlockService {
     return blockedUsers.map((block) => block.target.id);
   }
 
-  async createBlock(createUserBlockDto: CreateUserBlockDto): Promise<string> {
-    const { fromUserId, toUserId, action } = createUserBlockDto;
+  async createBlock(createUserBlockDto: UserBlockRequest): Promise<string> {
+    const { requesterId, targetId, action } = createUserBlockDto;
 
     const fromUser = await this.userService.findByFields({
-      where: { id: fromUserId, status: StatusEnum.ACTIVATED },
+      where: { id: requesterId, status: StatusEnum.ACTIVATED },
     });
     const toUser = await this.userService.findByFields({
-      where: { id: toUserId, status: StatusEnum.ACTIVATED },
+      where: { id: targetId, status: StatusEnum.ACTIVATED },
     });
 
     if (!fromUser || !toUser) {
