@@ -6,10 +6,7 @@ import {
 import { DataSource, Repository } from 'typeorm';
 import { Matching } from 'src/common/entities/matching.entity';
 import { ChatRoomService } from '../chat-room/chat-room.service';
-import {
-  DataNotFoundException,
-  InternalServerException,
-} from 'src/common/exception/service.exception';
+import { InternalServerException } from 'src/common/exception/service.exception';
 import { ChatMessageService } from 'src/chat-message/chat-message.service';
 import { ChatRoom } from 'src/common/entities/chat-room.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -57,17 +54,16 @@ export class MatchingService {
   }
 
   async createMatching(body: CreateMatchingReqeust): Promise<ChatRoom> {
-    let matching, chatRoom;
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      matching = await queryRunner.manager.save(Matching, {
+      const matching = await queryRunner.manager.save(Matching, {
         requester: { id: body.requesterId },
         target: { id: body.targetId },
       });
 
-      chatRoom = await this.chatRoomService.createChatRoom(
+      const chatRoom = await this.chatRoomService.createChatRoom(
         queryRunner,
         matching,
         body,
@@ -105,7 +101,7 @@ export class MatchingService {
         const chatRoom = await this.chatRoomService.getChatRoomByMatchingId(
           matching.id,
         );
-        chatRoom.requestStatus = 'accepted';
+        chatRoom.requestStatus = MatchingRequestStatusEnum.ACCEPTED;
         await queryRunner.manager.save(chatRoom);
       } else if (body.requestStatus === 'reject') {
         matching.requestStatus = MatchingRequestStatusEnum.REJECTED;
@@ -133,7 +129,9 @@ export class MatchingService {
       .leftJoinAndSelect('post.postStyletags', 'styleTag')
       .leftJoinAndSelect('styleTag.styletag', 'styletag')
       .where('matching.targetId = :currentUserId', { currentUserId })
-      .andWhere('matching.requestStatus = :status', { status: 'pending' })
+      .andWhere('matching.requestStatus = :status', {
+        status: MatchingRequestStatusEnum.PENDING,
+      })
       .andWhere('matching.status = :activated', { activated: 'activated' })
       .orderBy(
         // 우선순위: isRepresentative가 true인 게시물 먼저, 그 다음은 최신 게시물
@@ -175,21 +173,17 @@ export class MatchingService {
   }
 
   async getMatchingById(matchingId: number): Promise<Matching> {
-    const matching = await this.matchingRepository.findOne({
+    return await this.matchingRepository.findOne({
       where: { id: matchingId },
       relations: ['target', 'requester'],
     });
-    if (!matching) {
-      throw DataNotFoundException('해당 매칭 요청을 찾을 수 없습니다.');
-    }
-    return matching;
   }
 
   async existsMatching(
     requesterId: number,
     targetId: number,
   ): Promise<boolean> {
-    const matching = await this.matchingRepository.findOne({
+    const count = await this.matchingRepository.count({
       where: [
         {
           requester: { id: requesterId },
@@ -206,6 +200,6 @@ export class MatchingService {
       ],
     });
 
-    return !!matching; // 매칭 데이터가 있으면 true 반환
+    return count > 0;
   }
 }
