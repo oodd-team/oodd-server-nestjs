@@ -52,7 +52,7 @@ export class UserController {
     const currentUserId = req.user.id; // 또는 다른 방법으로 현재 사용자 ID를 가져옴
 
     // MatchingService를 통해 해당 사용자가 친구인지 확인
-    const isFriend = await this.matchingService.existsMatching(
+    const isFriend = await this.matchingService.isMatching(
       currentUserId,
       userId,
     );

@@ -78,10 +78,7 @@ export class MatchingController {
     }
 
     if (
-      await this.matchingService.getMatchingByUserId(
-        body.requesterId,
-        body.targetId,
-      )
+      await this.matchingService.existsMatching(body.requesterId, body.targetId)
     )
       throw InvalidInputValueException('이미 매칭 요청을 보냈습니다.');
 
