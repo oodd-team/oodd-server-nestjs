@@ -3,7 +3,7 @@ import { Type } from 'class-transformer';
 
 export class CreateMatchingResponse {
   @ApiProperty({ example: 1, description: '매칭 ID' })
-  matchingId: number;
+  id: number;
 
   @ApiProperty({ example: 1, description: '채팅방 아이디' })
   chatRoomId: number;
@@ -17,7 +17,7 @@ export class CreateMatchingResponse {
 
 export class PatchMatchingResponse {
   @ApiProperty({ example: 1, description: '매칭 ID' })
-  matchingId: number;
+  id: number;
 
   @ApiProperty({ example: 1, description: '신청한 유저 아이디' })
   requesterId: number;
@@ -98,7 +98,7 @@ export class GetMatchingsResponse {
     description: '매칭 존재 여부',
     example: true,
   })
-  isMatching: boolean;
+  hasMatching: boolean;
 
   @ApiProperty({
     description: '받은 매칭 수',
