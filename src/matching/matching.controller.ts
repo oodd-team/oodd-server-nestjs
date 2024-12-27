@@ -33,7 +33,7 @@ import { BaseResponse } from 'src/common/response/dto';
 import {
   GetMatchingsResponse,
   PatchMatchingResponse,
-  PostMatchingResponse,
+  CreateMatchingResponse,
 } from './dto/matching.response';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { PostService } from 'src/post/post.service';
@@ -59,7 +59,7 @@ export class MatchingController {
   async createMatching(
     @Req() req: Request,
     @Body() body: CreateMatchingReqeust,
-  ): Promise<BaseResponse<PostMatchingResponse>> {
+  ): Promise<BaseResponse<CreateMatchingResponse>> {
     if (req.user.id !== body.requesterId)
       throw UnauthorizedException('권한이 없습니다.');
 
@@ -83,10 +83,11 @@ export class MatchingController {
       throw InvalidInputValueException('이미 매칭 요청을 보냈습니다.');
 
     const chatRoom = await this.matchingService.createMatching(body);
-    return new BaseResponse<PostMatchingResponse>(true, 'SUCCESS', {
+    return new BaseResponse<CreateMatchingResponse>(true, 'SUCCESS', {
+      matchingId: chatRoom.matching.id,
       chatRoomId: chatRoom.id,
-      toUserId: chatRoom.toUser.id,
-      fromUserId: chatRoom.fromUser.id,
+      targetId: chatRoom.toUser.id,
+      requesterId: chatRoom.fromUser.id,
     });
   }
 
