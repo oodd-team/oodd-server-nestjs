@@ -84,7 +84,7 @@ export class MatchingController {
 
     const chatRoom = await this.matchingService.createMatching(body);
     return new BaseResponse<CreateMatchingResponse>(true, 'SUCCESS', {
-      matchingId: chatRoom.matching.id,
+      id: chatRoom.matching.id,
       chatRoomId: chatRoom.id,
       targetId: chatRoom.toUser.id,
       requesterId: chatRoom.fromUser.id,
@@ -121,7 +121,7 @@ export class MatchingController {
       true,
       '매칭 상태 변경 성공',
       {
-        matchingId: matching.id,
+        id: matching.id,
         requesterId: matching.requester.id,
         targetId: matching.target.id,
         requestStatus: matching.requestStatus,
