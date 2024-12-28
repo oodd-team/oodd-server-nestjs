@@ -83,14 +83,14 @@ export class PostService {
           : '1=1',
         { blockedUserIds },
       )
-      .orderBy('post.createdAt', 'DESC')
-      .take(pageOptionsDto.take)
-      .skip((pageOptionsDto.page - 1) * pageOptionsDto.take);
-
-    const posts = await queryBuilder.getMany();
-    console.log(posts);
+      .orderBy('post.createdAt', 'DESC');
 
     const total = await queryBuilder.getCount();
+
+    queryBuilder
+      .take(pageOptionsDto.take)
+      .skip((pageOptionsDto.page - 1) * pageOptionsDto.take);
+    const posts = await queryBuilder.getMany();
 
     const currentUserMatchings =
       await this.matchingService.getMatchingsByCurrentId(currentUserId);
