@@ -11,6 +11,7 @@ import { BaseSwaggerDecorator } from 'nestjs-swagger-decorator';
 import { BaseResponse } from 'src/common/response/dto';
 import { CreateCommentDto } from './dtos/create-comment.dto';
 import { GetCommentsDto } from './dtos/get-comment.dto';
+import { PageDto } from 'src/common/response/page.dto';
 
 // 게시글 댓글 생성 API Swagger
 export function CreatePostCommentSwagger(text: string) {
@@ -50,7 +51,7 @@ export function GetPostCommentsSwagger(text: string) {
     [
       ApiAcceptedResponse({
         description: '댓글 리스트 조회 성공',
-        type: GetCommentsDto,
+        type: PageDto<GetCommentsDto>,
       }),
       ApiBadRequestResponse({
         description: '잘못된 요청입니다.',
