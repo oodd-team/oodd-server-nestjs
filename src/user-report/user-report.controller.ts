@@ -2,9 +2,9 @@ import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { UserReportService } from './user-report.service';
 import { PostUserReportSwagger } from './user-report.swagger';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { CreateUserReportDto } from './dto/user-report.dto';
+import { UserReportRequest } from './dto/user-report.request';
 import { BaseResponse } from 'src/common/response/dto';
-import { AuthGuard } from 'src/auth/guards/jwt.auth.guard'; 
+import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { Request } from 'express';
 import { UnauthorizedException } from 'src/common/exception/service.exception';
 
@@ -18,18 +18,13 @@ export class UserReportController {
   @Post()
   @PostUserReportSwagger('유저 신고하기 API')
   async postUserReport(
-    @Body() createUserReportDto: CreateUserReportDto,
-    @Req() req: Request
+    @Body() createUserReportDto: UserReportRequest,
+    @Req() req: Request,
   ): Promise<BaseResponse<null>> {
-    const fromUserId = req.user['id'];
-
     // jwt 유저와 신고할 유저가 다른 경우
-    if (fromUserId != createUserReportDto.fromUserId) {
+    if (req.user.id != createUserReportDto.requesterId) {
       throw UnauthorizedException('신고 권한이 없습니다.');
     }
-
-    createUserReportDto.fromUserId = fromUserId; 
-
     await this.userReportService.createReport(createUserReportDto);
 
     return new BaseResponse<null>(true, 'USER_REPORTED_SUCCESS', null);

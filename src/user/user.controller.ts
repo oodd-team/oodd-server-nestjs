@@ -17,15 +17,15 @@ import {
   WithdrawSwagger,
 } from './user.swagger';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
-import { PatchUserRequest } from './dto/response/patch-user.request';
+import { PatchUserRequest } from './dto/response/user.request';
 import { BaseResponse } from 'src/common/response/dto';
 import { Request } from 'express';
 import {
   DataNotFoundException,
   UnauthorizedException,
 } from 'src/common/exception/service.exception';
-import { PatchUserResponse } from './dto/response/patch-user.response';
-import { GetOtherUserInfo } from './dto/response/get-user.response';
+import { GetUserInfo } from './dto/response/user.response';
+import { GetOtherUserInfo } from './dto/response/user.response';
 import { MatchingService } from 'src/matching/matching.service';
 import dayjs from 'dayjs';
 
@@ -47,18 +47,14 @@ export class UserController {
     @Param('userId') userId: number,
   ): Promise<BaseResponse<GetOtherUserInfo>> {
     const user = await this.userService.getUserById(userId);
-
-    // 현재 사용자의 ID를 가져옵니다. req.user에서 추출할 수 있습니다.
-    const currentUserId = req.user.id; // 또는 다른 방법으로 현재 사용자 ID를 가져옴
-
     // MatchingService를 통해 해당 사용자가 친구인지 확인
-    const isFriend = await this.matchingService.existsMatching(
-      currentUserId,
+    const isMatching = await this.matchingService.isMatching(
+      req.user.id,
       userId,
     );
 
     return new BaseResponse<GetOtherUserInfo>(true, '유저 정보 조회 성공', {
-      userId: user.id,
+      id: user.id,
       name: user.name,
       phoneNumber: user.phoneNumber,
       email: user.email,
@@ -66,7 +62,7 @@ export class UserController {
       profilePictureUrl: user.profilePictureUrl,
       bio: user.bio,
       birthDate: dayjs(user.birthDate).format('YYYY-MM-DD'),
-      isFriend: isFriend,
+      isMatching: isMatching,
     });
   }
 
@@ -91,7 +87,7 @@ export class UserController {
     @Req() req: Request,
     @Param('userId') userId: number,
     @Body() body: PatchUserRequest,
-  ): Promise<BaseResponse<PatchUserResponse>> {
+  ): Promise<BaseResponse<GetUserInfo>> {
     if (!(await this.userService.getUserById(userId)))
       throw DataNotFoundException('유저가 존재하지 않습니다.');
     if (req.user.id !== Number(userId)) {
@@ -100,11 +96,11 @@ export class UserController {
 
     const updatedUser = await this.userService.PatchUser(userId, body);
 
-    return new BaseResponse<PatchUserResponse>(true, '유저 정보 수정 성공', {
-      userId: updatedUser.id,
+    return new BaseResponse<GetUserInfo>(true, '유저 정보 수정 성공', {
+      id: updatedUser.id,
       name: updatedUser.name,
       phoneNumber: updatedUser.phoneNumber,
-      birthDate: updatedUser.birthDate,
+      birthDate: dayjs(updatedUser.birthDate).format('YYYY-MM-DD'),
       email: updatedUser.email,
       nickname: updatedUser.nickname,
       profilePictureUrl: updatedUser.profilePictureUrl,

@@ -33,12 +33,13 @@ import { BaseResponse } from 'src/common/response/dto';
 import {
   GetMatchingsResponse,
   PatchMatchingResponse,
-  PostMatchingResponse,
+  CreateMatchingResponse,
 } from './dto/matching.response';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { PostService } from 'src/post/post.service';
 import { ChatRoomService } from 'src/chat-room/chat-room.service';
 import { StatusEnum } from 'src/common/enum/entityStatus';
+import { MatchingRequestStatusEnum } from 'src/common/enum/matchingRequestStatus';
 
 @ApiBearerAuth('Authorization')
 @Controller('matching')
@@ -58,7 +59,7 @@ export class MatchingController {
   async createMatching(
     @Req() req: Request,
     @Body() body: CreateMatchingReqeust,
-  ): Promise<BaseResponse<PostMatchingResponse>> {
+  ): Promise<BaseResponse<CreateMatchingResponse>> {
     if (req.user.id !== body.requesterId)
       throw UnauthorizedException('권한이 없습니다.');
 
@@ -77,18 +78,16 @@ export class MatchingController {
     }
 
     if (
-      await this.matchingService.getMatchingByUserId(
-        body.requesterId,
-        body.targetId,
-      )
+      await this.matchingService.existsMatching(body.requesterId, body.targetId)
     )
       throw InvalidInputValueException('이미 매칭 요청을 보냈습니다.');
 
     const chatRoom = await this.matchingService.createMatching(body);
-    return new BaseResponse<PostMatchingResponse>(true, 'SUCCESS', {
+    return new BaseResponse<CreateMatchingResponse>(true, 'SUCCESS', {
+      id: chatRoom.matching.id,
       chatRoomId: chatRoom.id,
-      toUserId: chatRoom.toUser.id,
-      fromUserId: chatRoom.fromUser.id,
+      targetId: chatRoom.toUser.id,
+      requesterId: chatRoom.fromUser.id,
     });
   }
 
@@ -104,14 +103,15 @@ export class MatchingController {
     const chatRoom = await this.chatRoomService.getChatRoomByMatchingId(
       matching.id,
     );
+    if (!matching) {
+      throw DataNotFoundException('해당 매칭 요청을 찾을 수 없습니다.');
+    }
     if (req.user.id !== matching.target.id) {
       throw UnauthorizedException('권한이 없습니다.');
     }
-
-    if (matching.requestStatus !== 'pending') {
+    if (matching.requestStatus !== MatchingRequestStatusEnum.PENDING) {
       throw InvalidInputValueException('이미 처리된 요청입니다.');
     }
-
     if (!chatRoom) {
       throw DataNotFoundException('채팅방을 찾을 수 없습니다.');
     }
@@ -121,7 +121,7 @@ export class MatchingController {
       true,
       '매칭 상태 변경 성공',
       {
-        matchingId: matching.id,
+        id: matching.id,
         requesterId: matching.requester.id,
         targetId: matching.target.id,
         requestStatus: matching.requestStatus,

@@ -1,20 +1,23 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
-export class PostMatchingResponse {
+export class CreateMatchingResponse {
+  @ApiProperty({ example: 1, description: '매칭 ID' })
+  id: number;
+
   @ApiProperty({ example: 1, description: '채팅방 아이디' })
   chatRoomId: number;
 
   @ApiProperty({ example: 1, description: '신청한 유저 아이디' })
-  fromUserId: number;
+  requesterId: number;
 
   @ApiProperty({ example: 2, description: '매칭 상대 유저 아이디' })
-  toUserId: number;
+  targetId: number;
 }
 
 export class PatchMatchingResponse {
   @ApiProperty({ example: 1, description: '매칭 ID' })
-  matchingId: number;
+  id: number;
 
   @ApiProperty({ example: 1, description: '신청한 유저 아이디' })
   requesterId: number;
@@ -33,27 +36,7 @@ export class PatchMatchingResponse {
   chatRoomId?: number;
 }
 
-class RequesterResponse {
-  @ApiProperty({
-    description: '매칭 요청자의 ID',
-    example: 19,
-  })
-  requesterId: number;
-
-  @ApiProperty({
-    description: '매칭 요청자의 닉네임',
-    example: '1d1d1d',
-  })
-  nickname: string;
-
-  @ApiProperty({
-    description: '매칭 요청자의 프로필 이미지 url',
-    example: 'https://example.com/image1.jpg',
-  })
-  profilePictureUrl: string;
-}
-
-class RequesterPostResponse {
+class RepresentativePost {
   @ApiProperty({
     description: '매칭 요청자의 게시물 이미지 목록',
     type: [String],
@@ -71,10 +54,36 @@ class RequesterPostResponse {
   })
   styleTags: string[];
 }
+class RequesterResponse {
+  @ApiProperty({
+    description: '매칭 요청자의 ID',
+    example: 19,
+  })
+  id: number;
 
-class MatchingResponse {
+  @ApiProperty({
+    description: '매칭 요청자의 닉네임',
+    example: '러러',
+  })
+  nickname: string;
+
+  @ApiProperty({
+    description: '매칭 요청자의 프로필 이미지 url',
+    example: 'https://example.com/image1.jpg',
+  })
+  profilePictureUrl: string;
+
+  @ApiProperty({
+    description: '매칭 요청자의 대표 게시물이 없을 경우, 가장 최근 게시물 정보',
+    type: RepresentativePost,
+  })
+  @Type(() => RepresentativePost)
+  representativePost: RepresentativePost;
+}
+
+class Matching {
   @ApiProperty({ example: 1, description: '매칭 ID' })
-  matchingId: number;
+  id: number;
 
   @ApiProperty({
     description: '매칭 요청자 정보',
@@ -82,13 +91,6 @@ class MatchingResponse {
   })
   @Type(() => RequesterResponse)
   requester: RequesterResponse;
-
-  @ApiProperty({
-    description: '매칭 요청자의 대표 게시물이 없을 경우, 가장 최근 게시물 정보',
-    type: RequesterPostResponse,
-  })
-  @Type(() => RequesterPostResponse)
-  requesterPost: RequesterPostResponse;
 }
 
 export class GetMatchingsResponse {
@@ -96,7 +98,7 @@ export class GetMatchingsResponse {
     description: '매칭 존재 여부',
     example: true,
   })
-  isMatching: boolean;
+  hasMatching: boolean;
 
   @ApiProperty({
     description: '받은 매칭 수',
@@ -106,8 +108,8 @@ export class GetMatchingsResponse {
 
   @ApiProperty({
     description: '매칭 정보',
-    type: [MatchingResponse],
+    type: [Matching],
   })
-  @Type(() => MatchingResponse)
-  matching: MatchingResponse[];
+  @Type(() => Matching)
+  matching: Matching[];
 }

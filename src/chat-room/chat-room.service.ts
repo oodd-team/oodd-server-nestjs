@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ChatRoom } from 'src/common/entities/chat-room.entity';
 import { Matching } from 'src/common/entities/matching.entity';
 import { StatusEnum } from 'src/common/enum/entityStatus';
+import { MatchingRequestStatusEnum } from 'src/common/enum/matchingRequestStatus';
 import { DataNotFoundException } from 'src/common/exception/service.exception';
 import { CreateMatchingReqeust } from 'src/matching/dto/matching.request';
 import { Repository, QueryRunner } from 'typeorm';
@@ -20,30 +21,46 @@ export class ChatRoomService {
       .leftJoinAndSelect('chatRoom.fromUser', 'fromUser')
       .leftJoinAndSelect('chatRoom.toUser', 'toUser')
       .leftJoinAndSelect('chatRoom.chatMessages', 'chatMessages')
-      .where('chatRoom.fromUserId = :userId OR chatRoom.toUserId = :userId', {
-        userId,
-      })
-      .andWhere('chatRoom.status = :status', { status: 'activated' })
-      .andWhere('chatRoom.requestStatus = :requestStatus', {
-        requestStatus: 'accepted',
-      })
+      .addSelect([
+        'fromUser.id',
+        'fromUser.nickname',
+        'fromUser.profilePictureUrl',
+      ])
+      .addSelect(['toUser.id', 'toUser.nickname', 'toUser.profilePictureUrl'])
+      .where(
+        '(chatRoom.fromUserId = :userId OR chatRoom.toUserId = :userId) AND chatRoom.status = :status AND chatRoom.requestStatus = :requestStatus',
+        {
+          userId,
+          status: StatusEnum.ACTIVATED,
+          requestStatus: MatchingRequestStatusEnum.ACCEPTED,
+        },
+      )
       .orderBy('chatMessages.createdAt', 'DESC')
       .getMany();
+    if (!chatRooms || chatRooms.length === 0) {
+      return [];
+    }
 
     // 각 채팅방에서 최신 메시지를 선택
     const chatRoomsWithLatestMessages = chatRooms.map((room) => {
       const otherUser =
-        room.fromUser.id === userId ? room.toUser : room.fromUser;
+        room.fromUser && room.fromUser.id === userId
+          ? room.toUser
+          : room.fromUser;
+      // fromUser나 toUser가 null인 경우, otherUser를 빈 객체로 설정
+      const otherUserInfo = otherUser
+        ? {
+            id: otherUser.id,
+            nickname: otherUser.nickname,
+            profilePictureUrl: otherUser.profilePictureUrl,
+          }
+        : {};
+
       const latestMessage =
         room.chatMessages.length > 0 ? room.chatMessages[0] : null; // 가장 최근 메시지 선택
-
       return {
-        chatRoomId: room.id,
-        otherUser: {
-          id: otherUser.id,
-          nickname: otherUser.nickname,
-          profileUrl: otherUser.profilePictureUrl,
-        },
+        id: room.id,
+        otherUser: otherUserInfo,
         latestMessage: latestMessage,
       };
     });

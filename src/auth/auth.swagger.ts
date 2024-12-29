@@ -3,7 +3,7 @@ import { LoginResponse } from './dto/auth.response';
 import { BaseResponse } from 'src/common/response/dto';
 import { ErrorCodeVo } from 'src/common/exception/error';
 import { ApiInternalServerErrorResponse } from '@nestjs/swagger';
-import { GetUserInfo } from 'src/user/dto/response/get-user.response';
+import { GetUserInfo } from 'src/user/dto/response/user.response';
 
 // 카카오 로그인 API Swagger
 export const KakaoLoginSwagger = (text: string) => {

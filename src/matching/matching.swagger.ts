@@ -8,7 +8,7 @@ import { BaseSwaggerDecorator } from 'nestjs-swagger-decorator';
 import {
   GetMatchingsResponse,
   PatchMatchingResponse,
-  PostMatchingResponse,
+  CreateMatchingResponse,
 } from './dto/matching.response';
 import { BaseResponse } from 'src/common/response/dto';
 
@@ -21,7 +21,7 @@ export function CreateMatchingSwagger(apiSummary: string) {
         statusCode: 200,
         responseOptions: [
           {
-            model: PostMatchingResponse,
+            model: CreateMatchingResponse,
             exampleTitle: '성공',
             exampleDescription: '성공했을 때 값',
           },

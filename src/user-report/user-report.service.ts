@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserReport } from '../common/entities/user-report.entity';
-import { CreateUserReportDto } from '../user-report/dto/user-report.dto';
+import { UserReportRequest } from './dto/user-report.request';
 import {
   DataNotFoundException,
   InvalidInputValueException,
@@ -18,14 +18,14 @@ export class UserReportService {
     private readonly userService: UserService,
   ) {}
 
-  async createReport(createUserReportDto: CreateUserReportDto): Promise<void> {
-    const { fromUserId, toUserId, reason } = createUserReportDto;
+  async createReport(createUserReportDto: UserReportRequest): Promise<void> {
+    const { requesterId, targetId, reason } = createUserReportDto;
 
     const fromUser = await this.userService.findByFields({
-      where: { id: fromUserId, status: StatusEnum.ACTIVATED },
+      where: { id: requesterId, status: StatusEnum.ACTIVATED },
     });
     const toUser = await this.userService.findByFields({
-      where: { id: toUserId, status: StatusEnum.ACTIVATED },
+      where: { id: targetId, status: StatusEnum.ACTIVATED },
     });
 
     if (!fromUser || !toUser) {
@@ -35,8 +35,8 @@ export class UserReportService {
     // 중복 신고 확인
     const existingReport = await this.userReportRepository
       .createQueryBuilder('report')
-      .where('report.fromUser = :fromUserId', { fromUserId })
-      .andWhere('report.toUser = :toUserId', { toUserId })
+      .where('report.fromUser = :requesterId', { requesterId })
+      .andWhere('report.toUser = :targetId', { targetId })
       .andWhere('report.reason = :reason', { reason })
       .getOne();
 
@@ -49,7 +49,6 @@ export class UserReportService {
       toUser,
       reason,
       createdAt: new Date(),
-      updatedAt: new Date(),
       status: StatusEnum.ACTIVATED,
     });
 
