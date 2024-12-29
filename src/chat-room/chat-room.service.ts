@@ -38,11 +38,11 @@ export class ChatRoomService {
         room.chatMessages.length > 0 ? room.chatMessages[0] : null; // 가장 최근 메시지 선택
 
       return {
-        chatRoomId: room.id,
+        id: room.id,
         otherUser: {
           id: otherUser.id,
           nickname: otherUser.nickname,
-          profileUrl: otherUser.profilePictureUrl,
+          profilePictureUrl: otherUser.profilePictureUrl,
         },
         latestMessage: latestMessage,
       };
