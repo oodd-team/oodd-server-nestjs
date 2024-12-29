@@ -8,7 +8,11 @@ import { IoAdapter } from '@nestjs/platform-socket.io';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalFilters(new ServiceExceptionToHttpExceptionFilter());
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+    }),
+  );
   app.useWebSocketAdapter(new IoAdapter(app));
   setupSwagger(app);
   await app.listen(process.env.PORT);

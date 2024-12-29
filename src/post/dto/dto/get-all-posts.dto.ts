@@ -27,7 +27,7 @@ export class PostImageDto extends PickType(PostImage, [
     super();
     this.id = postImage.id;
     this.url = postImage.url;
-    this.orderNum = postImage.orderNum;
+    this.orderNum = Number(postImage.orderNum);
   }
 }
 
