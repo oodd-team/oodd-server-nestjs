@@ -117,6 +117,9 @@ export class MatchingService {
       .andWhere('matching.status = :activated', {
         activated: StatusEnum.ACTIVATED,
       })
+      .andWhere('requester.status = :activated', {
+        activated: StatusEnum.ACTIVATED,
+      })
       .orderBy(
         // 우선순위: isRepresentative가 true인 게시물 먼저, 그 다음은 최신 게시물
         'CASE WHEN post.isRepresentative = true THEN 0 ELSE 1 END',

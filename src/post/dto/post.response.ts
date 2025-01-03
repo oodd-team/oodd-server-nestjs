@@ -30,7 +30,7 @@ class UserDto {
     example: 1,
     description: 'userId',
   })
-  userId: number;
+  id: number;
 
   @ApiProperty({
     example: 'nickname',
@@ -45,7 +45,7 @@ class UserDto {
   profilePictureUrl: string;
 
   constructor(user: User) {
-    this.userId = user.id;
+    this.id = user.id;
     this.nickname = user.nickname;
     this.profilePictureUrl = user.profilePictureUrl;
   }
@@ -90,7 +90,7 @@ export class PostResponse {
     example: 1,
     description: '게시물 번호입니다.',
   })
-  postId: number;
+  id: number;
 
   @ApiProperty({
     example: 1,
@@ -133,7 +133,7 @@ export class PostResponse {
 
   constructor(post: Post) {
     this.userId = post.user.id;
-    this.postId = post.id;
+    this.id = post.id;
     this.content = post.content;
     this.isRepresentative = post.isRepresentative;
     this.postImages =
@@ -151,7 +151,7 @@ export class PostDetailResponse {
     example: 1,
     description: '게시물 번호입니다.',
   })
-  postId: number;
+  id: number;
 
   @ApiProperty({
     type: UserDto,
@@ -223,7 +223,7 @@ export class PostDetailResponse {
   })
   isPostLike: boolean;
   constructor(post: Post, currentUserId: number) {
-    this.postId = post.id;
+    this.id = post.id;
     this.content = post.content;
     this.isRepresentative = post.isRepresentative;
     this.postImages =

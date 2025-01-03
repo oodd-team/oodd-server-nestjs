@@ -129,7 +129,7 @@ export class PostController {
   ): Promise<BaseResponse<PostResponse>> {
     const post = await this.postService.createPost(createPostDto, req.user.id);
     const postResponse: PostResponse = {
-      postId: post.id,
+      id: post.id,
       userId: post.user.id,
       content: post.content,
       isRepresentative: post.isRepresentative,
@@ -171,7 +171,7 @@ export class PostController {
       req.user.id,
     );
     const postResponse: PostResponse = {
-      postId: updatedPost.id,
+      id: updatedPost.id,
       userId: updatedPost.user.id,
       content: updatedPost.content,
       isRepresentative: updatedPost.isRepresentative,

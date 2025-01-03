@@ -28,7 +28,11 @@ export class PostDto extends GetAllPostDto {
     this.id = post.id;
     this.content = post.content;
     this.createdAt = dayjs(post.createdAt).format('YYYY-MM-DDTHH:mm:ssZ');
-    this.postImages = post.postImages ?? [];
+    this.postImages =
+      post.postImages.map((image) => ({
+        ...image,
+        orderNum: Number(image.orderNum), // 강제로 숫자로 변환
+      })) ?? [];
     this.isPostLike = post.postLikes.length > 0 ? true : false;
     this.requestStatus = requestStatus;
     this.user = new UserDto(post.user);
