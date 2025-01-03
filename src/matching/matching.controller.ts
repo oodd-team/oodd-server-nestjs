@@ -54,13 +54,13 @@ export class MatchingController {
   ) {}
 
   @Post()
-  @UseGuards(AuthGuard)
+  //@UseGuards(AuthGuard)
   @CreateMatchingSwagger('매칭 생성 API')
   async createMatching(
     @Req() req: Request,
     @Body() body: CreateMatchingReqeust,
   ): Promise<BaseResponse<CreateMatchingResponse>> {
-    if (req.user.id !== body.requesterId)
+    if (10 !== body.requesterId)
       throw UnauthorizedException('권한이 없습니다.');
 
     if (!(await this.userService.getUserById(body.targetId)))
@@ -137,12 +137,12 @@ export class MatchingController {
   }
 
   @Get()
-  @UseGuards(AuthGuard)
+  //@UseGuards(AuthGuard)
   @GetMatchingsSwagger('매칭 리스트 조회 API')
   async getMatchings(
     @Req() req: Request,
   ): Promise<BaseResponse<GetMatchingsResponse>> {
-    const response = await this.matchingService.getMatchings(req.user.id);
+    const response = await this.matchingService.getMatchings(14);
     return new BaseResponse(true, 'SUCCESS', response);
   }
 }

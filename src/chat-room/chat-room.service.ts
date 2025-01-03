@@ -77,7 +77,7 @@ export class ChatRoomService {
       fromUser: { id: body.requesterId },
       toUser: { id: body.targetId },
       matching: matching,
-      requestStatus: 'pending',
+      requestStatus: MatchingRequestStatusEnum.PENDING,
     });
   }
 

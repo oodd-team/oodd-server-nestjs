@@ -108,9 +108,9 @@ export class PostLikeService {
       await this.postLikeRepository.save(likeData);
       return {
         id: likeData.post.id,
-        isPostLike: likeData.status === 'activated',
+        isPostLike: likeData.status === StatusEnum.ACTIVATED,
         postLikesCount:
-          likeData.status === 'activated'
+          likeData.status === StatusEnum.ACTIVATED
             ? allLikesData.length + 1
             : allLikesData.length - 1,
       };
@@ -124,7 +124,7 @@ export class PostLikeService {
       await this.postLikeRepository.save(newLike);
       return {
         id: newLike.post.id,
-        isPostLike: newLike.status === 'activated',
+        isPostLike: newLike.status === StatusEnum.ACTIVATED,
         postLikesCount: allLikesData.length + 1,
       };
     }
