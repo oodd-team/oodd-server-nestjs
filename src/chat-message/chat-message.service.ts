@@ -96,7 +96,6 @@ export class ChatMessageService {
     });
 
     if (messages.length === 0) {
-      console.log(`채팅방 ID ${chatRoomId}에 활성화된 메시지가 없습니다.`);
       return;
     }
 
@@ -106,9 +105,5 @@ export class ChatMessageService {
     }
 
     await this.chatMessageRepository.save(messages);
-
-    console.log(
-      `채팅방 ID ${chatRoomId}의 메시지 상태를 모두 비활성화했습니다.`,
-    );
   }
 }

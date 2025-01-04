@@ -86,8 +86,8 @@ export class ChatRoomService {
   async deleteChatRoom(chatRoomId: number, userId: number): Promise<void> {
     const chatRoom = await this.chatRoomRepository.findOne({
       where: { id: chatRoomId },
+      relations: ['fromUser', 'toUser'],
     });
-
     if (!chatRoom) {
       throw DataNotFoundException('채팅방을 찾을 수 없습니다.');
     }
