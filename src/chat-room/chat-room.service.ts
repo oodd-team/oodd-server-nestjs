@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ChatMessageService } from 'src/chat-message/chat-message.service';
 import { ChatRoom } from 'src/common/entities/chat-room.entity';
 import { Matching } from 'src/common/entities/matching.entity';
 import { StatusEnum } from 'src/common/enum/entityStatus';
@@ -13,6 +14,7 @@ export class ChatRoomService {
   constructor(
     @InjectRepository(ChatRoom)
     private readonly chatRoomRepository: Repository<ChatRoom>,
+    private readonly chatMessageService: ChatMessageService,
   ) {}
 
   async getChatRoomsWithLatestMessage(userId: number) {
@@ -102,6 +104,7 @@ export class ChatRoomService {
     if (chatRoom.fromUserLeavedAt && chatRoom.toUserLeavedAt) {
       chatRoom.status = StatusEnum.DEACTIVATED;
       chatRoom.softDelete();
+      await this.chatMessageService.deleteMessages(chatRoomId);
     }
 
     await this.chatRoomRepository.save(chatRoom);

@@ -106,7 +106,7 @@ export class MatchingService {
 
   async getMatchings(currentUserId: number): Promise<GetMatchingsResponse> {
     const blockedUserIds =
-      await this.userBlockService.getBlockedUserIdsByRequesterId(currentUserId);
+      await this.userBlockService.getBlockedUserIds(currentUserId);
     const matchings = await this.matchingRepository
       .createQueryBuilder('matching')
       .leftJoinAndSelect('matching.requester', 'requester')

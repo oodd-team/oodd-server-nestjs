@@ -8,6 +8,8 @@ import {
 import { Server, Socket } from 'socket.io';
 import { ChatRoomService } from './chat-room/chat-room.service';
 import { ChatMessageService } from './chat-message/chat-message.service';
+import { UserService } from './user/user.service';
+import { UserBlockService } from './user-block/user-block.service';
 
 //클라이언트의 패킷들이 게이트웨이를 통해서 들어오게 됩니다.
 @WebSocketGateway({ namespace: '/socket/chatting' })
@@ -19,6 +21,8 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly chatRoomService: ChatRoomService,
     private readonly chatMessageService: ChatMessageService,
+    private readonly userService: UserService,
+    private readonly userBlockService: UserBlockService,
   ) {}
   /*
      유저정보는 같지만 소켓이 여러개가 연결되어 있을 경우
@@ -74,6 +78,16 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     },
   ) {
     const { chatRoomId, toUserId, content, fromUserId, createdAt } = payload;
+    const toUser = await this.userService.getUserById(toUserId);
+    const blockedUserIds =
+      await this.userBlockService.getBlockedUserIds(toUserId);
+    if (!toUser || blockedUserIds.includes(fromUserId)) {
+      const errorMessage = !toUser
+        ? '존재하지 않는 사용자입니다.'
+        : '차단된 사용자에게 메시지를 보낼 수 없습니다.';
+      client.emit('error', errorMessage);
+      return;
+    }
 
     // 메시지 저장 로직
     const newMessage = await this.chatMessageService.saveMessage(

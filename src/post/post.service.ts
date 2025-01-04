@@ -48,7 +48,7 @@ export class PostService {
     currentUserId: number,
   ): Promise<{ posts: GetAllPostsResponse; total: number }> {
     const blockedUserIds =
-      await this.userBlockService.getBlockedUserIdsByRequesterId(currentUserId);
+      await this.userBlockService.getBlockedUserIds(currentUserId);
 
     const queryBuilder = this.dataSource
       .getRepository(Post)
@@ -388,7 +388,7 @@ export class PostService {
   // 게시글 상세 조회
   async getPost(postId: number, currentUserId: number): Promise<Post | null> {
     const blockedUserIds =
-      await this.userBlockService.getBlockedUserIdsByRequesterId(currentUserId);
+      await this.userBlockService.getBlockedUserIds(currentUserId);
     return await this.postRepository
       .createQueryBuilder('post')
       .leftJoinAndSelect(
