@@ -47,6 +47,7 @@ export class UserController {
     @Param('userId') userId: number,
   ): Promise<BaseResponse<GetOtherUserInfo>> {
     const user = await this.userService.getUserById(userId);
+    if (!user) throw DataNotFoundException('존재하지 않는 사용자입니다.');
     // MatchingService를 통해 해당 사용자가 친구인지 확인
     const isMatching = await this.matchingService.isMatching(
       req.user.id,

@@ -71,7 +71,8 @@ export class PostStyletagService {
 
     if (newTags.length === 0) {
       const tagsToDelete = existingPostStyletags.filter(
-        (existingPostStyletag) => existingPostStyletag.status === 'activated',
+        (existingPostStyletag) =>
+          existingPostStyletag.status === StatusEnum.ACTIVATED,
       );
 
       await this.deletePostStyletags(tagsToDelete, queryRunner);
@@ -88,7 +89,7 @@ export class PostStyletagService {
     const newTagIds = styleTags.map((tag) => tag.id);
     const tagsToRemove = existingPostStyletags.filter(
       (existingTag) =>
-        existingTag.status === 'activated' &&
+        existingTag.status === StatusEnum.ACTIVATED &&
         !newTagIds.includes(existingTag.styletag.id),
     );
 

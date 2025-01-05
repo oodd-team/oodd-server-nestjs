@@ -52,7 +52,7 @@ export class PostClothingService {
     // 빈 배열이 들어온 경우
     if (uploadClothingDtos.length === 0) {
       const clothingsToDeactivate = existingPostClothings.filter(
-        (existingClothing) => existingClothing.status === 'activated',
+        (existingClothing) => existingClothing.status === StatusEnum.ACTIVATED,
       );
 
       await this.deletePostClothing(clothingsToDeactivate, queryRunner);
@@ -62,7 +62,7 @@ export class PostClothingService {
     // 삭제할 PostClothing
     const postClothingsToRemove = existingPostClothings.filter(
       (existingPostClothing) =>
-        existingPostClothing.status === 'activated' &&
+        existingPostClothing.status === StatusEnum.ACTIVATED &&
         !uploadClothingDtos.some(
           (newClothing) => newClothing.id === existingPostClothing.clothing.id,
         ),

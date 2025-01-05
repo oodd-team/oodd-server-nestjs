@@ -45,14 +45,14 @@ class RepresentativePost {
       { url: 'https://example.com/image2.jpg', orderNum: 2 },
     ],
   })
-  postImages: { url: string; orderNum: number }[];
+  postImages?: { url: string; orderNum: number }[];
 
   @ApiProperty({
     description: '매칭 요청자의 게시물 스타일 태그 목록',
     type: [String],
     example: ['classic', 'basic'],
   })
-  styleTags: string[];
+  styleTags?: string[];
 }
 class RequesterResponse {
   @ApiProperty({
@@ -78,7 +78,7 @@ class RequesterResponse {
     type: RepresentativePost,
   })
   @Type(() => RepresentativePost)
-  representativePost: RepresentativePost;
+  representativePost?: RepresentativePost;
 }
 
 class Matching {

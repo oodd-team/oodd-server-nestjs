@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ChatMessageService } from 'src/chat-message/chat-message.service';
 import { ChatRoom } from 'src/common/entities/chat-room.entity';
 import { Matching } from 'src/common/entities/matching.entity';
 import { StatusEnum } from 'src/common/enum/entityStatus';
@@ -13,6 +14,7 @@ export class ChatRoomService {
   constructor(
     @InjectRepository(ChatRoom)
     private readonly chatRoomRepository: Repository<ChatRoom>,
+    private readonly chatMessageService: ChatMessageService,
   ) {}
 
   async getChatRoomsWithLatestMessage(userId: number) {
@@ -77,15 +79,15 @@ export class ChatRoomService {
       fromUser: { id: body.requesterId },
       toUser: { id: body.targetId },
       matching: matching,
-      requestStatus: 'pending',
+      requestStatus: MatchingRequestStatusEnum.PENDING,
     });
   }
 
   async deleteChatRoom(chatRoomId: number, userId: number): Promise<void> {
     const chatRoom = await this.chatRoomRepository.findOne({
       where: { id: chatRoomId },
+      relations: ['fromUser', 'toUser'],
     });
-
     if (!chatRoom) {
       throw DataNotFoundException('채팅방을 찾을 수 없습니다.');
     }
@@ -102,6 +104,7 @@ export class ChatRoomService {
     if (chatRoom.fromUserLeavedAt && chatRoom.toUserLeavedAt) {
       chatRoom.status = StatusEnum.DEACTIVATED;
       chatRoom.softDelete();
+      await this.chatMessageService.deleteMessages(chatRoomId);
     }
 
     await this.chatRoomRepository.save(chatRoom);

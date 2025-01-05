@@ -7,6 +7,8 @@ import { ChatMessageModule } from 'src/chat-message/chat-message.module';
 import { ChatRoomModule } from 'src/chat-room/chat-room.module';
 import { UserModule } from 'src/user/user.module';
 import { PostModule } from 'src/post/post.module';
+import { UserBlock } from 'src/common/entities/user-block.entity';
+import { UserBlockModule } from 'src/user-block/user-block.module';
 
 @Module({
   imports: [
@@ -15,6 +17,7 @@ import { PostModule } from 'src/post/post.module';
     ChatRoomModule,
     forwardRef(() => UserModule),
     PostModule,
+    UserBlockModule,
   ],
   controllers: [MatchingController],
   providers: [MatchingService],

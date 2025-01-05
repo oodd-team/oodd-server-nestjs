@@ -13,6 +13,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { GetMatchingsResponse } from './dto/matching.response';
 import { MatchingRequestStatusEnum } from 'src/common/enum/matchingRequestStatus';
 import { StatusEnum } from 'src/common/enum/entityStatus';
+import { UserBlockService } from 'src/user-block/user-block.service';
 
 @Injectable()
 export class MatchingService {
@@ -22,6 +23,7 @@ export class MatchingService {
     private readonly chatRoomService: ChatRoomService,
     private readonly chatMessageService: ChatMessageService,
     private readonly dataSource: DataSource,
+    private readonly userBlockService: UserBlockService,
   ) {}
 
   async getMatchingsByCurrentId(currentUserId: number): Promise<Matching[]> {
@@ -103,6 +105,8 @@ export class MatchingService {
   }
 
   async getMatchings(currentUserId: number): Promise<GetMatchingsResponse> {
+    const blockedUserIds =
+      await this.userBlockService.getBlockedUserIds(currentUserId);
     const matchings = await this.matchingRepository
       .createQueryBuilder('matching')
       .leftJoinAndSelect('matching.requester', 'requester')
@@ -120,12 +124,15 @@ export class MatchingService {
       .andWhere('requester.status = :activated', {
         activated: StatusEnum.ACTIVATED,
       })
-      .orderBy(
-        // 우선순위: isRepresentative가 true인 게시물 먼저, 그 다음은 최신 게시물
-        'CASE WHEN post.isRepresentative = true THEN 0 ELSE 1 END',
-        'ASC',
+      .andWhere(
+        blockedUserIds.length > 0
+          ? 'requester.id NOT IN (:...blockedUserIds)'
+          : '1=1',
+        { blockedUserIds },
       )
-      .addOrderBy('post.createdAt', 'DESC')
+      .orderBy('matching.createdAt', 'DESC')
+      .addOrderBy('post.isRepresentative', 'DESC') // 'isRepresentative'가 true인 게시물을 우선적으로 정렬
+      .addOrderBy('post.createdAt', 'DESC') // 그 다음은 최신 게시물 우선으로 정렬
       .getMany();
 
     const response: GetMatchingsResponse = {
@@ -140,17 +147,19 @@ export class MatchingService {
             id: matching.requester.id,
             nickname: matching.requester.nickname,
             profilePictureUrl: matching.requester.profilePictureUrl,
-            representativePost: {
-              postImages: requesterPost.postImages.map((image) => ({
-                url: image.url,
-                orderNum: image.orderNum,
-              })),
-              styleTags: requesterPost.postStyletags
-                ? requesterPost.postStyletags.map(
-                    (styleTag) => styleTag.styletag.tag,
-                  )
-                : [],
-            },
+            representativePost: requesterPost
+              ? {
+                  postImages: requesterPost.postImages.map((image) => ({
+                    url: image.url,
+                    orderNum: image.orderNum,
+                  })),
+                  styleTags: requesterPost.postStyletags
+                    ? requesterPost.postStyletags.map(
+                        (styleTag) => styleTag.styletag.tag,
+                      )
+                    : [],
+                }
+              : {},
           },
         };
       }),
