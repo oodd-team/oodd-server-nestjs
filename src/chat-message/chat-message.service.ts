@@ -32,7 +32,6 @@ export class ChatMessageService {
       where: { id: newMessage.id },
       relations: ['fromUser', 'toUser'],
     });
-
     return {
       id: newMessageWithUser.id,
       chatRoomId: chatRoomId,
@@ -89,5 +88,22 @@ export class ChatMessageService {
       toUser: { id: body.targetId },
       content: body.message,
     });
+  }
+
+  async deleteMessages(chatRoomId: number): Promise<void> {
+    const messages = await this.chatMessageRepository.find({
+      where: { chatRoom: { id: chatRoomId }, status: StatusEnum.ACTIVATED },
+    });
+
+    if (messages.length === 0) {
+      return;
+    }
+
+    for (const message of messages) {
+      message.status = StatusEnum.DEACTIVATED;
+      message.softDelete();
+    }
+
+    await this.chatMessageRepository.save(messages);
   }
 }
