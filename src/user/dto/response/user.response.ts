@@ -48,6 +48,17 @@ export class GetUserInfo {
     example: '2000-12-17',
   })
   birthDate: string;
+
+  constructor(user: Partial<GetUserInfo>) {
+    this.id = user.id;
+    this.name = user.name;
+    this.phoneNumber = user.phoneNumber;
+    this.email = user.email;
+    this.nickname = user.nickname;
+    this.profilePictureUrl = user.profilePictureUrl;
+    this.bio = user.bio;
+    this.birthDate = user.birthDate;
+  }
 }
 
 export class GetOtherUserInfo extends GetUserInfo {
@@ -56,4 +67,9 @@ export class GetOtherUserInfo extends GetUserInfo {
     example: true,
   })
   isMatching: boolean;
+
+  constructor(user: Partial<GetOtherUserInfo>, isMatching: boolean) {
+    super(user);
+    this.isMatching = isMatching;
+  }
 }

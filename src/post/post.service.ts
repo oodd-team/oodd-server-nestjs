@@ -60,20 +60,20 @@ export class PostService {
         'post.postImages',
         'postImage',
         'postImage.status = :status',
-        { status: 'activated' },
+        { status: StatusEnum.ACTIVATED },
       )
       .leftJoin(
         'post.postLikes',
         'postLike',
         'postLike.status = :status and postLike.postId = post.id and postLike.userId = :currentUserId',
         {
-          status: 'activated',
+          status: StatusEnum.ACTIVATED,
           currentUserId,
         },
       )
       .addSelect(['postLike.id'])
-      .where('post.status = :status', { status: 'activated' })
-      .andWhere('user.status = :status', { status: 'activated' })
+      .where('post.status = :status', { status: StatusEnum.ACTIVATED })
+      .andWhere('user.status = :status', { status: StatusEnum.ACTIVATED })
       .andWhere('user.id NOT IN (:currentUserId)', {
         currentUserId: [currentUserId],
       })
@@ -121,14 +121,14 @@ export class PostService {
         'post.postImages',
         'postImage',
         'postImage.status = :status AND postImage.orderNum = :orderNum',
-        { status: 'activated', orderNum: 1 },
+        { status: StatusEnum.ACTIVATED, orderNum: 1 },
       )
       .leftJoinAndSelect(
         'post.postLikes',
         'postLike',
         'postLike.status = :likeStatus',
         {
-          likeStatus: 'activated',
+          likeStatus: StatusEnum.ACTIVATED,
         },
       )
       .leftJoinAndSelect('postLike.user', 'postLikeUser')
@@ -137,11 +137,11 @@ export class PostService {
         'postComment',
         'postComment.status = :commentStatus',
         {
-          commentStatus: 'activated',
+          commentStatus: StatusEnum.ACTIVATED,
         },
       )
       .leftJoinAndSelect('postComment.user', 'postCommentUser')
-      .where('post.status = :status', { status: 'activated' })
+      .where('post.status = :status', { status: StatusEnum.ACTIVATED })
       .andWhere('post.user.id = :userId', { userId })
       .select([
         'post.id',
@@ -317,20 +317,20 @@ export class PostService {
           'post.postImages',
           'postImage',
           'postImage.status = :status',
-          { status: 'activated' },
+          { status: StatusEnum.ACTIVATED },
         )
         .leftJoinAndSelect(
           'post.postStyletags',
           'postStyletag',
           'postStyletag.status = :status',
-          { status: 'activated' },
+          { status: StatusEnum.ACTIVATED },
         )
         .leftJoinAndSelect('postStyletag.styletag', 'styletag')
         .leftJoinAndSelect(
           'post.postClothings',
           'postClothing',
           'postClothing.status = :status',
-          { status: 'activated' },
+          { status: StatusEnum.ACTIVATED },
         )
         .leftJoinAndSelect('postClothing.clothing', 'clothing')
         .leftJoinAndSelect('post.user', 'user')
@@ -395,7 +395,7 @@ export class PostService {
         'post.postImages',
         'postImage',
         'postImage.status = :imageStatus',
-        { imageStatus: 'activated' },
+        { imageStatus: StatusEnum.ACTIVATED },
       )
       .leftJoinAndSelect('post.user', 'user')
       .leftJoinAndSelect(
@@ -403,7 +403,7 @@ export class PostService {
         'postLike',
         'postLike.status = :likeStatus AND postLike.user.id NOT IN (:...blockedUserIds)',
         {
-          likeStatus: 'activated',
+          likeStatus: StatusEnum.ACTIVATED,
           blockedUserIds: blockedUserIds.length > 0 ? blockedUserIds : [-1], // 차단된 사용자가 없으면 무효화된 조건 (-1)
         },
       )
@@ -413,7 +413,7 @@ export class PostService {
         'postComment',
         'postComment.status = :commentStatus AND postComment.user.id NOT IN (:...blockedUserIds)',
         {
-          commentStatus: 'activated',
+          commentStatus: StatusEnum.ACTIVATED,
           blockedUserIds: blockedUserIds.length > 0 ? blockedUserIds : [-1],
         },
       )
@@ -422,18 +422,20 @@ export class PostService {
         'post.postClothings',
         'postClothing',
         'postClothing.status = :clothingStatus',
-        { clothingStatus: 'activated' },
+        { clothingStatus: StatusEnum.ACTIVATED },
       )
       .leftJoinAndSelect('postClothing.clothing', 'clothing')
       .leftJoinAndSelect(
         'post.postStyletags',
         'postStyletag',
         'postStyletag.status = :styletagStatus',
-        { styletagStatus: 'activated' },
+        { styletagStatus: StatusEnum.ACTIVATED },
       )
       .leftJoinAndSelect('postStyletag.styletag', 'styletag')
       .where('post.id = :postId', { postId })
-      .andWhere('post.status = :postStatus', { postStatus: 'activated' })
+      .andWhere('post.status = :postStatus', {
+        postStatus: StatusEnum.ACTIVATED,
+      })
       .getOne();
   }
 
@@ -499,7 +501,7 @@ export class PostService {
       {
         user: { id: userId },
         isRepresentative: true,
-        status: 'activated',
+        status: StatusEnum.ACTIVATED,
       },
       { isRepresentative: false },
     );

@@ -56,7 +56,7 @@ export class PostImageService {
     // 삭제할 이미지 목록
     const imagesToRemove = existingImages.filter(
       (existingImage) =>
-        existingImage.status === 'activated' &&
+        existingImage.status === StatusEnum.ACTIVATED &&
         !postImages.some((newImage) => newImage.url === existingImage.url),
     );
 
