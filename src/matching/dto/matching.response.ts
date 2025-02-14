@@ -81,7 +81,7 @@ class RequesterResponse {
   representativePost?: RepresentativePost;
 }
 
-class Matching {
+export class MatchingsResponse {
   @ApiProperty({ example: 1, description: '매칭 ID' })
   id: number;
 
@@ -108,8 +108,8 @@ export class GetMatchingsResponse {
 
   @ApiProperty({
     description: '매칭 정보',
-    type: [Matching],
+    type: [MatchingsResponse],
   })
-  @Type(() => Matching)
-  matching: Matching[];
+  @Type(() => MatchingsResponse)
+  matching: MatchingsResponse[];
 }

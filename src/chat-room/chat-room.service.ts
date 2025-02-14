@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ChatMessageService } from 'src/chat-message/chat-message.service';
 import { ChatRoom } from 'src/common/entities/chat-room.entity';
@@ -43,6 +43,8 @@ export class ChatRoomService {
       return [];
     }
 
+    const matchings = {};
+
     // 각 채팅방에서 최신 메시지를 선택
     const chatRoomsWithLatestMessages = chatRooms.map((room) => {
       const otherUser =
@@ -60,10 +62,12 @@ export class ChatRoomService {
 
       const latestMessage =
         room.chatMessages.length > 0 ? room.chatMessages[0] : null; // 가장 최근 메시지 선택
+
       return {
         id: room.id,
         otherUser: otherUserInfo,
         latestMessage: latestMessage,
+        matchings: matchings,
       };
     });
     return chatRoomsWithLatestMessages;

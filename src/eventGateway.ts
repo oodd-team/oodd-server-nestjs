@@ -10,6 +10,9 @@ import { ChatRoomService } from './chat-room/chat-room.service';
 import { ChatMessageService } from './chat-message/chat-message.service';
 import { UserService } from './user/user.service';
 import { UserBlockService } from './user-block/user-block.service';
+import { MatchingsResponse } from './matching/dto/matching.response';
+import { MatchingService } from './matching/matching.service';
+import { forwardRef, Inject } from '@nestjs/common';
 
 //클라이언트의 패킷들이 게이트웨이를 통해서 들어오게 됩니다.
 @WebSocketGateway({ namespace: '/socket/chatting' })
@@ -68,11 +71,11 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('sendMessage')
   async handleSendMessage(
-    client: Socket,
+    client: Socket | null,
     payload: {
       chatRoomId: number;
       toUserId: number;
-      content: string;
+      content: string | { text: string; matching: MatchingsResponse };
       fromUserId: number;
       createdAt: string;
     },
@@ -89,11 +92,15 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return;
     }
 
+    // content가 객체라면 JSON 문자열로 변환해서 저장
+    const messageContent =
+      typeof content === 'object' ? JSON.stringify(content) : content;
+
     // 메시지 저장 로직
     const newMessage = await this.chatMessageService.saveMessage(
       chatRoomId,
       toUserId,
-      content,
+      messageContent,
       fromUserId,
       createdAt,
     );
@@ -104,7 +111,9 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     client.emit('chatRoomList', chatRooms);
 
     // 해당 채팅방에 있는 모든 사용자에게 메시지 전송
-    this.server.to(String(chatRoomId)).emit('newMessage', newMessage);
+    this.server
+      .to(String(chatRoomId))
+      .emit('newMessage', { ...newMessage, content });
   }
 
   @SubscribeMessage('getChatRoomMessages')
@@ -137,4 +146,65 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client.emit('error', '채팅방 나가기 처리 중 오류가 발생했습니다.');
     }
   }
+
+  emitChatRooms(userId: number) {
+    this.server.to(String(userId)).emit('getChatRooms', { userId });
+  }
+
+  /*
+  @SubscribeMessage('requestMatching')
+  async handleRequestMatching(client: Socket, payload: CreateMatchingReqeust) {
+    const { requesterId, targetId, message } = payload;
+
+    const matching = await this.matchingService.createMatching(payload);
+    const chatRoom = await this.chatRoomService.getMatchingBotChatRoom(
+      payload.targetId,
+    );
+    const requester = await this.userService.getUserById(requesterId);
+    const requesterPost = requester.posts[0];
+    const toUser = await this.userService.getUserById(targetId);
+    const blockedUserIds =
+      await this.userBlockService.getBlockedUserIds(targetId);
+    if (!toUser || blockedUserIds.includes(targetId)) {
+      const errorMessage = !toUser
+        ? '존재하지 않는 사용자입니다.'
+        : '차단된 사용자에게 매칭을 요청할 수 없습니다.';
+      client.emit('error', errorMessage);
+      return;
+    }
+
+    // 매칭 성공 시 메시지 이벤트 호출
+    const botMessage = {
+      chatRoomId: chatRoom.id,
+      toUserId: targetId,
+      fromUserId: MatchingBotStatusEnum.BOT_USER_ID,
+      content: {
+        text: `매칭 신청이 도착했습니다!💌\n\n"${message}"`,
+        matching: {
+          id: matching.id,
+          requester: {
+            id: requester.id,
+            nickname: requester.nickname,
+            profilePictureUrl: requester.profilePictureUrl,
+            representativePost: requesterPost
+              ? {
+                  postImages: requesterPost.postImages.map((image) => ({
+                    url: image.url,
+                    orderNum: image.orderNum,
+                  })),
+                  styleTags: requesterPost.postStyletags
+                    ? requesterPost.postStyletags.map(
+                        (styleTag) => styleTag.styletag.tag,
+                      )
+                    : [],
+                }
+              : {},
+          },
+        },
+      },
+      createdAt: new Date().toISOString(),
+    };
+    this.server.emit('sendMessage', botMessage);
+  }
+    */
 }

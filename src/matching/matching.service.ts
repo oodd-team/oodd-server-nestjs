@@ -10,10 +10,11 @@ import { InternalServerException } from 'src/common/exception/service.exception'
 import { ChatMessageService } from 'src/chat-message/chat-message.service';
 import { ChatRoom } from 'src/common/entities/chat-room.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { GetMatchingsResponse } from './dto/matching.response';
+import { MatchingsResponse } from './dto/matching.response';
 import { MatchingRequestStatusEnum } from 'src/common/enum/matchingRequestStatus';
 import { StatusEnum } from 'src/common/enum/entityStatus';
 import { UserBlockService } from 'src/user-block/user-block.service';
+import { EventsGateway } from 'src/eventGateway';
 
 @Injectable()
 export class MatchingService {
@@ -24,6 +25,7 @@ export class MatchingService {
     private readonly chatMessageService: ChatMessageService,
     private readonly dataSource: DataSource,
     private readonly userBlockService: UserBlockService,
+    private readonly eventsGateway: EventsGateway,
   ) {}
 
   async getMatchingsByCurrentId(currentUserId: number): Promise<Matching[]> {
@@ -58,6 +60,9 @@ export class MatchingService {
         chatRoom,
         body,
       );
+
+      this.eventsGateway.emitChatRooms(body.targetId);
+
       await queryRunner.commitTransaction();
 
       return chatRoom;
@@ -104,7 +109,7 @@ export class MatchingService {
     }
   }
 
-  async getMatchings(currentUserId: number): Promise<GetMatchingsResponse> {
+  async getMatchings(currentUserId: number): Promise<MatchingsResponse[]> {
     const blockedUserIds =
       await this.userBlockService.getBlockedUserIds(currentUserId);
     const matchings = await this.matchingRepository
@@ -135,35 +140,30 @@ export class MatchingService {
       .addOrderBy('post.createdAt', 'DESC') // 그 다음은 최신 게시물 우선으로 정렬
       .getMany();
 
-    const response: GetMatchingsResponse = {
-      hasMatching: matchings.length > 0,
-      matchingsCount: matchings.length,
-      matching: matchings.map((matching) => {
-        const requesterPost = matching.requester.posts[0];
-
-        return {
-          id: matching.id,
-          requester: {
-            id: matching.requester.id,
-            nickname: matching.requester.nickname,
-            profilePictureUrl: matching.requester.profilePictureUrl,
-            representativePost: requesterPost
-              ? {
-                  postImages: requesterPost.postImages.map((image) => ({
-                    url: image.url,
-                    orderNum: image.orderNum,
-                  })),
-                  styleTags: requesterPost.postStyletags
-                    ? requesterPost.postStyletags.map(
-                        (styleTag) => styleTag.styletag.tag,
-                      )
-                    : [],
-                }
-              : {},
-          },
-        };
-      }),
-    };
+    const response: MatchingsResponse[] = matchings.map((matching) => {
+      const requesterPost = matching.requester.posts[0];
+      return {
+        id: matching.id,
+        requester: {
+          id: matching.requester.id,
+          nickname: matching.requester.nickname,
+          profilePictureUrl: matching.requester.profilePictureUrl,
+          representativePost: requesterPost
+            ? {
+                postImages: requesterPost.postImages.map((image) => ({
+                  url: image.url,
+                  orderNum: image.orderNum,
+                })),
+                styleTags: requesterPost.postStyletags
+                  ? requesterPost.postStyletags.map(
+                      (styleTag) => styleTag.styletag.tag,
+                    )
+                  : [],
+              }
+            : {},
+        },
+      };
+    });
 
     return response;
   }

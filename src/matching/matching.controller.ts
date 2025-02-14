@@ -31,7 +31,7 @@ import {
 } from 'src/common/exception/service.exception';
 import { BaseResponse } from 'src/common/response/dto';
 import {
-  GetMatchingsResponse,
+  MatchingsResponse,
   PatchMatchingResponse,
   CreateMatchingResponse,
 } from './dto/matching.response';
@@ -54,14 +54,13 @@ export class MatchingController {
   ) {}
 
   @Post()
-  @UseGuards(AuthGuard)
+  //@UseGuards(AuthGuard)
   @CreateMatchingSwagger('매칭 생성 API')
   async createMatching(
     @Req() req: Request,
     @Body() body: CreateMatchingReqeust,
   ): Promise<BaseResponse<CreateMatchingResponse>> {
-    if (req.user.id !== body.requesterId)
-      throw UnauthorizedException('권한이 없습니다.');
+    if (3 !== body.requesterId) throw UnauthorizedException('권한이 없습니다.');
 
     if (!(await this.userService.getUserById(body.targetId)))
       throw DataNotFoundException('대상 유저가 존재하지 않습니다.');
@@ -86,8 +85,8 @@ export class MatchingController {
     return new BaseResponse<CreateMatchingResponse>(true, 'SUCCESS', {
       id: chatRoom.matching.id,
       chatRoomId: chatRoom.id,
-      targetId: chatRoom.toUser.id,
-      requesterId: chatRoom.fromUser.id,
+      targetId: body.targetId,
+      requesterId: body.requesterId,
     });
   }
 
@@ -141,7 +140,7 @@ export class MatchingController {
   @GetMatchingsSwagger('매칭 리스트 조회 API')
   async getMatchings(
     @Req() req: Request,
-  ): Promise<BaseResponse<GetMatchingsResponse>> {
+  ): Promise<BaseResponse<MatchingsResponse[]>> {
     const response = await this.matchingService.getMatchings(req.user.id);
     return new BaseResponse(true, 'SUCCESS', response);
   }

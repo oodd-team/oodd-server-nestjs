@@ -9,6 +9,7 @@ import { UserModule } from 'src/user/user.module';
 import { PostModule } from 'src/post/post.module';
 import { UserBlock } from 'src/common/entities/user-block.entity';
 import { UserBlockModule } from 'src/user-block/user-block.module';
+import { EventsGateway } from 'src/eventGateway';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { UserBlockModule } from 'src/user-block/user-block.module';
     forwardRef(() => UserModule),
     PostModule,
     UserBlockModule,
+    EventsGateway,
   ],
   controllers: [MatchingController],
   providers: [MatchingService],
