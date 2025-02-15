@@ -49,6 +49,12 @@ export class GetUserInfo {
   })
   birthDate: string;
 
+  @ApiProperty({
+    description: '유저 스타일태그',
+    example: 'vintage',
+  })
+  userStyleTag: string;
+
   constructor(user: Partial<GetUserInfo>) {
     this.id = user.id;
     this.name = user.name;
@@ -58,6 +64,7 @@ export class GetUserInfo {
     this.profilePictureUrl = user.profilePictureUrl;
     this.bio = user.bio;
     this.birthDate = user.birthDate;
+    this.userStyleTag = user.userStyleTag;
   }
 }
 

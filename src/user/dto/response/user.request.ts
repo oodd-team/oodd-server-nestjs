@@ -81,4 +81,16 @@ export class PatchUserRequest {
     required: false,
   })
   bio?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(20, {
+    message: '유저 스타일 태그는 최대 20자까지 입력할 수 있습니다.',
+  })
+  @ApiProperty({
+    description: '수정할 유저 스타일 태그',
+    example: 'vintage',
+    required: false,
+  })
+  userStyleTag?: string;
 }
