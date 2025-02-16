@@ -76,6 +76,7 @@ export class AuthController {
       phoneNumber: user.phoneNumber,
       birthDate: dayjs(user.birthDate).format('YYYY-MM-DD'),
       bio: user.bio,
+      userStyleTag: user.userStyleTag,
     });
   }
 }

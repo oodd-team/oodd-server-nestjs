@@ -63,6 +63,7 @@ export class UserController {
       profilePictureUrl: user.profilePictureUrl,
       bio: user.bio,
       birthDate: dayjs(user.birthDate).format('YYYY-MM-DD'),
+      userStyleTag: user.userStyleTag,
       isMatching: isMatching,
     });
   }
@@ -106,6 +107,7 @@ export class UserController {
       nickname: updatedUser.nickname,
       profilePictureUrl: updatedUser.profilePictureUrl,
       bio: updatedUser.bio,
+      userStyleTag: updatedUser.userStyleTag,
     });
   }
 

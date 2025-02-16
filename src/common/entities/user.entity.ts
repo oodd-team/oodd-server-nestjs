@@ -64,6 +64,10 @@ export class User extends BaseEntity {
   @Column('datetime')
   privacyTermAcceptedAt!: Date;
 
+  @ApiProperty({ description: '유저 스타일태그', example: 'vintage' })
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  userStyleTag!: string | null;
+
   //one to many 관계 설정
 
   @OneToMany(() => Post, (post) => post.user)
