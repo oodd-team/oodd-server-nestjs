@@ -16,15 +16,16 @@ export class JwtKakaoStrategy extends PassportStrategy(Strategy, 'kakao') {
     });
   }
 
-  async authenticate(req: Request) {
+  async authenticate(req: Request, options?: any) {
     if (req.query.redirectUrl) {
       // /auth
       return super.authenticate(req, {
+        ...options,
         state: encodeURIComponent(req.query.redirectUrl as string),
       });
     }
     // /auth/callback
-    return super.authenticate(req);
+    return super.authenticate(req, options);
   }
 
   async validate(
