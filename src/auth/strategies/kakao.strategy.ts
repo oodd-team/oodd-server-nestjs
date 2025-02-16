@@ -16,7 +16,7 @@ export class JwtKakaoStrategy extends PassportStrategy(Strategy, 'kakao') {
     });
   }
 
-  async authenticate(req: Request, options?: any) {
+  authenticate(req: Request, options?: any) {
     if (req.query.redirectUrl) {
       // /auth
       return super.authenticate(req, {
