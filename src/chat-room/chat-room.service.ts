@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ChatMessageService } from 'src/chat-message/chat-message.service';
 import { ChatRoom } from 'src/common/entities/chat-room.entity';
@@ -6,7 +6,7 @@ import { Matching } from 'src/common/entities/matching.entity';
 import { StatusEnum } from 'src/common/enum/entityStatus';
 import { MatchingRequestStatusEnum } from 'src/common/enum/matchingRequestStatus';
 import { DataNotFoundException } from 'src/common/exception/service.exception';
-import { CreateMatchingReqeust } from 'src/matching/dto/matching.request';
+import { CreateMatchingRequest } from 'src/matching/dto/matching.request';
 import { Repository, QueryRunner } from 'typeorm';
 
 @Injectable()
@@ -43,8 +43,6 @@ export class ChatRoomService {
       return [];
     }
 
-    const matchings = {};
-
     // 각 채팅방에서 최신 메시지를 선택
     const chatRoomsWithLatestMessages = chatRooms.map((room) => {
       const otherUser =
@@ -67,7 +65,6 @@ export class ChatRoomService {
         id: room.id,
         otherUser: otherUserInfo,
         latestMessage: latestMessage,
-        matchings: matchings,
       };
     });
     return chatRoomsWithLatestMessages;
@@ -76,7 +73,7 @@ export class ChatRoomService {
   async createChatRoom(
     queryRunner: QueryRunner,
     matching: Matching,
-    body: CreateMatchingReqeust,
+    body: CreateMatchingRequest,
   ): Promise<ChatRoom> {
     // 채팅방 생성 로직
     return await queryRunner.manager.save(ChatRoom, {

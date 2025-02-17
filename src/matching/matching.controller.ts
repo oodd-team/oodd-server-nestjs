@@ -19,7 +19,7 @@ import {
 } from './matching.swagger';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
-  CreateMatchingReqeust,
+  CreateMatchingRequest,
   PatchMatchingRequest,
 } from './dto/matching.request';
 import { UserService } from 'src/user/user.service';
@@ -31,9 +31,9 @@ import {
 } from 'src/common/exception/service.exception';
 import { BaseResponse } from 'src/common/response/dto';
 import {
-  MatchingsResponse,
   PatchMatchingResponse,
   CreateMatchingResponse,
+  GetMatchingsResponse,
 } from './dto/matching.response';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { PostService } from 'src/post/post.service';
@@ -54,13 +54,14 @@ export class MatchingController {
   ) {}
 
   @Post()
-  //@UseGuards(AuthGuard)
+  @UseGuards(AuthGuard)
   @CreateMatchingSwagger('매칭 생성 API')
   async createMatching(
     @Req() req: Request,
-    @Body() body: CreateMatchingReqeust,
+    @Body() body: CreateMatchingRequest,
   ): Promise<BaseResponse<CreateMatchingResponse>> {
-    if (3 !== body.requesterId) throw UnauthorizedException('권한이 없습니다.');
+    if (req.user.id !== body.requesterId)
+      throw UnauthorizedException('권한이 없습니다.');
 
     if (!(await this.userService.getUserById(body.targetId)))
       throw DataNotFoundException('대상 유저가 존재하지 않습니다.');
@@ -81,13 +82,8 @@ export class MatchingController {
     )
       throw InvalidInputValueException('이미 매칭 요청을 보냈습니다.');
 
-    const chatRoom = await this.matchingService.createMatching(body);
-    return new BaseResponse<CreateMatchingResponse>(true, 'SUCCESS', {
-      id: chatRoom.matching.id,
-      chatRoomId: chatRoom.id,
-      targetId: body.targetId,
-      requesterId: body.requesterId,
-    });
+    const matching = await this.matchingService.createMatching(body);
+    return new BaseResponse<CreateMatchingResponse>(true, 'SUCCESS', matching);
   }
 
   @Patch(':matchingId')
@@ -140,7 +136,7 @@ export class MatchingController {
   @GetMatchingsSwagger('매칭 리스트 조회 API')
   async getMatchings(
     @Req() req: Request,
-  ): Promise<BaseResponse<MatchingsResponse[]>> {
+  ): Promise<BaseResponse<GetMatchingsResponse>> {
     const response = await this.matchingService.getMatchings(req.user.id);
     return new BaseResponse(true, 'SUCCESS', response);
   }

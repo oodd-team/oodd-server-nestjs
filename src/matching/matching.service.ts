@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
-  CreateMatchingReqeust,
+  CreateMatchingRequest,
   PatchMatchingRequest,
 } from './dto/matching.request';
 import { DataSource, Repository } from 'typeorm';
@@ -8,13 +8,15 @@ import { Matching } from 'src/common/entities/matching.entity';
 import { ChatRoomService } from '../chat-room/chat-room.service';
 import { InternalServerException } from 'src/common/exception/service.exception';
 import { ChatMessageService } from 'src/chat-message/chat-message.service';
-import { ChatRoom } from 'src/common/entities/chat-room.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MatchingsResponse } from './dto/matching.response';
+import {
+  CreateMatchingResponse,
+  GetMatchingsResponse,
+} from './dto/matching.response';
 import { MatchingRequestStatusEnum } from 'src/common/enum/matchingRequestStatus';
 import { StatusEnum } from 'src/common/enum/entityStatus';
 import { UserBlockService } from 'src/user-block/user-block.service';
-import { EventsGateway } from 'src/eventGateway';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class MatchingService {
@@ -24,8 +26,6 @@ export class MatchingService {
     private readonly chatRoomService: ChatRoomService,
     private readonly chatMessageService: ChatMessageService,
     private readonly dataSource: DataSource,
-    private readonly userBlockService: UserBlockService,
-    private readonly eventsGateway: EventsGateway,
   ) {}
 
   async getMatchingsByCurrentId(currentUserId: number): Promise<Matching[]> {
@@ -38,7 +38,9 @@ export class MatchingService {
     });
   }
 
-  async createMatching(body: CreateMatchingReqeust): Promise<ChatRoom> {
+  async createMatching(
+    body: CreateMatchingRequest,
+  ): Promise<CreateMatchingResponse> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -61,11 +63,46 @@ export class MatchingService {
         body,
       );
 
-      this.eventsGateway.emitChatRooms(body.targetId);
+      const matchingInfo = await queryRunner.manager
+        .createQueryBuilder(Matching, 'matching')
+        .leftJoinAndSelect('matching.target', 'target')
+        .leftJoinAndSelect('matching.requester', 'requester')
+        .leftJoinAndSelect('requester.posts', 'post')
+        .leftJoinAndSelect('post.postImages', 'image')
+        .leftJoinAndSelect('post.postStyletags', 'styleTag')
+        .leftJoinAndSelect('styleTag.styletag', 'styletag')
+        .where('matching.id = :id', { id: matching.id })
+        .getOne();
+
+      const requesterPost = matchingInfo.requester.posts[0];
 
       await queryRunner.commitTransaction();
 
-      return chatRoom;
+      return {
+        id: matchingInfo.id,
+        message: body.message,
+        createdAt: dayjs(matching.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
+        chatRoomId: chatRoom.id,
+        targetId: body.targetId,
+        requester: {
+          id: body.requesterId,
+          nickname: matchingInfo.requester.nickname,
+          profilePictureUrl: matchingInfo.requester.profilePictureUrl,
+          representativePost: requesterPost
+            ? {
+                postImages: requesterPost.postImages.map((image) => ({
+                  url: image.url,
+                  orderNum: image.orderNum,
+                })),
+                styleTags: requesterPost.postStyletags
+                  ? requesterPost.postStyletags.map(
+                      (styleTag) => styleTag.styletag.tag,
+                    )
+                  : [],
+              }
+            : {},
+        },
+      };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw InternalServerException(error.message);
@@ -109,9 +146,7 @@ export class MatchingService {
     }
   }
 
-  async getMatchings(currentUserId: number): Promise<MatchingsResponse[]> {
-    const blockedUserIds =
-      await this.userBlockService.getBlockedUserIds(currentUserId);
+  async getMatchings(currentUserId: number): Promise<GetMatchingsResponse> {
     const matchings = await this.matchingRepository
       .createQueryBuilder('matching')
       .leftJoinAndSelect('matching.requester', 'requester')
@@ -129,42 +164,40 @@ export class MatchingService {
       .andWhere('requester.status = :activated', {
         activated: StatusEnum.ACTIVATED,
       })
-      .andWhere(
-        blockedUserIds.length > 0
-          ? 'requester.id NOT IN (:...blockedUserIds)'
-          : '1=1',
-        { blockedUserIds },
-      )
       .orderBy('matching.createdAt', 'DESC')
       .addOrderBy('post.isRepresentative', 'DESC') // 'isRepresentative'가 true인 게시물을 우선적으로 정렬
       .addOrderBy('post.createdAt', 'DESC') // 그 다음은 최신 게시물 우선으로 정렬
       .getMany();
 
-    const response: MatchingsResponse[] = matchings.map((matching) => {
-      const requesterPost = matching.requester.posts[0];
-      return {
-        id: matching.id,
-        requester: {
-          id: matching.requester.id,
-          nickname: matching.requester.nickname,
-          profilePictureUrl: matching.requester.profilePictureUrl,
-          representativePost: requesterPost
-            ? {
-                postImages: requesterPost.postImages.map((image) => ({
-                  url: image.url,
-                  orderNum: image.orderNum,
-                })),
-                styleTags: requesterPost.postStyletags
-                  ? requesterPost.postStyletags.map(
-                      (styleTag) => styleTag.styletag.tag,
-                    )
-                  : [],
-              }
-            : {},
-        },
-      };
-    });
+    const response: GetMatchingsResponse = {
+      hasMatching: matchings.length > 0,
+      matchingsCount: matchings.length,
+      matching: matchings.map((matching) => {
+        const requesterPost = matching.requester.posts[0];
 
+        return {
+          id: matching.id,
+          requester: {
+            id: matching.requester.id,
+            nickname: matching.requester.nickname,
+            profilePictureUrl: matching.requester.profilePictureUrl,
+            representativePost: requesterPost
+              ? {
+                  postImages: requesterPost.postImages.map((image) => ({
+                    url: image.url,
+                    orderNum: image.orderNum,
+                  })),
+                  styleTags: requesterPost.postStyletags
+                    ? requesterPost.postStyletags.map(
+                        (styleTag) => styleTag.styletag.tag,
+                      )
+                    : [],
+                }
+              : {},
+          },
+        };
+      }),
+    };
     return response;
   }
 
