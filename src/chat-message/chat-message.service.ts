@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ChatMessage } from 'src/common/entities/chat-message.entity';
 import { ChatRoom } from 'src/common/entities/chat-room.entity';
 import { StatusEnum } from 'src/common/enum/entityStatus';
-import { CreateMatchingReqeust } from 'src/matching/dto/matching.request';
+import { CreateMatchingRequest } from 'src/matching/dto/matching.request';
 import { QueryRunner, Repository } from 'typeorm';
 
 @Injectable()
@@ -80,7 +80,7 @@ export class ChatMessageService {
   async createChatMessage(
     queryRunner: QueryRunner,
     chatRoom: ChatRoom,
-    body: CreateMatchingReqeust,
+    body: CreateMatchingRequest,
   ): Promise<ChatMessage> {
     return queryRunner.manager.save(ChatMessage, {
       chatRoom: chatRoom,

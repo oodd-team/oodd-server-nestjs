@@ -10,6 +10,7 @@ import { ChatRoomService } from './chat-room/chat-room.service';
 import { ChatMessageService } from './chat-message/chat-message.service';
 import { UserService } from './user/user.service';
 import { UserBlockService } from './user-block/user-block.service';
+import { MatchingService } from './matching/matching.service';
 
 //클라이언트의 패킷들이 게이트웨이를 통해서 들어오게 됩니다.
 @WebSocketGateway({ namespace: '/socket/chatting' })
@@ -23,6 +24,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly chatMessageService: ChatMessageService,
     private readonly userService: UserService,
     private readonly userBlockService: UserBlockService,
+    private readonly matchingService: MatchingService,
   ) {}
   /*
      유저정보는 같지만 소켓이 여러개가 연결되어 있을 경우
