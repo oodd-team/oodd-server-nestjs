@@ -122,6 +122,7 @@ export class MatchingService {
       matching.id,
     );
     try {
+      console.log(body.requestStatus);
       if (body.requestStatus === 'accept') {
         matching.requestStatus = MatchingRequestStatusEnum.ACCEPTED;
         matching.acceptedAt = new Date();

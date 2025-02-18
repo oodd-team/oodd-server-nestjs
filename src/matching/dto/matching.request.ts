@@ -21,6 +21,10 @@ export class CreateMatchingRequest {
 }
 
 export class PatchMatchingRequest {
+  @ApiProperty({ example: 1, description: '매칭 아이디' })
+  @IsInt()
+  id: number;
+
   @ApiProperty({
     example: 'accept',
     enum: ['accept', 'reject'],
