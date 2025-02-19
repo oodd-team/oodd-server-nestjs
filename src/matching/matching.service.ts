@@ -15,7 +15,6 @@ import {
 } from './dto/matching.response';
 import { MatchingRequestStatusEnum } from 'src/common/enum/matchingRequestStatus';
 import { StatusEnum } from 'src/common/enum/entityStatus';
-import { UserBlockService } from 'src/user-block/user-block.service';
 import dayjs from 'dayjs';
 
 @Injectable()
@@ -145,6 +144,14 @@ export class MatchingService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async getLatestMatching(currentUserId: number): Promise<Matching> {
+    return await this.matchingRepository.findOne({
+      where: { target: { id: currentUserId } },
+      relations: ['target', 'requester'],
+      order: { createdAt: 'DESC' },
+    });
   }
 
   async getMatchings(currentUserId: number): Promise<GetMatchingsResponse> {

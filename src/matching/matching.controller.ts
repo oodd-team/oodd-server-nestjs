@@ -14,6 +14,7 @@ import { MatchingService } from './matching.service';
 import {
   CreateMatchingSwagger,
   DeleteMatchingSwagger,
+  getLatestMatchingSwagger,
   GetMatchingsSwagger,
   PatchMatchingRequestStatusSwagger,
 } from './matching.swagger';
@@ -34,6 +35,7 @@ import {
   PatchMatchingResponse,
   CreateMatchingResponse,
   GetMatchingsResponse,
+  GetOneMatchingResponse,
 } from './dto/matching.response';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { PostService } from 'src/post/post.service';
@@ -139,5 +141,23 @@ export class MatchingController {
   ): Promise<BaseResponse<GetMatchingsResponse>> {
     const response = await this.matchingService.getMatchings(req.user.id);
     return new BaseResponse(true, 'SUCCESS', response);
+  }
+
+  @Get('latest')
+  @UseGuards(AuthGuard)
+  @getLatestMatchingSwagger('최근 매칭 조회 API')
+  async getLatestMatching(
+    @Req() req: Request,
+  ): Promise<BaseResponse<GetOneMatchingResponse>> {
+    const matching = await this.matchingService.getLatestMatching(req.user.id);
+    if (!matching) {
+      throw DataNotFoundException('매칭을 찾을 수 없습니다.');
+    }
+    return new BaseResponse<GetOneMatchingResponse>(true, '매칭 조회 성공', {
+      id: matching.id,
+      requesterId: matching.requester.id,
+      targetId: matching.target.id,
+      requestStatus: matching.requestStatus,
+    });
   }
 }
