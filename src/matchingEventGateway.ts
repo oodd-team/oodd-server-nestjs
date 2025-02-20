@@ -158,4 +158,17 @@ export class MatchingEventsGateway
       client.emit('error', '매칭 상태 변경 처리 중 오류가 발생했습니다.');
     }
   }
+
+  @SubscribeMessage('getLatestMatching')
+  async handleGetLatestMatching(client: Socket, payload: { userId: number }) {
+    const { userId } = payload;
+    try {
+      const latestMatching =
+        await this.matchingService.getLatestMatching(userId);
+
+      client.emit('latestMatching', latestMatching);
+    } catch (error) {
+      client.emit('error', '매칭 조회 중 오류가 발생했습니다.');
+    }
+  }
 }

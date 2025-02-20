@@ -132,4 +132,10 @@ export class GetMatchingsResponse {
 
 export class GetOneMatchingResponse extends OmitType(PatchMatchingResponse, [
   'chatRoomId',
-] as const) {}
+] as const) {
+  @ApiProperty({
+    example: '2024-10-11T09:00:00.000Z',
+    description: '신청 시각',
+  })
+  createdAt: string;
+}
