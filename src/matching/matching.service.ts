@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
-  CreateMatchingReqeust,
+  CreateMatchingRequest,
   PatchMatchingRequest,
 } from './dto/matching.request';
 import { DataSource, Repository } from 'typeorm';
@@ -8,12 +8,15 @@ import { Matching } from 'src/common/entities/matching.entity';
 import { ChatRoomService } from '../chat-room/chat-room.service';
 import { InternalServerException } from 'src/common/exception/service.exception';
 import { ChatMessageService } from 'src/chat-message/chat-message.service';
-import { ChatRoom } from 'src/common/entities/chat-room.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { GetMatchingsResponse } from './dto/matching.response';
+import {
+  CreateMatchingResponse,
+  GetMatchingsResponse,
+  GetOneMatchingResponse,
+} from './dto/matching.response';
 import { MatchingRequestStatusEnum } from 'src/common/enum/matchingRequestStatus';
 import { StatusEnum } from 'src/common/enum/entityStatus';
-import { UserBlockService } from 'src/user-block/user-block.service';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class MatchingService {
@@ -23,7 +26,6 @@ export class MatchingService {
     private readonly chatRoomService: ChatRoomService,
     private readonly chatMessageService: ChatMessageService,
     private readonly dataSource: DataSource,
-    private readonly userBlockService: UserBlockService,
   ) {}
 
   async getMatchingsByCurrentId(currentUserId: number): Promise<Matching[]> {
@@ -36,7 +38,9 @@ export class MatchingService {
     });
   }
 
-  async createMatching(body: CreateMatchingReqeust): Promise<ChatRoom> {
+  async createMatching(
+    body: CreateMatchingRequest,
+  ): Promise<CreateMatchingResponse> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -58,9 +62,47 @@ export class MatchingService {
         chatRoom,
         body,
       );
+
+      const matchingInfo = await queryRunner.manager
+        .createQueryBuilder(Matching, 'matching')
+        .leftJoinAndSelect('matching.target', 'target')
+        .leftJoinAndSelect('matching.requester', 'requester')
+        .leftJoinAndSelect('requester.posts', 'post')
+        .leftJoinAndSelect('post.postImages', 'image')
+        .leftJoinAndSelect('post.postStyletags', 'styleTag')
+        .leftJoinAndSelect('styleTag.styletag', 'styletag')
+        .where('matching.id = :id', { id: matching.id })
+        .getOne();
+
+      const requesterPost = matchingInfo.requester.posts[0];
+
       await queryRunner.commitTransaction();
 
-      return chatRoom;
+      return {
+        id: matchingInfo.id,
+        message: body.message,
+        createdAt: dayjs(matching.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
+        chatRoomId: chatRoom.id,
+        targetId: body.targetId,
+        requester: {
+          id: body.requesterId,
+          nickname: matchingInfo.requester.nickname,
+          profilePictureUrl: matchingInfo.requester.profilePictureUrl,
+          representativePost: requesterPost
+            ? {
+                postImages: requesterPost.postImages.map((image) => ({
+                  url: image.url,
+                  orderNum: image.orderNum,
+                })),
+                styleTags: requesterPost.postStyletags
+                  ? requesterPost.postStyletags.map(
+                      (styleTag) => styleTag.styletag.tag,
+                    )
+                  : [],
+              }
+            : {},
+        },
+      };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw InternalServerException(error.message);
@@ -80,6 +122,7 @@ export class MatchingService {
       matching.id,
     );
     try {
+      console.log(body.requestStatus);
       if (body.requestStatus === 'accept') {
         matching.requestStatus = MatchingRequestStatusEnum.ACCEPTED;
         matching.acceptedAt = new Date();
@@ -104,9 +147,29 @@ export class MatchingService {
     }
   }
 
+  async getLatestMatching(
+    userId: number,
+  ): Promise<GetOneMatchingResponse | {}> {
+    const matching = await this.matchingRepository.findOne({
+      where: { target: { id: userId } },
+      relations: ['target', 'requester'],
+      order: { createdAt: 'DESC' },
+    });
+
+    if (!matching) {
+      return {};
+    }
+
+    return {
+      id: matching.id,
+      requesterId: matching.requester.id,
+      targetId: matching.target.id,
+      requestStatus: matching.requestStatus,
+      createdAt: dayjs(matching.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
+    };
+  }
+
   async getMatchings(currentUserId: number): Promise<GetMatchingsResponse> {
-    const blockedUserIds =
-      await this.userBlockService.getBlockedUserIds(currentUserId);
     const matchings = await this.matchingRepository
       .createQueryBuilder('matching')
       .leftJoinAndSelect('matching.requester', 'requester')
@@ -124,12 +187,6 @@ export class MatchingService {
       .andWhere('requester.status = :activated', {
         activated: StatusEnum.ACTIVATED,
       })
-      .andWhere(
-        blockedUserIds.length > 0
-          ? 'requester.id NOT IN (:...blockedUserIds)'
-          : '1=1',
-        { blockedUserIds },
-      )
       .orderBy('matching.createdAt', 'DESC')
       .addOrderBy('post.isRepresentative', 'DESC') // 'isRepresentative'가 true인 게시물을 우선적으로 정렬
       .addOrderBy('post.createdAt', 'DESC') // 그 다음은 최신 게시물 우선으로 정렬
@@ -164,7 +221,6 @@ export class MatchingService {
         };
       }),
     };
-
     return response;
   }
 

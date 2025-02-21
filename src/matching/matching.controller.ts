@@ -19,7 +19,7 @@ import {
 } from './matching.swagger';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
-  CreateMatchingReqeust,
+  CreateMatchingRequest,
   PatchMatchingRequest,
 } from './dto/matching.request';
 import { UserService } from 'src/user/user.service';
@@ -31,9 +31,10 @@ import {
 } from 'src/common/exception/service.exception';
 import { BaseResponse } from 'src/common/response/dto';
 import {
-  GetMatchingsResponse,
   PatchMatchingResponse,
   CreateMatchingResponse,
+  GetMatchingsResponse,
+  GetOneMatchingResponse,
 } from './dto/matching.response';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { PostService } from 'src/post/post.service';
@@ -58,7 +59,7 @@ export class MatchingController {
   @CreateMatchingSwagger('매칭 생성 API')
   async createMatching(
     @Req() req: Request,
-    @Body() body: CreateMatchingReqeust,
+    @Body() body: CreateMatchingRequest,
   ): Promise<BaseResponse<CreateMatchingResponse>> {
     if (req.user.id !== body.requesterId)
       throw UnauthorizedException('권한이 없습니다.');
@@ -82,13 +83,8 @@ export class MatchingController {
     )
       throw InvalidInputValueException('이미 매칭 요청을 보냈습니다.');
 
-    const chatRoom = await this.matchingService.createMatching(body);
-    return new BaseResponse<CreateMatchingResponse>(true, 'SUCCESS', {
-      id: chatRoom.matching.id,
-      chatRoomId: chatRoom.id,
-      targetId: chatRoom.toUser.id,
-      requesterId: chatRoom.fromUser.id,
-    });
+    const matching = await this.matchingService.createMatching(body);
+    return new BaseResponse<CreateMatchingResponse>(true, 'SUCCESS', matching);
   }
 
   @Patch(':matchingId')

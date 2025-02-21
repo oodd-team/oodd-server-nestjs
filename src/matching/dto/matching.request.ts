@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsIn, IsInt, IsString, MaxLength, MinLength } from 'class-validator';
 
-export class CreateMatchingReqeust {
+export class CreateMatchingRequest {
   @ApiProperty({ example: 1, description: '신청하는 유저 아이디' })
   @IsInt()
   requesterId: number;
@@ -21,6 +21,10 @@ export class CreateMatchingReqeust {
 }
 
 export class PatchMatchingRequest {
+  @ApiProperty({ example: 1, description: '매칭 아이디' })
+  @IsInt()
+  id: number;
+
   @ApiProperty({
     example: 'accept',
     enum: ['accept', 'reject'],

@@ -6,7 +6,7 @@ import { Matching } from 'src/common/entities/matching.entity';
 import { StatusEnum } from 'src/common/enum/entityStatus';
 import { MatchingRequestStatusEnum } from 'src/common/enum/matchingRequestStatus';
 import { DataNotFoundException } from 'src/common/exception/service.exception';
-import { CreateMatchingReqeust } from 'src/matching/dto/matching.request';
+import { CreateMatchingRequest } from 'src/matching/dto/matching.request';
 import { Repository, QueryRunner } from 'typeorm';
 
 @Injectable()
@@ -60,6 +60,7 @@ export class ChatRoomService {
 
       const latestMessage =
         room.chatMessages.length > 0 ? room.chatMessages[0] : null; // 가장 최근 메시지 선택
+
       return {
         id: room.id,
         otherUser: otherUserInfo,
@@ -72,7 +73,7 @@ export class ChatRoomService {
   async createChatRoom(
     queryRunner: QueryRunner,
     matching: Matching,
-    body: CreateMatchingReqeust,
+    body: CreateMatchingRequest,
   ): Promise<ChatRoom> {
     // 채팅방 생성 로직
     return await queryRunner.manager.save(ChatRoom, {
