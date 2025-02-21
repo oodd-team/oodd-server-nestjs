@@ -10,6 +10,7 @@ import {
 import { DataSource, FindOneOptions, Repository } from 'typeorm';
 import { PatchUserRequest } from './dto/response/user.request';
 import { StatusEnum } from 'src/common/enum/entityStatus';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class UserService {
@@ -41,6 +42,15 @@ export class UserService {
     return await this.userRepository.findOne({
       where: { id: id, status: StatusEnum.ACTIVATED },
     });
+  }
+
+  async getCreatedAtById(id: number): Promise<string> {
+    const user = await this.userRepository.findOne({
+      where: { id: id },
+      select: ['createdAt'],
+    });
+
+    return dayjs(user.createdAt).format('YYYY-MM-DD HH:mm:ss');
   }
 
   async createUserByKakaoOrNaver(user: SocialUser): Promise<string> {

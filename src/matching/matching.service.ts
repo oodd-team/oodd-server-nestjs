@@ -157,7 +157,7 @@ export class MatchingService {
     });
 
     if (!matching) {
-      return {};
+      return null;
     }
 
     return {

@@ -166,6 +166,12 @@ export class MatchingEventsGateway
       const latestMatching =
         await this.matchingService.getLatestMatching(userId);
 
+      if (!latestMatching) {
+        const createdAt = await this.userService.getCreatedAtById(userId);
+        client.emit('매칭이 존재하지 않습니다.', createdAt);
+        return;
+      }
+
       client.emit('latestMatching', latestMatching);
     } catch (error) {
       client.emit('error', '매칭 조회 중 오류가 발생했습니다.');
