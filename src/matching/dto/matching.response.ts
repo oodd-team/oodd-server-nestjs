@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
 export class PatchMatchingResponse {
@@ -94,7 +94,7 @@ export class CreateMatchingResponse {
 
   @ApiProperty({
     example: '2024-10-11T09:00:00.000Z',
-    description: '신청청 시각',
+    description: '신청 시각',
   })
   createdAt: string;
 
@@ -128,4 +128,14 @@ export class GetMatchingsResponse {
   })
   @Type(() => MatchingResponse)
   matching: MatchingResponse[];
+}
+
+export class GetOneMatchingResponse extends OmitType(PatchMatchingResponse, [
+  'chatRoomId',
+] as const) {
+  @ApiProperty({
+    example: '2024-10-11T09:00:00.000Z',
+    description: '신청 시각',
+  })
+  createdAt: string;
 }

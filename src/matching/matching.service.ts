@@ -12,10 +12,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import {
   CreateMatchingResponse,
   GetMatchingsResponse,
+  GetOneMatchingResponse,
 } from './dto/matching.response';
 import { MatchingRequestStatusEnum } from 'src/common/enum/matchingRequestStatus';
 import { StatusEnum } from 'src/common/enum/entityStatus';
-import { UserBlockService } from 'src/user-block/user-block.service';
 import dayjs from 'dayjs';
 
 @Injectable()
@@ -145,6 +145,28 @@ export class MatchingService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async getLatestMatching(
+    userId: number,
+  ): Promise<GetOneMatchingResponse | {}> {
+    const matching = await this.matchingRepository.findOne({
+      where: { target: { id: userId } },
+      relations: ['target', 'requester'],
+      order: { createdAt: 'DESC' },
+    });
+
+    if (!matching) {
+      return {};
+    }
+
+    return {
+      id: matching.id,
+      requesterId: matching.requester.id,
+      targetId: matching.target.id,
+      requestStatus: matching.requestStatus,
+      createdAt: dayjs(matching.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
+    };
   }
 
   async getMatchings(currentUserId: number): Promise<GetMatchingsResponse> {

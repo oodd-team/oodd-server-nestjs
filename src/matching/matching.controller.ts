@@ -34,6 +34,7 @@ import {
   PatchMatchingResponse,
   CreateMatchingResponse,
   GetMatchingsResponse,
+  GetOneMatchingResponse,
 } from './dto/matching.response';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { PostService } from 'src/post/post.service';
