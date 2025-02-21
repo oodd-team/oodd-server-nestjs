@@ -8,6 +8,7 @@ import { PostLike } from './post-like.entity';
 import { PostReport } from './post-report.entity';
 import { ChatMessage } from './chat-message.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { UserStyletag } from './user-styletag.entity';
 
 @Entity('User')
 export class User extends BaseEntity {
@@ -64,10 +65,6 @@ export class User extends BaseEntity {
   @Column('datetime')
   privacyTermAcceptedAt!: Date;
 
-  @ApiProperty({ description: '유저 스타일태그', example: 'vintage' })
-  @Column({ type: 'varchar', length: 20, nullable: true })
-  userStyleTag!: string | null;
-
   //one to many 관계 설정
 
   @OneToMany(() => Post, (post) => post.user)
@@ -99,6 +96,9 @@ export class User extends BaseEntity {
 
   @OneToMany(() => PostReport, (postReport) => postReport.reporter)
   postReports!: PostReport[];
+
+  @OneToMany(() => UserStyletag, (userStyletag) => userStyletag.user)
+  userStyletags!: UserStyletag[];
 
   // 대표 게시물 필드 추가
   @OneToOne(() => Post, (post) => post.user)

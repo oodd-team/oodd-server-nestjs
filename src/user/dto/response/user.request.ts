@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsDateString,
   IsEmail,
   IsNotEmpty,
@@ -83,14 +84,17 @@ export class PatchUserRequest {
   bio?: string;
 
   @IsOptional()
-  @IsString()
+  @IsArray()
+  @IsString({ each: true })
   @MaxLength(20, {
-    message: '유저 스타일 태그는 최대 20자까지 입력할 수 있습니다.',
+    each: true,
+    message: '각 스타일 태그는 최대 20자까지 입력할 수 있습니다.',
   })
   @ApiProperty({
-    description: '수정할 유저 스타일 태그',
-    example: 'vintage',
+    description: '수정할 유저 스타일 태그 배열',
+    example: ['casual', 'street'],
     required: false,
+    type: [String],
   })
-  userStyleTag?: string;
+  userStyletags?: string[];
 }

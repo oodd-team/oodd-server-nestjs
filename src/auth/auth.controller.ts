@@ -66,17 +66,9 @@ export class AuthController {
   @GetJwtInfoSwagger('JWT 토큰 정보 조회 API')
   @Get('/me')
   async test(@Req() req: Request): Promise<BaseResponse<GetUserInfo>> {
-    const user = await this.userService.getUserById(req.user?.id);
-    return new BaseResponse<GetUserInfo>(true, 'SUCCESS', {
-      id: user.id,
-      email: user.email,
-      nickname: user.nickname,
-      profilePictureUrl: user.profilePictureUrl,
-      name: user.name,
-      phoneNumber: user.phoneNumber,
-      birthDate: dayjs(user.birthDate).format('YYYY-MM-DD'),
-      bio: user.bio,
-      userStyleTag: user.userStyleTag,
-    });
+    const user = await this.userService.getUserWithTag(req.user?.id);
+    const userInfo = new GetUserInfo(user);
+
+    return new BaseResponse<GetUserInfo>(true, 'SUCCESS', userInfo);
   }
 }

@@ -27,7 +27,6 @@ import {
 import { GetUserInfo } from './dto/response/user.response';
 import { GetOtherUserInfo } from './dto/response/user.response';
 import { MatchingService } from 'src/matching/matching.service';
-import dayjs from 'dayjs';
 
 @ApiBearerAuth('Authorization')
 @Controller('user')
@@ -46,7 +45,7 @@ export class UserController {
     @Req() req: Request,
     @Param('userId') userId: number,
   ): Promise<BaseResponse<GetOtherUserInfo>> {
-    const user = await this.userService.getUserById(userId);
+    const user = await this.userService.getUserWithTag(userId);
     if (!user) throw DataNotFoundException('존재하지 않는 사용자입니다.');
     // MatchingService를 통해 해당 사용자가 친구인지 확인
     const isMatching = await this.matchingService.isMatching(
@@ -54,18 +53,13 @@ export class UserController {
       userId,
     );
 
-    return new BaseResponse<GetOtherUserInfo>(true, '유저 정보 조회 성공', {
-      id: user.id,
-      name: user.name,
-      phoneNumber: user.phoneNumber,
-      email: user.email,
-      nickname: user.nickname,
-      profilePictureUrl: user.profilePictureUrl,
-      bio: user.bio,
-      birthDate: dayjs(user.birthDate).format('YYYY-MM-DD'),
-      userStyleTag: user.userStyleTag,
-      isMatching: isMatching,
-    });
+    const otherUserInfo = new GetOtherUserInfo(user, isMatching);
+
+    return new BaseResponse<GetOtherUserInfo>(
+      true,
+      '유저 정보 조회 성공',
+      otherUserInfo,
+    );
   }
 
   @Patch(':userId/withdraw')
@@ -97,18 +91,13 @@ export class UserController {
     }
 
     const updatedUser = await this.userService.PatchUser(userId, body);
+    const updatedUserResponse = new GetUserInfo(updatedUser);
 
-    return new BaseResponse<GetUserInfo>(true, '유저 정보 수정 성공', {
-      id: updatedUser.id,
-      name: updatedUser.name,
-      phoneNumber: updatedUser.phoneNumber,
-      birthDate: dayjs(updatedUser.birthDate).format('YYYY-MM-DD'),
-      email: updatedUser.email,
-      nickname: updatedUser.nickname,
-      profilePictureUrl: updatedUser.profilePictureUrl,
-      bio: updatedUser.bio,
-      userStyleTag: updatedUser.userStyleTag,
-    });
+    return new BaseResponse<GetUserInfo>(
+      true,
+      '유저 정보 수정 성공',
+      updatedUserResponse,
+    );
   }
 
   @Post(':userId')
