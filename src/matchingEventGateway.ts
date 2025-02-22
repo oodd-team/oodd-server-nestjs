@@ -100,11 +100,34 @@ export class MatchingEventsGateway
         client.emit('error', '신청 유저의 게시물이 존재하지 않습니다.');
         return;
       }
-
-      const matchingInfo = await this.matchingService.createMatching(payload);
-      client.emit('matchingInfo', matchingInfo);
+      await this.matchingService.createMatching(payload);
+      client.emit('getLatestMatching');
     } catch (error) {
       client.emit('error', '매칭 신청 처리 중 오류가 발생했습니다.');
+    }
+  }
+
+  @SubscribeMessage('getMatching')
+  async handleGetMatching(client: Socket, payload: { userId: number }) {
+    const { userId } = payload;
+    try {
+      const nextMatching = await this.matchingService.getNextMatching(userId);
+
+      client.emit('nextMatching', nextMatching);
+    } catch (error) {
+      client.emit('error', '매칭 조회 중 오류가 발생했습니다.');
+    }
+  }
+
+  @SubscribeMessage('getAllMatchings')
+  async handleGetAllMatchings(client: Socket, payload: { userId: number }) {
+    const { userId } = payload;
+    try {
+      const matchings = await this.matchingService.getMatchings(userId);
+
+      client.emit('matchings', matchings);
+    } catch (error) {
+      client.emit('error', '매칭 조회 중 오류가 발생했습니다.');
     }
   }
 
@@ -141,19 +164,12 @@ export class MatchingEventsGateway
         return;
       }
 
-      const patchMatching =
-        await this.matchingService.patchMatchingRequestStatus(
-          matching,
-          payload,
-        );
-      const matchingStatus = {
-        id: id,
-        requesterId: patchMatching.requester.id,
-        targetId: patchMatching.target.id,
-        requestStatus: patchMatching.requestStatus,
-        chatRoomId: chatRoom.id,
-      };
-      client.emit('matchingStatus', matchingStatus);
+      await this.matchingService.patchMatchingRequestStatus(matching, payload);
+      const nextMatching = await this.matchingService.getNextMatching(
+        matching.target.id,
+      );
+
+      client.emit('nextMatching', nextMatching);
     } catch (error) {
       client.emit('error', '매칭 상태 변경 처리 중 오류가 발생했습니다.');
     }
@@ -166,7 +182,13 @@ export class MatchingEventsGateway
       const latestMatching =
         await this.matchingService.getLatestMatching(userId);
 
-      client.emit('latestMatching', latestMatching);
+      if (!latestMatching) {
+        const joinedAt = await this.userService.getCreatedAtById(userId);
+        client.emit('matchingNotFound', joinedAt);
+        return;
+      }
+
+      client.emit('getLatestMatching', latestMatching);
     } catch (error) {
       client.emit('error', '매칭 조회 중 오류가 발생했습니다.');
     }

@@ -34,7 +34,6 @@ import {
   PatchMatchingResponse,
   CreateMatchingResponse,
   GetMatchingsResponse,
-  GetOneMatchingResponse,
 } from './dto/matching.response';
 import { AuthGuard } from 'src/auth/guards/jwt.auth.guard';
 import { PostService } from 'src/post/post.service';
@@ -83,8 +82,8 @@ export class MatchingController {
     )
       throw InvalidInputValueException('이미 매칭 요청을 보냈습니다.');
 
-    const matching = await this.matchingService.createMatching(body);
-    return new BaseResponse<CreateMatchingResponse>(true, 'SUCCESS', matching);
+    await this.matchingService.createMatching(body);
+    return new BaseResponse<CreateMatchingResponse>(true, 'SUCCESS');
   }
 
   @Patch(':matchingId')

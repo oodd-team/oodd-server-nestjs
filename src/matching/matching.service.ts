@@ -10,9 +10,9 @@ import { InternalServerException } from 'src/common/exception/service.exception'
 import { ChatMessageService } from 'src/chat-message/chat-message.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
-  CreateMatchingResponse,
   GetMatchingsResponse,
   GetOneMatchingResponse,
+  MatchingRequest,
 } from './dto/matching.response';
 import { MatchingRequestStatusEnum } from 'src/common/enum/matchingRequestStatus';
 import { StatusEnum } from 'src/common/enum/entityStatus';
@@ -38,9 +38,7 @@ export class MatchingService {
     });
   }
 
-  async createMatching(
-    body: CreateMatchingRequest,
-  ): Promise<CreateMatchingResponse> {
+  async createMatching(body: CreateMatchingRequest): Promise<void> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -63,46 +61,8 @@ export class MatchingService {
         body,
       );
 
-      const matchingInfo = await queryRunner.manager
-        .createQueryBuilder(Matching, 'matching')
-        .leftJoinAndSelect('matching.target', 'target')
-        .leftJoinAndSelect('matching.requester', 'requester')
-        .leftJoinAndSelect('requester.posts', 'post')
-        .leftJoinAndSelect('post.postImages', 'image')
-        .leftJoinAndSelect('post.postStyletags', 'styleTag')
-        .leftJoinAndSelect('styleTag.styletag', 'styletag')
-        .where('matching.id = :id', { id: matching.id })
-        .getOne();
-
-      const requesterPost = matchingInfo.requester.posts[0];
-
       await queryRunner.commitTransaction();
-
-      return {
-        id: matchingInfo.id,
-        message: body.message,
-        createdAt: dayjs(matching.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
-        chatRoomId: chatRoom.id,
-        targetId: body.targetId,
-        requester: {
-          id: body.requesterId,
-          nickname: matchingInfo.requester.nickname,
-          profilePictureUrl: matchingInfo.requester.profilePictureUrl,
-          representativePost: requesterPost
-            ? {
-                postImages: requesterPost.postImages.map((image) => ({
-                  url: image.url,
-                  orderNum: image.orderNum,
-                })),
-                styleTags: requesterPost.postStyletags
-                  ? requesterPost.postStyletags.map(
-                      (styleTag) => styleTag.styletag.tag,
-                    )
-                  : [],
-              }
-            : {},
-        },
-      };
+      await this.addMatchingQueues(body.targetId);
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw InternalServerException(error.message);
@@ -122,7 +82,6 @@ export class MatchingService {
       matching.id,
     );
     try {
-      console.log(body.requestStatus);
       if (body.requestStatus === 'accept') {
         matching.requestStatus = MatchingRequestStatusEnum.ACCEPTED;
         matching.acceptedAt = new Date();
@@ -157,7 +116,7 @@ export class MatchingService {
     });
 
     if (!matching) {
-      return {};
+      return null;
     }
 
     return {
@@ -169,7 +128,86 @@ export class MatchingService {
     };
   }
 
-  async getMatchings(currentUserId: number): Promise<GetMatchingsResponse> {
+  private matchingQueues: { [key: number]: MatchingRequest[] } = [];
+  // 매칭 추가
+  async addMatchingQueues(userId: number) {
+    try {
+      const matchingInfo = await this.matchingRepository
+        .createQueryBuilder('matching')
+        .leftJoinAndSelect('matching.requester', 'requester')
+        .leftJoinAndSelect('requester.posts', 'post')
+        .leftJoinAndSelect('post.postImages', 'image')
+        .leftJoinAndSelect('post.postStyletags', 'styleTag')
+        .leftJoinAndSelect('styleTag.styletag', 'styletag')
+        .where('matching.targetId = :userId', { userId })
+        .andWhere('matching.requestStatus = :status', {
+          status: MatchingRequestStatusEnum.PENDING,
+        })
+        .andWhere('matching.status = :activated', {
+          activated: StatusEnum.ACTIVATED,
+        })
+        .andWhere('requester.status = :activated', {
+          activated: StatusEnum.ACTIVATED,
+        })
+        .orderBy('matching.createdAt', 'DESC')
+        .addOrderBy('post.isRepresentative', 'DESC')
+        .addOrderBy('post.createdAt', 'DESC')
+        .orderBy('matching.createdAt', 'DESC')
+        .getOne();
+
+      const requesterPost = matchingInfo.requester.posts[0];
+      const chatRoom = await this.chatRoomService.getChatRoomByMatchingId(
+        matchingInfo.id,
+      );
+
+      const formattedMatching: MatchingRequest = {
+        id: matchingInfo.id,
+        message: matchingInfo.message,
+        createdAt: dayjs(matchingInfo.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
+        requestStatus: matchingInfo.requestStatus,
+        chatRoomId: chatRoom.id,
+        targetId: userId,
+        requester: {
+          id: matchingInfo.requester.id,
+          nickname: matchingInfo.requester.nickname,
+          profilePictureUrl: matchingInfo.requester.profilePictureUrl,
+          representativePost: requesterPost
+            ? {
+                postImages: requesterPost.postImages.map((image) => ({
+                  url: image.url,
+                  orderNum: image.orderNum,
+                })),
+                styleTags: requesterPost.postStyletags
+                  ? requesterPost.postStyletags.map(
+                      (styleTag) => styleTag.styletag.tag,
+                    )
+                  : [],
+              }
+            : undefined,
+        },
+      };
+
+      if (!this.matchingQueues[userId]) {
+        this.matchingQueues[userId] = [];
+      }
+      this.matchingQueues[userId].push(formattedMatching);
+    } catch (error) {
+      throw InternalServerException(error);
+    }
+  }
+
+  // 다음 매칭 가져오기 (큐에서 제거)
+  getNextMatching(userId: number): MatchingRequest | {} {
+    if (
+      !this.matchingQueues[userId] ||
+      this.matchingQueues[userId].length === 0
+    ) {
+      return {};
+    }
+    return this.matchingQueues[userId].shift() || {};
+  }
+
+  async getMatchings(userId: number): Promise<GetMatchingsResponse> {
     const matchings = await this.matchingRepository
       .createQueryBuilder('matching')
       .leftJoinAndSelect('matching.requester', 'requester')
@@ -177,8 +215,9 @@ export class MatchingService {
       .leftJoinAndSelect('post.postImages', 'image')
       .leftJoinAndSelect('post.postStyletags', 'styleTag')
       .leftJoinAndSelect('styleTag.styletag', 'styletag')
-      .where('matching.targetId = :currentUserId', { currentUserId })
-      .andWhere('matching.requestStatus = :status', {
+      .where('matching.targetId = :userId', { userId })
+      // Pending이 아닌 매칭 조회
+      .andWhere('matching.requestStatus <> :status', {
         status: MatchingRequestStatusEnum.PENDING,
       })
       .andWhere('matching.status = :activated', {
@@ -193,35 +232,49 @@ export class MatchingService {
       .getMany();
 
     const response: GetMatchingsResponse = {
-      hasMatching: matchings.length > 0,
-      matchingsCount: matchings.length,
-      matching: matchings.map((matching) => {
-        const requesterPost = matching.requester.posts[0];
+      matching: await Promise.all(
+        matchings.map(async (matching) => {
+          try {
+            const requesterPost = matching.requester.posts[0];
+            const chatRoom = await this.chatRoomService.getChatRoomByMatchingId(
+              matching.id,
+            );
 
-        return {
-          id: matching.id,
-          requester: {
-            id: matching.requester.id,
-            nickname: matching.requester.nickname,
-            profilePictureUrl: matching.requester.profilePictureUrl,
-            representativePost: requesterPost
-              ? {
-                  postImages: requesterPost.postImages.map((image) => ({
-                    url: image.url,
-                    orderNum: image.orderNum,
-                  })),
-                  styleTags: requesterPost.postStyletags
-                    ? requesterPost.postStyletags.map(
-                        (styleTag) => styleTag.styletag.tag,
-                      )
-                    : [],
-                }
-              : {},
-          },
-        };
-      }),
+            return {
+              id: matching.id,
+              message: matching.message,
+              createdAt: dayjs(matching.createdAt).format(
+                'YYYY-MM-DDTHH:mm:ssZ',
+              ),
+              requestStatus: matching.requestStatus,
+              chatRoomId: chatRoom.id,
+              targetId: userId,
+              requester: {
+                id: matching.requester.id,
+                nickname: matching.requester.nickname,
+                profilePictureUrl: matching.requester.profilePictureUrl,
+                representativePost: requesterPost
+                  ? {
+                      postImages: requesterPost.postImages.map((image) => ({
+                        url: image.url,
+                        orderNum: image.orderNum,
+                      })),
+                      styleTags: requesterPost.postStyletags
+                        ? requesterPost.postStyletags.map(
+                            (styleTag) => styleTag.styletag.tag,
+                          )
+                        : [],
+                    }
+                  : {},
+              },
+            };
+          } catch (error) {
+            throw InternalServerException(error);
+          }
+        }),
+      ),
     };
-    return response;
+    return response.matching.length ? response : { matching: [] };
   }
 
   async getMatchingById(matchingId: number): Promise<Matching> {
