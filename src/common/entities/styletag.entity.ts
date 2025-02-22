@@ -1,6 +1,7 @@
 import { Entity, Column, OneToMany } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { PostStyletag } from './post-styletag.entity';
+import { UserStyletag } from './user-styletag.entity';
 
 @Entity('Styletag')
 export class Styletag extends BaseEntity {
@@ -9,4 +10,7 @@ export class Styletag extends BaseEntity {
 
   @OneToMany(() => PostStyletag, (postStyletag) => postStyletag.styletag)
   postStyletags!: PostStyletag[];
+
+  @OneToMany(() => UserStyletag, (userStyletag) => userStyletag.styletag)
+  userStyletags!: UserStyletag[];
 }
