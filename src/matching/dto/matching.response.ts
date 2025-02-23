@@ -1,5 +1,6 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
+import { MatchingRequestStatusEnum } from 'src/common/enum/matchingRequestStatus';
 
 export class PatchMatchingResponse {
   @ApiProperty({ example: 1, description: '매칭 ID' })
@@ -67,7 +68,7 @@ class RequesterResponse {
   representativePost?: RepresentativePost;
 }
 
-class MatchingResponse {
+export class MatchingResponse {
   @ApiProperty({ example: 1, description: '매칭 ID' })
   id: number;
 
@@ -111,18 +112,6 @@ export class CreateMatchingResponse {
 
 export class GetMatchingsResponse {
   @ApiProperty({
-    description: '매칭 존재 여부',
-    example: true,
-  })
-  hasMatching: boolean;
-
-  @ApiProperty({
-    description: '받은 매칭 수',
-    example: 10,
-  })
-  matchingsCount: number;
-
-  @ApiProperty({
     description: '매칭 정보',
     type: [MatchingResponse],
   })
@@ -138,4 +127,22 @@ export class GetOneMatchingResponse extends OmitType(PatchMatchingResponse, [
     description: '신청 시각',
   })
   createdAt: string;
+}
+
+export interface MatchingRequest {
+  id: number;
+  message: string;
+  createdAt: string;
+  requestStatus: MatchingRequestStatusEnum;
+  chatRoomId: number;
+  targetId: number;
+  requester: {
+    id: number;
+    nickname: string;
+    profilePictureUrl: string;
+    representativePost?: {
+      postImages: { url: string; orderNum: number }[];
+      styleTags: string[];
+    };
+  };
 }
