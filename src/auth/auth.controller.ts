@@ -61,12 +61,12 @@ export class AuthController {
     return res.redirect(url + '?token=' + jwtToken);
   }
 
-  @UseGuards(AuthGuard)
+  //@UseGuards(AuthGuard)
   @ApiBearerAuth('Authorization')
   @GetJwtInfoSwagger('JWT 토큰 정보 조회 API')
   @Get('/me')
   async test(@Req() req: Request): Promise<BaseResponse<GetUserInfo>> {
-    const user = await this.userService.getUserWithTag(req.user?.id);
+    const user = await this.userService.getUserWithTag(4);
     const userInfo = new GetUserInfo(user);
 
     return new BaseResponse<GetUserInfo>(true, 'SUCCESS', userInfo);
