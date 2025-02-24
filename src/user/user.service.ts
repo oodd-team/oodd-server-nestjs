@@ -56,15 +56,12 @@ export class UserService {
   }
 
   async getUserWithTag(id: number): Promise<User | null> {
-    return await this.dataSource
-      .createQueryBuilder(User, 'user')
+    return await this.userRepository
+      .createQueryBuilder('user')
       .leftJoinAndSelect('user.userStyletags', 'userStyletag')
       .leftJoinAndSelect('userStyletag.styletag', 'styletag')
       .where('user.id = :id', { id })
       .andWhere('user.status = :status', { status: StatusEnum.ACTIVATED })
-      .andWhere('userStyletag.status = :status', {
-        status: StatusEnum.ACTIVATED,
-      })
       .getOne();
   }
 
