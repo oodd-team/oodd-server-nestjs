@@ -1,4 +1,12 @@
-import { Controller, Get, Query, Req, Res, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Controller,
+  Get,
+  Query,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import {
   GetJwtInfoSwagger,
@@ -13,8 +21,6 @@ import { NaverAuthGuard } from './guards/naver.auth.guard';
 import { AuthGuard } from './guards/jwt.auth.guard';
 import { BaseResponse } from '../common/response/dto';
 import { GetUserInfo } from 'src/user/dto/response/user.response';
-import dayjs from 'dayjs';
-
 @Controller('auth')
 @ApiTags('[서비스] Auth 관련')
 export class AuthController {
@@ -66,7 +72,10 @@ export class AuthController {
   @GetJwtInfoSwagger('JWT 토큰 정보 조회 API')
   @Get('/me')
   async test(@Req() req: Request): Promise<BaseResponse<GetUserInfo>> {
+    console.log(req.user);
     const user = await this.userService.getUserWithTag(req.user?.id);
+    if (!user) throw new BadRequestException('User not found');
+
     const userInfo = new GetUserInfo(user);
 
     return new BaseResponse<GetUserInfo>(true, 'SUCCESS', userInfo);
