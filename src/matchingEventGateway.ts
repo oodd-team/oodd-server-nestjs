@@ -85,7 +85,7 @@ export class MatchingEventsGateway
       }
 
       if (await this.matchingService.existsMatching(requesterId, targetId)) {
-        client.emit('error', '이미 매칭 요청을 보냈습니다.');
+        client.emit('error', '이미 매칭이 존재합니다.');
         return;
       }
 
