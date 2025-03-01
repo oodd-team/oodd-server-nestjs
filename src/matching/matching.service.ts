@@ -38,7 +38,7 @@ export class MatchingService {
     });
   }
 
-  async createMatching(body: CreateMatchingRequest): Promise<void> {
+  async createMatching(body: CreateMatchingRequest): Promise<Matching> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -63,6 +63,7 @@ export class MatchingService {
 
       await queryRunner.commitTransaction();
       await this.addMatchingQueues(body.targetId);
+      return matching;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw InternalServerException(error.message);

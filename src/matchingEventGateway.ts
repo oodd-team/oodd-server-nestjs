@@ -100,8 +100,18 @@ export class MatchingEventsGateway
         client.emit('error', '신청 유저의 게시물이 존재하지 않습니다.');
         return;
       }
-      await this.matchingService.createMatching(payload);
-      client.emit('getLatestMatching');
+      const matching = await this.matchingService.createMatching(payload);
+
+      const latestMatching =
+        await this.matchingService.getLatestMatching(targetId);
+      const chatRoom = await this.chatRoomService.getChatRoomByMatchingId(
+        matching.id,
+      );
+
+      client
+        .to(String(chatRoom.id))
+        .except(client.id)
+        .emit('getLatestMatching', latestMatching);
     } catch (error) {
       client.emit('error', '매칭 신청 처리 중 오류가 발생했습니다.');
     }
