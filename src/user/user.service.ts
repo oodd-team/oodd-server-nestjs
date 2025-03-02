@@ -7,7 +7,7 @@ import {
   DataNotFoundException,
   InternalServerException,
 } from 'src/common/exception/service.exception';
-import { DataSource, FindOneOptions, Repository } from 'typeorm';
+import { Brackets, DataSource, FindOneOptions, Repository } from 'typeorm';
 import { PatchUserRequest } from './dto/response/user.request';
 import { StatusEnum } from 'src/common/enum/entityStatus';
 import { UserStyletagService } from 'src/user-styletag/user-styletag.service';
@@ -61,7 +61,16 @@ export class UserService {
       .leftJoinAndSelect('user.userStyletags', 'userStyletag')
       .leftJoinAndSelect('userStyletag.styletag', 'styletag')
       .where('user.id = :id', { id })
-      .andWhere('user.status = :status', { status: StatusEnum.ACTIVATED })
+      .andWhere('user.status = :userStatus', {
+        userStatus: StatusEnum.ACTIVATED,
+      })
+      .andWhere(
+        new Brackets((qb) => {
+          qb.where('userStyletag.status = :tagStatus', {
+            tagStatus: StatusEnum.ACTIVATED,
+          }).orWhere('userStyletag.id IS NULL');
+        }),
+      )
       .getOne();
   }
 

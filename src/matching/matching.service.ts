@@ -38,7 +38,7 @@ export class MatchingService {
     });
   }
 
-  async createMatching(body: CreateMatchingRequest): Promise<void> {
+  async createMatching(body: CreateMatchingRequest): Promise<Matching> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -62,7 +62,7 @@ export class MatchingService {
       );
 
       await queryRunner.commitTransaction();
-      await this.addMatchingQueues(body.targetId);
+      return matching;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw InternalServerException(error.message);
@@ -128,11 +128,10 @@ export class MatchingService {
     };
   }
 
-  private matchingQueues: { [key: number]: MatchingRequest[] } = [];
-  // 매칭 추가
-  async addMatchingQueues(userId: number) {
+  async getNextMatching(userId: number): Promise<MatchingRequest | {}> {
     try {
-      const matchingInfo = await this.matchingRepository
+      // 디비에서 PENDING 상태인 가장 오래된 매칭을 가져온다
+      const matching = await this.matchingRepository
         .createQueryBuilder('matching')
         .leftJoinAndSelect('matching.requester', 'requester')
         .leftJoinAndSelect('requester.posts', 'post')
@@ -149,28 +148,31 @@ export class MatchingService {
         .andWhere('requester.status = :activated', {
           activated: StatusEnum.ACTIVATED,
         })
-        .orderBy('matching.createdAt', 'DESC')
+        .orderBy('matching.createdAt', 'ASC')
         .addOrderBy('post.isRepresentative', 'DESC')
         .addOrderBy('post.createdAt', 'DESC')
-        .orderBy('matching.createdAt', 'DESC')
         .getOne();
 
-      const requesterPost = matchingInfo.requester.posts[0];
+      if (!matching) {
+        return {};
+      }
+
+      const requesterPost = matching.requester.posts[0];
       const chatRoom = await this.chatRoomService.getChatRoomByMatchingId(
-        matchingInfo.id,
+        matching.id,
       );
 
       const formattedMatching: MatchingRequest = {
-        id: matchingInfo.id,
-        message: matchingInfo.message,
-        createdAt: dayjs(matchingInfo.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
-        requestStatus: matchingInfo.requestStatus,
+        id: matching.id,
+        message: matching.message,
+        createdAt: dayjs(matching.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
+        requestStatus: matching.requestStatus,
         chatRoomId: chatRoom.id,
         targetId: userId,
         requester: {
-          id: matchingInfo.requester.id,
-          nickname: matchingInfo.requester.nickname,
-          profilePictureUrl: matchingInfo.requester.profilePictureUrl,
+          id: matching.requester.id,
+          nickname: matching.requester.nickname,
+          profilePictureUrl: matching.requester.profilePictureUrl,
           representativePost: requesterPost
             ? {
                 postImages: requesterPost.postImages.map((image) => ({
@@ -186,25 +188,10 @@ export class MatchingService {
             : undefined,
         },
       };
-
-      if (!this.matchingQueues[userId]) {
-        this.matchingQueues[userId] = [];
-      }
-      this.matchingQueues[userId].push(formattedMatching);
+      return formattedMatching;
     } catch (error) {
       throw InternalServerException(error);
     }
-  }
-
-  // 다음 매칭 가져오기 (큐에서 제거)
-  getNextMatching(userId: number): MatchingRequest | {} {
-    if (
-      !this.matchingQueues[userId] ||
-      this.matchingQueues[userId].length === 0
-    ) {
-      return {};
-    }
-    return this.matchingQueues[userId].shift() || {};
   }
 
   async getMatchings(userId: number): Promise<GetMatchingsResponse> {

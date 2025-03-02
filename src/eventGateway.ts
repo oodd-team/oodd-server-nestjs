@@ -24,7 +24,6 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly chatMessageService: ChatMessageService,
     private readonly userService: UserService,
     private readonly userBlockService: UserBlockService,
-    private readonly matchingService: MatchingService,
   ) {}
   /*
      유저정보는 같지만 소켓이 여러개가 연결되어 있을 경우
