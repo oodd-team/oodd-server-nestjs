@@ -25,6 +25,10 @@ export class MatchingEventsGateway
   // 소켓 서버를 정의합니다.
   @WebSocketServer()
   server: Server;
+
+  private connectedClients = new Map<number, string>(); // userId -> socketId 매핑
+  private pendingMatchings = new Map<number, any>(); // userId -> pendingMatching
+
   // 유저 정보를 레디스에 적재시키기 위해서 레디스 설정이 선행되야합니다.
   constructor(
     private readonly matchingService: MatchingService,
@@ -38,15 +42,17 @@ export class MatchingEventsGateway
      핸들링 할수있게 유저정보와 소켓 연결정보에 대한
      분기처리가 필요합니다.
    */
-  private connectedClients = [];
 
   afterInit(server: Server) {
     console.log('Initialized', JSON.stringify(server.sockets));
   }
 
   handleConnection(client: Socket) {
-    console.log('Connected', client.id);
-    this.addClient(client); // 괄호 추가
+    const userId = Number(client.handshake.query.userId);
+    if (userId) {
+      this.addClient(client, userId);
+      console.log(`User ${userId} Connected ${client.id}`);
+    }
   }
 
   handleDisconnect(client: Socket) {
@@ -55,15 +61,24 @@ export class MatchingEventsGateway
   }
 
   // 클라이언트 추가 메서드
-  addClient(client: any) {
-    this.connectedClients.push(client.id);
+  addClient(client: Socket, userId: number) {
+    this.connectedClients.set(userId, client.id);
+
+    // 오프라인 시 받은 매칭을 연결 시 전송
+    const pendingMatching = this.pendingMatchings.get(userId);
+    if (pendingMatching) {
+      this.server.to(client.id).emit('getLatestMatching', pendingMatching);
+      this.pendingMatchings.delete(userId);
+    }
   }
 
   // 클라이언트 삭제 메서드
-  removeClient(client: any) {
-    const index = this.connectedClients.indexOf(client.id);
-    if (index !== -1) {
-      this.connectedClients.splice(index, 1);
+  removeClient(client: Socket) {
+    for (const [userId, socketId] of this.connectedClients.entries()) {
+      if (socketId === client.id) {
+        this.connectedClients.delete(userId);
+        break;
+      }
     }
   }
 
@@ -100,18 +115,20 @@ export class MatchingEventsGateway
         client.emit('error', '신청 유저의 게시물이 존재하지 않습니다.');
         return;
       }
-      const matching = await this.matchingService.createMatching(payload);
+      await this.matchingService.createMatching(payload);
 
       const latestMatching =
         await this.matchingService.getLatestMatching(targetId);
-      const chatRoom = await this.chatRoomService.getChatRoomByMatchingId(
-        matching.id,
-      );
 
-      client
-        .to(String(chatRoom.id))
-        .except(client.id)
-        .emit('getLatestMatching', latestMatching);
+      const targetSocketId = this.connectedClients.get(targetId);
+      if (targetSocketId) {
+        this.server
+          .to(targetSocketId)
+          .emit('getLatestMatching', latestMatching);
+      } else {
+        // 오프라인 상태면 보류 중인 매칭 저장
+        this.pendingMatchings.set(targetId, latestMatching);
+      }
     } catch (error) {
       client.emit('error', '매칭 신청 처리 중 오류가 발생했습니다.');
     }
