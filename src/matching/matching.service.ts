@@ -222,9 +222,11 @@ export class MatchingService {
         matchings.map(async (matching) => {
           try {
             const requesterPost = matching.requester.posts[0];
+            console.log('1', matching.id);
             const chatRoom = await this.chatRoomService.getChatRoomByMatchingId(
               matching.id,
             );
+            console.log('2', chatRoom);
 
             return {
               id: matching.id,
