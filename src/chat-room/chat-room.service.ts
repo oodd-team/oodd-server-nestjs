@@ -117,6 +117,7 @@ export class ChatRoomService {
         matching: { id: matchingId },
       },
       relations: ['matching'],
+      withDeleted: true, // 소프트 딜리트된 데이터도 조회
     });
   }
 }
