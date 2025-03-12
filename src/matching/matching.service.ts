@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
-  CreateMatchingReqeust,
+  CreateMatchingRequest,
   PatchMatchingRequest,
 } from './dto/matching.request';
 import { DataSource, Repository } from 'typeorm';
@@ -8,12 +8,15 @@ import { Matching } from 'src/common/entities/matching.entity';
 import { ChatRoomService } from '../chat-room/chat-room.service';
 import { InternalServerException } from 'src/common/exception/service.exception';
 import { ChatMessageService } from 'src/chat-message/chat-message.service';
-import { ChatRoom } from 'src/common/entities/chat-room.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { GetMatchingsResponse } from './dto/matching.response';
+import {
+  GetMatchingsResponse,
+  GetOneMatchingResponse,
+  MatchingRequest,
+} from './dto/matching.response';
 import { MatchingRequestStatusEnum } from 'src/common/enum/matchingRequestStatus';
 import { StatusEnum } from 'src/common/enum/entityStatus';
-import { UserBlockService } from 'src/user-block/user-block.service';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class MatchingService {
@@ -23,7 +26,6 @@ export class MatchingService {
     private readonly chatRoomService: ChatRoomService,
     private readonly chatMessageService: ChatMessageService,
     private readonly dataSource: DataSource,
-    private readonly userBlockService: UserBlockService,
   ) {}
 
   async getMatchingsByCurrentId(currentUserId: number): Promise<Matching[]> {
@@ -36,7 +38,7 @@ export class MatchingService {
     });
   }
 
-  async createMatching(body: CreateMatchingReqeust): Promise<ChatRoom> {
+  async createMatching(body: CreateMatchingRequest): Promise<void> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -58,9 +60,8 @@ export class MatchingService {
         chatRoom,
         body,
       );
-      await queryRunner.commitTransaction();
 
-      return chatRoom;
+      await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw InternalServerException(error.message);
@@ -104,9 +105,95 @@ export class MatchingService {
     }
   }
 
-  async getMatchings(currentUserId: number): Promise<GetMatchingsResponse> {
-    const blockedUserIds =
-      await this.userBlockService.getBlockedUserIds(currentUserId);
+  async getLatestMatching(
+    userId: number,
+  ): Promise<GetOneMatchingResponse | {}> {
+    const matching = await this.matchingRepository.findOne({
+      where: { target: { id: userId } },
+      relations: ['target', 'requester'],
+      order: { createdAt: 'DESC' },
+    });
+
+    if (!matching) {
+      return null;
+    }
+
+    return {
+      id: matching.id,
+      requesterId: matching.requester.id,
+      targetId: matching.target.id,
+      requestStatus: matching.requestStatus,
+      createdAt: dayjs(matching.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
+    };
+  }
+
+  async getNextMatching(userId: number): Promise<MatchingRequest | {}> {
+    try {
+      // 디비에서 PENDING 상태인 가장 오래된 매칭을 가져온다
+      const matching = await this.matchingRepository
+        .createQueryBuilder('matching')
+        .leftJoinAndSelect('matching.requester', 'requester')
+        .leftJoinAndSelect('requester.posts', 'post')
+        .leftJoinAndSelect('post.postImages', 'image')
+        .leftJoinAndSelect('post.postStyletags', 'styleTag')
+        .leftJoinAndSelect('styleTag.styletag', 'styletag')
+        .where('matching.targetId = :userId', { userId })
+        .andWhere('matching.requestStatus = :status', {
+          status: MatchingRequestStatusEnum.PENDING,
+        })
+        .andWhere('matching.status = :activated', {
+          activated: StatusEnum.ACTIVATED,
+        })
+        .andWhere('requester.status = :activated', {
+          activated: StatusEnum.ACTIVATED,
+        })
+        .orderBy('matching.createdAt', 'ASC')
+        .addOrderBy('post.isRepresentative', 'DESC')
+        .addOrderBy('post.createdAt', 'DESC')
+        .getOne();
+
+      if (!matching) {
+        return {};
+      }
+
+      const requesterPost = matching.requester.posts[0];
+      const chatRoom = await this.chatRoomService.getChatRoomByMatchingId(
+        matching.id,
+      );
+
+      const formattedMatching: MatchingRequest = {
+        id: matching.id,
+        message: matching.message,
+        createdAt: dayjs(matching.createdAt).format('YYYY-MM-DDTHH:mm:ssZ'),
+        requestStatus: matching.requestStatus,
+        chatRoomId: chatRoom.id,
+        targetId: userId,
+        requester: {
+          id: matching.requester.id,
+          nickname: matching.requester.nickname,
+          profilePictureUrl: matching.requester.profilePictureUrl,
+          representativePost: requesterPost
+            ? {
+                postImages: requesterPost.postImages.map((image) => ({
+                  url: image.url,
+                  orderNum: image.orderNum,
+                })),
+                styleTags: requesterPost.postStyletags
+                  ? requesterPost.postStyletags.map(
+                      (styleTag) => styleTag.styletag.tag,
+                    )
+                  : [],
+              }
+            : undefined,
+        },
+      };
+      return formattedMatching;
+    } catch (error) {
+      throw InternalServerException(error);
+    }
+  }
+
+  async getMatchings(userId: number): Promise<GetMatchingsResponse> {
     const matchings = await this.matchingRepository
       .createQueryBuilder('matching')
       .leftJoinAndSelect('matching.requester', 'requester')
@@ -114,8 +201,9 @@ export class MatchingService {
       .leftJoinAndSelect('post.postImages', 'image')
       .leftJoinAndSelect('post.postStyletags', 'styleTag')
       .leftJoinAndSelect('styleTag.styletag', 'styletag')
-      .where('matching.targetId = :currentUserId', { currentUserId })
-      .andWhere('matching.requestStatus = :status', {
+      .where('matching.targetId = :userId', { userId })
+      // Pending이 아닌 매칭 조회
+      .andWhere('matching.requestStatus <> :status', {
         status: MatchingRequestStatusEnum.PENDING,
       })
       .andWhere('matching.status = :activated', {
@@ -124,48 +212,57 @@ export class MatchingService {
       .andWhere('requester.status = :activated', {
         activated: StatusEnum.ACTIVATED,
       })
-      .andWhere(
-        blockedUserIds.length > 0
-          ? 'requester.id NOT IN (:...blockedUserIds)'
-          : '1=1',
-        { blockedUserIds },
-      )
       .orderBy('matching.createdAt', 'DESC')
       .addOrderBy('post.isRepresentative', 'DESC') // 'isRepresentative'가 true인 게시물을 우선적으로 정렬
       .addOrderBy('post.createdAt', 'DESC') // 그 다음은 최신 게시물 우선으로 정렬
       .getMany();
 
     const response: GetMatchingsResponse = {
-      hasMatching: matchings.length > 0,
-      matchingsCount: matchings.length,
-      matching: matchings.map((matching) => {
-        const requesterPost = matching.requester.posts[0];
+      matching: await Promise.all(
+        matchings.map(async (matching) => {
+          try {
+            const requesterPost = matching.requester.posts[0];
+            console.log('1', matching.id);
+            const chatRoom = await this.chatRoomService.getChatRoomByMatchingId(
+              matching.id,
+            );
+            console.log('2', chatRoom);
 
-        return {
-          id: matching.id,
-          requester: {
-            id: matching.requester.id,
-            nickname: matching.requester.nickname,
-            profilePictureUrl: matching.requester.profilePictureUrl,
-            representativePost: requesterPost
-              ? {
-                  postImages: requesterPost.postImages.map((image) => ({
-                    url: image.url,
-                    orderNum: image.orderNum,
-                  })),
-                  styleTags: requesterPost.postStyletags
-                    ? requesterPost.postStyletags.map(
-                        (styleTag) => styleTag.styletag.tag,
-                      )
-                    : [],
-                }
-              : {},
-          },
-        };
-      }),
+            return {
+              id: matching.id,
+              message: matching.message,
+              createdAt: dayjs(matching.createdAt).format(
+                'YYYY-MM-DDTHH:mm:ssZ',
+              ),
+              requestStatus: matching.requestStatus,
+              chatRoomId: chatRoom.id,
+              targetId: userId,
+              requester: {
+                id: matching.requester.id,
+                nickname: matching.requester.nickname,
+                profilePictureUrl: matching.requester.profilePictureUrl,
+                representativePost: requesterPost
+                  ? {
+                      postImages: requesterPost.postImages.map((image) => ({
+                        url: image.url,
+                        orderNum: image.orderNum,
+                      })),
+                      styleTags: requesterPost.postStyletags
+                        ? requesterPost.postStyletags.map(
+                            (styleTag) => styleTag.styletag.tag,
+                          )
+                        : [],
+                    }
+                  : {},
+              },
+            };
+          } catch (error) {
+            throw InternalServerException(error);
+          }
+        }),
+      ),
     };
-
-    return response;
+    return response.matching.length ? response : { matching: [] };
   }
 
   async getMatchingById(matchingId: number): Promise<Matching> {

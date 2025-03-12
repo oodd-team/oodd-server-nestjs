@@ -1,19 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-
-export class CreateMatchingResponse {
-  @ApiProperty({ example: 1, description: '매칭 ID' })
-  id: number;
-
-  @ApiProperty({ example: 1, description: '채팅방 아이디' })
-  chatRoomId: number;
-
-  @ApiProperty({ example: 1, description: '신청한 유저 아이디' })
-  requesterId: number;
-
-  @ApiProperty({ example: 2, description: '매칭 상대 유저 아이디' })
-  targetId: number;
-}
+import { MatchingRequestStatusEnum } from 'src/common/enum/matchingRequestStatus';
 
 export class PatchMatchingResponse {
   @ApiProperty({ example: 1, description: '매칭 ID' })
@@ -81,7 +68,7 @@ class RequesterResponse {
   representativePost?: RepresentativePost;
 }
 
-class Matching {
+export class MatchingResponse {
   @ApiProperty({ example: 1, description: '매칭 ID' })
   id: number;
 
@@ -93,23 +80,69 @@ class Matching {
   requester: RequesterResponse;
 }
 
+export class CreateMatchingResponse {
+  @ApiProperty({ example: 1, description: '매칭 ID' })
+  id: number;
+
+  @ApiProperty({
+    description: '매칭 요청 메시지',
+    example: '안녕하세요! 매칭 요청합니다.',
+  })
+  message: string;
+
+  @ApiProperty({ example: 1, description: '채팅방 아이디' })
+  chatRoomId?: number;
+
+  @ApiProperty({
+    example: '2024-10-11T09:00:00.000Z',
+    description: '신청 시각',
+  })
+  createdAt: string;
+
+  @ApiProperty({ example: 2, description: '매칭 상대 유저 아이디' })
+  targetId: number;
+
+  @ApiProperty({
+    description: '매칭 요청자 정보',
+    type: RequesterResponse,
+  })
+  @Type(() => RequesterResponse)
+  requester: RequesterResponse;
+}
+
 export class GetMatchingsResponse {
   @ApiProperty({
-    description: '매칭 존재 여부',
-    example: true,
-  })
-  hasMatching: boolean;
-
-  @ApiProperty({
-    description: '받은 매칭 수',
-    example: 10,
-  })
-  matchingsCount: number;
-
-  @ApiProperty({
     description: '매칭 정보',
-    type: [Matching],
+    type: [MatchingResponse],
   })
-  @Type(() => Matching)
-  matching: Matching[];
+  @Type(() => MatchingResponse)
+  matching: MatchingResponse[];
+}
+
+export class GetOneMatchingResponse extends OmitType(PatchMatchingResponse, [
+  'chatRoomId',
+] as const) {
+  @ApiProperty({
+    example: '2024-10-11T09:00:00.000Z',
+    description: '신청 시각',
+  })
+  createdAt: string;
+}
+
+export interface MatchingRequest {
+  id: number;
+  message: string;
+  createdAt: string;
+  requestStatus: MatchingRequestStatusEnum;
+  chatRoomId: number;
+  targetId: number;
+  requester: {
+    id: number;
+    nickname: string;
+    profilePictureUrl: string;
+    representativePost?: {
+      postImages: { url: string; orderNum: number }[];
+      styleTags: string[];
+    };
+  };
 }

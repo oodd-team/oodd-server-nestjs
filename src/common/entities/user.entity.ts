@@ -8,6 +8,7 @@ import { PostLike } from './post-like.entity';
 import { PostReport } from './post-report.entity';
 import { ChatMessage } from './chat-message.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { UserStyletag } from './user-styletag.entity';
 
 @Entity('User')
 export class User extends BaseEntity {
@@ -95,6 +96,9 @@ export class User extends BaseEntity {
 
   @OneToMany(() => PostReport, (postReport) => postReport.reporter)
   postReports!: PostReport[];
+
+  @OneToMany(() => UserStyletag, (userStyletag) => userStyletag.user)
+  userStyletags!: UserStyletag[];
 
   // 대표 게시물 필드 추가
   @OneToOne(() => Post, (post) => post.user)

@@ -7,9 +7,11 @@ import {
   DataNotFoundException,
   InternalServerException,
 } from 'src/common/exception/service.exception';
-import { DataSource, FindOneOptions, Repository } from 'typeorm';
+import { Brackets, DataSource, FindOneOptions, Repository } from 'typeorm';
 import { PatchUserRequest } from './dto/response/user.request';
 import { StatusEnum } from 'src/common/enum/entityStatus';
+import { UserStyletagService } from 'src/user-styletag/user-styletag.service';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class UserService {
@@ -19,6 +21,7 @@ export class UserService {
     @Inject(forwardRef(() => AuthService))
     private readonly authService: AuthService,
     private readonly dataSource: DataSource,
+    private readonly userStyletagService: UserStyletagService,
   ) {}
 
   async findByFields(fields: FindOneOptions<User>) {
@@ -43,6 +46,34 @@ export class UserService {
     });
   }
 
+  async getCreatedAtById(id: number): Promise<string> {
+    const user = await this.userRepository.findOne({
+      where: { id: id },
+      select: ['createdAt'],
+    });
+
+    return dayjs(user.createdAt).format('YYYY-MM-DD HH:mm:ss');
+  }
+
+  async getUserWithTag(id: number): Promise<User | null> {
+    return await this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.userStyletags', 'userStyletag')
+      .leftJoinAndSelect('userStyletag.styletag', 'styletag')
+      .where('user.id = :id', { id })
+      .andWhere('user.status = :userStatus', {
+        userStatus: StatusEnum.ACTIVATED,
+      })
+      .andWhere(
+        new Brackets((qb) => {
+          qb.where('userStyletag.status = :tagStatus', {
+            tagStatus: StatusEnum.ACTIVATED,
+          }).orWhere('userStyletag.id IS NULL');
+        }),
+      )
+      .getOne();
+  }
+
   async createUserByKakaoOrNaver(user: SocialUser): Promise<string> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -64,20 +95,39 @@ export class UserService {
     id: number,
     patchUserRequest: PatchUserRequest,
   ): Promise<User> {
-    const user = await this.userRepository.findOne({
-      where: { id: id, status: StatusEnum.ACTIVATED },
-    });
+    const queryRunner =
+      this.userRepository.manager.connection.createQueryRunner();
+    await queryRunner.startTransaction();
 
     try {
-      Object.entries(patchUserRequest).forEach(([key, value]) => {
+      const user = await queryRunner.manager.findOne(User, {
+        where: { id: id, status: StatusEnum.ACTIVATED },
+      });
+
+      if (patchUserRequest.userStyletags) {
+        await this.userStyletagService.saveUserStyletags(
+          user,
+          patchUserRequest.userStyletags,
+          queryRunner,
+        );
+      }
+
+      const { userStyletags, ...userFields } = patchUserRequest;
+      Object.entries(userFields).forEach(([key, value]) => {
         if (value !== undefined) {
           user[key] = value;
         }
       });
 
-      return await this.userRepository.save(user);
+      await queryRunner.manager.save(user);
+      await queryRunner.commitTransaction();
+
+      return await this.getUserWithTag(user.id);
     } catch (error) {
+      await queryRunner.rollbackTransaction();
       throw InternalServerException(error.message);
+    } finally {
+      await queryRunner.release();
     }
   }
 

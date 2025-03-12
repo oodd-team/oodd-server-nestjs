@@ -1,4 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
+import dayjs from 'dayjs';
+import { User } from 'src/common/entities/user.entity';
 
 export class GetUserInfo {
   @ApiProperty({
@@ -49,7 +51,14 @@ export class GetUserInfo {
   })
   birthDate: string;
 
-  constructor(user: Partial<GetUserInfo>) {
+  @ApiProperty({
+    type: [String],
+    description: '유저 스타일태그',
+    example: ['casual', 'street'],
+  })
+  userStyletags: string[];
+
+  constructor(user: User) {
     this.id = user.id;
     this.name = user.name;
     this.phoneNumber = user.phoneNumber;
@@ -57,7 +66,10 @@ export class GetUserInfo {
     this.nickname = user.nickname;
     this.profilePictureUrl = user.profilePictureUrl;
     this.bio = user.bio;
-    this.birthDate = user.birthDate;
+    this.birthDate = dayjs(user.birthDate).format('YYYY-MM-DDTHH:mm:ssZ');
+    this.userStyletags =
+      user.userStyletags?.map((userStyleTag) => userStyleTag.styletag.tag) ||
+      [];
   }
 }
 
@@ -68,7 +80,7 @@ export class GetOtherUserInfo extends GetUserInfo {
   })
   isMatching: boolean;
 
-  constructor(user: Partial<GetOtherUserInfo>, isMatching: boolean) {
+  constructor(user: User, isMatching: boolean) {
     super(user);
     this.isMatching = isMatching;
   }

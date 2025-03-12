@@ -22,6 +22,8 @@ import { AuthModule } from './auth/auth.module';
 import { DayjsModule } from './common/dayjs/dayjs.module'; // DayjsModule 추가
 import { EventsGateway } from './eventGateway';
 import { ConfigService } from '@nestjs/config';
+import { MatchingEventsGateway } from './matchingEventGateway';
+import { UserStyletagModule } from './user-styletag/user-styletag.module';
 
 const configService: ConfigService = new ConfigService();
 
@@ -64,8 +66,9 @@ const configService: ConfigService = new ConfigService();
     UserBlockModule,
     UserReportModule,
     AuthModule,
+    UserStyletagModule,
   ],
   controllers: [AppController],
-  providers: [AppService, EventsGateway],
+  providers: [AppService, EventsGateway, MatchingEventsGateway],
 })
 export class AppModule {}

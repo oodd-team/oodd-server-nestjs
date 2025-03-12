@@ -45,10 +45,13 @@ export class PostDto extends PickType(Post, [
     this.postCommentsCount = post.postComments?.length || 0;
     this.postLikesCount = post.postLikes?.length || 0;
     this.isPostLike =
-      post.postLikes?.some((like) => like.user.id === currentUserId) || false;
+      post.postLikes?.some(
+        (like) => like.user && like.user.id === currentUserId,
+      ) || false;
     this.isPostComment =
-      post.postComments?.some((comment) => comment.user.id === currentUserId) ||
-      false;
+      post.postComments?.some(
+        (comment) => comment.user && comment.user.id === currentUserId,
+      ) || false;
   }
 }
 

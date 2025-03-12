@@ -3,7 +3,6 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Profile, Strategy } from 'passport-kakao';
 import { SocialUser } from '../dto/auth.dto';
 import { ConfigService } from '@nestjs/config';
-import { Request } from 'express';
 
 @Injectable()
 export class JwtKakaoStrategy extends PassportStrategy(Strategy, 'kakao') {
@@ -16,19 +15,20 @@ export class JwtKakaoStrategy extends PassportStrategy(Strategy, 'kakao') {
     });
   }
 
-  async authenticate(req: Request) {
+  authenticate(req: any, options?: any) {
     if (req.query.redirectUrl) {
       // /auth
       return super.authenticate(req, {
+        ...options,
         state: encodeURIComponent(req.query.redirectUrl as string),
       });
     }
     // /auth/callback
-    return super.authenticate(req);
+    return super.authenticate(req, options);
   }
 
   async validate(
-    req: Request,
+    req: any,
     accessToken: string,
     refreshToken: string,
     profile: Profile,
